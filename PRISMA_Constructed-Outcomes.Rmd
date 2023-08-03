@@ -9,7 +9,84 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r, warning=FALSE}
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(knitr)
+library(stringr)
+library(ThemePark)
+library(purrr)
+```
+
 ```{r}
-# making changes
+path_to_data <- 'Z:/SynapseCSVs/Kenya/2023-07-28/' # If MNH*.xlsx files are located elsewhere, set this to, for example, 'data/' or '//TNT/...'
+
+path_to_data <- 'Z:/Processed Data/2023-07-28/'
+```
+
+```{r}
+
+form_data_filename <- paste0(path_to_data, 'MatData_Wide_2023-07-28',".RData")
+    form_df <- load(form_data_filename)
+    
+form_data_filename <- paste0(path_to_data, 'InfData_Wide_2023-07-28',".RData")
+    form_df <- load(form_data_filename)  
+    
+    
+# Create a datasubset from maternal and infant files:
+inf_subset_df <- InfData_Wide %>% dplyr::select(SITE, MOMID, PREGID, INFANTID, M11_INF_DSTERM, 
+                                                M11_BW_FAORRES, M11_BW_EST_FAORRES,
+                                                M13_BREATH_CEOCCUR,#_CEOCCUR with no _MR is in MNH13 not in MNH11.
+                                                )
+
+mat_subset_df <- MatData_Wide %>% dplyr::select(SITE, MOMID, PREGID, SCRNID, DOB, M01_US_OHOLOC_1, 
+                                                M04_FETAL_LOSS_DSSTDAT_1, M04_FETAL_LOSS_DSSTDAT_2, M04_FETAL_LOSS_DSSTDAT_3,
+                                                M04_FETAL_LOSS_DSSTDAT_4, M04_FETAL_LOSS_DSSTDAT_5,
+                                                M09_DELIV_DSSTDAT_INF1_6, M09_BIRTH_DSTERM_INF1_6,
+                                                M01_GA_LMP_WEEKS_SCORRES_1, M01_GA_LMP_DAYS_SCORRES_1, M01_US_GA_WKS_AGE_FTS1_1,
+                                                M01_US_GA_WKS_AGE_FTS1_1, M01_US_GA_DAYS_AGE_FTS1_1, 
+                                                M09_CRY_CEOCCUR_INF1_6, M09_FHR_VSTAT_INF1_6, M09_MACER_CEOCCUR_INF1_6, 
+                                                M09_CORD_PULS_CEOCCUR_INF1_6,
+                                                M19)
+
+mat_inf_subset_df <- left_join(mat_subset_df, inf_subset_df, by = c("SITE", "MOMID", "PREGID"))
+mat_inf_subset_df <- mat_inf_subset_df %>% dplyr::filter(is.na(INFANTID))
+#3104 after merge might be ok.
+# 2543 enrolled and we have 3015 have an MNH02 (Screened but not enrolled.).
+# B/c there is no enrollemnt yes/no variable, Stacie has been doing a variable from: Enrolled when age requirement, viable pregnancy with GA>= weeks by US, Outside catchment area, did not consent.
+
+```
+
+```{r}
+# DONT NEED TO DO THIS B/C I DON'T NEED TO MERGE FILES.
+# form_nums <- c(0:11, 23, 25, 26)
+# 
+# for(form_num in form_nums) {
+#   form_name <- paste0("MNH", sprintf('%02d', form_num)) # b/c these numbers in MNH forms, the ones that have double digits starting with '0' will show up with a single digit.  Example: 00 will be 0, 01 will be 1. 
+#   
+#   print(form_name)
+#   form_data_filename <- paste0(path_to_data, tolower(form_name),".csv")
+#   form_df <- read.csv(form_data_filename)
+#   
+#   assign(form_name, form_df)
+# }
+```
+
+Full-join
+```{r}
+# list_df <- list(MNH01, MNH04, MNH09)
+# test_df <- list_df %>% reduce(full_join, by = c("MOMID"))
+# temp.df <- test_df %>% select(MOMID, SCRNID, TYPE_VISIT.x, TYPE_VISIT.y, INFANTS_FAORRES)
+```
+
+Fetal/Infant outcomes
+```{r}
+
+MatData_Wide$M01_US_OHOSTDAT_1 #_1 means first visit (use this for GA calc. )
+MatData_Wide$M04_FETAL_LOSS_DSSTDAT_1
+sort(colnames(MatData_Wide))
+MatData_Wide %>% dplyr::mutate(GA_DIFF_WKS = GA_LMP_WEEKS_SCORRES - US_GA_WKS_AGE_FTS1,
+                        GA_DIFF_DAYS = GA_LMP_DAYS_SCORRES - US_GA_DAYS_AGE_FTS1)
 ```
 
