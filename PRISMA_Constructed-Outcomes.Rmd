@@ -74,16 +74,31 @@ mat_inf_subset_df <- left_join(mat_subset_df, inf_subset_df, by = c("SITE", "MOM
 mat_inf_subset_df <- mat_inf_subset_df %>% dplyr::filter(if_else(is.na(INFANTID), TRUE,
                                                                   INFANTID != "n/a")) # Have to be very careful with NA in a logical expression.  Dplyr filter only includes rows where the expression is TRUE but not where it's FALSE or NA.
 
+# mat_inf_subset: 3360 makes sense b/c n=12 twin pregnancies so 12 extra rows in the mat_subset_df of 3348.  
 
-#3104 after merge might be ok.
-# 2543 enrolled and we have 3015 have an MNH02 (Screened but not enrolled.).
+
+# Stacie: 2543 enrolled and we have 3015 have an MNH02 (Screened but not enrolled.).
 # B/c there is no enrollment yes/no variable, Stacie has been doing a variable from: Enrolled when age requirement, viable pregnancy with GA>= weeks by US, Outside catchment area, did not consent.
 
 ```
 
 Fetal/Infant outcomes
-For GA_BOE: use US_GA_DAYS_AGE_FTS1,2,3,4 and see which one is bigger.  Use the biggest on to do the calculation.  In the constructed outcomes sheets, it is not listed correctly (b/c only asking to use first fetus)
+1. GA_BOE: use US_GA_DAYS_AGE_FTS1,2,3,4 and US_GA_WKS_AGE_FTS1,2,3,4 to calculate the biggest fetus.  Use the biggest fetus to do the calculations for GA_DIFF_WKS and GA_DIFF_DAYS.  In the constructed outcomes sheets, it is not listed correctly (b/c only asking to use first fetus)
+2. Use the biggest infant using US and GA_LMP_WEEKS_SCORRES and GA_LMP_DAYS to calc. variable GA_DIFF_WKS and GA_DIFF_DAYS 
 ```{r}
+# STEP 1:
+mat_inf_subset_df <- mat_inf_subset_df %>% select(M01_US_GA_WKS_AGE_FTS1_1, M01_US_GA_DAYS_AGE_FTS1_1, 
+                                        M01_US_GA_WKS_AGE_FTS2_1, M01_US_GA_DAYS_AGE_FTS2_1,
+                                        M01_US_GA_WKS_AGE_FTS3_1, M01_US_GA_DAYS_AGE_FTS3_1,
+                                        M01_US_GA_WKS_AGE_FTS4_1, M01_US_GA_DAYS_AGE_FTS4_1) %>% 
+  rowwise() %>% mutate(biggest_M01_US_GA_DAYS_FTS = max(((M01_US_GA_WKS_AGE_FTS1_1*7) + M01_US_GA_DAYS_AGE_FTS1_1),
+                                     ((M01_US_GA_WKS_AGE_FTS2_1*7) + M01_US_GA_DAYS_AGE_FTS2_1),
+                                     ((M01_US_GA_WKS_AGE_FTS3_1*7) + M01_US_GA_DAYS_AGE_FTS3_1),
+                                     ((M01_US_GA_WKS_AGE_FTS4_1*7) + M01_US_GA_DAYS_AGE_FTS4_1), na.rm = TRUE)) %>%
+  mutate(biggest_M01_US_GA_DAYS_FTS = if_else(biggest_M01_US_GA_DAYS_FTS<0, NA, biggest_M01_US_GA_DAYS_FTS)) # <0 covers '-Inf' cases and where it's only -7.
+
+# STEP 2: 
+temp.df <- mat_inf_subset_df %>% 
 
 ```
 
