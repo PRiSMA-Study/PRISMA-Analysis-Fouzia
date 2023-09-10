@@ -65,30 +65,53 @@ The varname structure for the newly integrated forms (hospitalizations, adverse 
 # path_to_data <- 'Z:/SynapseCSVs/Kenya/2023-07-28/' # If MNH*.xlsx files are located elsewhere, set this to, for example, 'data/' or '//TNT/...'
 # path_to_data <- 'Z:/Processed Data/2023-07-28/'
 
-# path_to_data <- 'Z:/Stacked Data/2023-08-11' 
+ path_to_data <- 'Z:/Stacked Data/2023-09-01' 
 
-path_to_data <- 'data'
+# path_to_data <- 'data'- for Mac R.
 ```
 
+For CSV files in AWS:
 ```{r}
-
 ########################################################################################
 recreate_mnh_list <- FALSE #if I want to recreate the big data list then set this to TRUE
 ########################################################################################
-
+tic <- Sys.time()
 if(recreate_mnh_list == TRUE){
   mnh_list <- list() # create an empty list first.
-  list_mnh <- dir(path = path_to_data, pattern = "*.sas7bdat", full.names = TRUE) #creates a list of all the csv files in the directory
+  list_mnh <- dir(path = path_to_data, pattern = "*.csv", full.names = TRUE) #creates a list of all the csv files in the directory
   for (data_file in list_mnh[]) { #can test by just bringing in a small number (add 1:2 inside the bracket to do so)
     form_num <- substr(basename(data_file), 1,5) #substr pulls out the 1:5 spaces in a char (will pull out "mnh00" etc);
     #basename() pulls out just the name of the file from the entire directory/path. 
     print(paste("Reading", form_num))
-    mnh_list[[form_num]] <- read_sas(data_file, )
+    mnh_list[[form_num]] <- read.csv(data_file)
   }
   saveRDS(mnh_list, file = paste0("MNH_list_", basename(path_to_data), ".RDS")) 
 }
+toc <- Sys.time() 
+print(toc - tic)
 
-mnh_list <- readRDS("MNH_list_data.RDS")  #read in the RDS objects with all the MNH files as a massive list.  
+mnh_list <- readRDS(paste0("MNH_list_", basename(path_to_data), ".RDS"))  #read in the RDS objects with all the MNH files as a massive list.  
+```
+
+```{r}
+########################################################################################
+# recreate_mnh_list <- FALSE #if I want to recreate the big data list then set this to TRUE
+########################################################################################
+
+# if(recreate_mnh_list == TRUE){
+#   mnh_list <- list() # create an empty list first.
+#   list_mnh <- dir(path = path_to_data, pattern = "*.sas7bdat", full.names = TRUE) #creates a list of all the csv files in the directory
+#   for (data_file in list_mnh[]) { #can test by just bringing in a small number (add 1:2 inside the bracket to do so)
+#     form_num <- substr(basename(data_file), 1,5) #substr pulls out the 1:5 spaces in a char (will pull out "mnh00" etc);
+#     #basename() pulls out just the name of the file from the entire directory/path. 
+#     print(paste("Reading", form_num))
+#     mnh_list[[form_num]] <- read_sas(data_file, )
+#   }
+#   saveRDS(mnh_list, file = paste0("MNH_list_", basename(path_to_data), ".RDS")) 
+# }
+# 
+# mnh_list <- readRDS("MNH_list_data.RDS")  #read in the RDS objects with all the MNH files as a massive list. 
+
 ```
 
 Hard code TYPE_VISIT for M00=1, M02=1, M03=1,  M09=6, M10=6, M11=6, M17=6, M18=12
@@ -176,8 +199,8 @@ MNH01 doesn't have MOMID and PREGID in Kenya data. Merge it in from MNH02.
 ```{r}
 mnh_list[["mnh00"]] <- mnh_list[["mnh00"]] %>% select(-PREGID, -MOMID)
 # View(mnh_list[["mnh00"]])
-mnh_list[["mnh00"]] <- mnh_list[["mnh00"]] %>% filter(!is.na(SCRN_OBSSTDAT)) # had to remove 2 rows of garbage. 
-mnh_list[["mnh00"]]$SCRNID <- as.double(mnh_list[["mnh00"]]$SCRNID)
+# mnh_list[["mnh00"]] <- mnh_list[["mnh00"]] %>% filter(!is.na(SCRN_OBSSTDAT)) # had to remove 2 rows of garbage. 
+# mnh_list[["mnh00"]]$SCRNID <- as.double(mnh_list[["mnh00"]]$SCRNID)
 mnh_list[["mnh00"]] <- left_join(mnh_list[["mnh00"]], 
                                  mnh_list[["mnh02"]] %>% select(SCRNID, MOMID, PREGID),
                                  by = "SCRNID")
@@ -192,33 +215,51 @@ mnh_list[["mnh01"]] <- left_join(mnh_list[["mnh01"]],
 Adding a prefix of M_XX:
 Using modify() from Purrr library and a lambda function.
 ```{r}
-dont_fix <- c("SCRNID", "MOMID", "PREGID")
-
-for (form_name in names(mnh_list)) {
-  print(form_name)
-  
-  col_names_vec <- names(mnh_list[[form_name]])
-  var_prefix <- paste0('M',substr(form_name, 4, 5))
-  names(mnh_list[[form_name]]) <- modify(col_names_vec, 
-                                         function(x) {
-    ifelse(x %in% dont_fix | startsWith(x, var_prefix), #second part is checking if variable already has M_XX.
-           x, 
-           paste0(var_prefix, "_", x))}) #x is whatever name is passed in.
-}
+#############################################################################################################################################
+# THIS DOESN'T NOT NEED TO BE RUN WHEN RUNNING IN AWS DATA - THIS IS ONLY NEEDED FOR TEST DATA OUTSIDE B/C THOSE VARS DIDN'T HAVE PREFIX Mxx
+#############################################################################################################################################
+# dont_fix <- c("SCRNID", "MOMID", "PREGID", "SITE")
+# 
+# for (form_name in names(mnh_list)) {
+#   print(form_name)
+#   
+#   col_names_vec <- names(mnh_list[[form_name]])
+#   var_prefix <- paste0('M',substr(form_name, 4, 5))
+#   names(mnh_list[[form_name]]) <- modify(col_names_vec, 
+#                                          function(x) {
+#     ifelse(x %in% dont_fix | startsWith(x, var_prefix), #second part is checking if variable already has M_XX.
+#            x, 
+#            paste0(var_prefix, "_", x))}) #x is whatever name is passed in.
+# }
 ```
 
 ```{r}
 
 mnh_list[["mnh00"]] <- mnh_list[["mnh00"]] %>%
   filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
-  filter(!is.na(MOMID)) %>%
-  distinct (MOMID, PREGID, M00_TYPE_VISIT, .keep_all = TRUE)
+  filter(!is.na(MOMID)) %>% #try using 'drop_na (variables)
+  distinct (MOMID, PREGID, M00_TYPE_VISIT, .keep_all = TRUE) # keep_all keeps the first row rather than dropping both duplicates. 
 
 
 mnh_list[["mnh01"]] <- mnh_list[["mnh01"]] %>%
   filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
   filter(!is.na(MOMID)) %>%
   distinct (MOMID, PREGID, M01_TYPE_VISIT, .keep_all = TRUE)
+
+mnh_list[["mnh02"]] <- mnh_list[["mnh02"]] %>%
+  filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
+  drop_na(MOMID, PREGID) %>%
+  distinct (MOMID, PREGID, M02_TYPE_VISIT, .keep_all = TRUE)
+
+mnh_list[["mnh04"]] <- mnh_list[["mnh04"]] %>%
+  filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
+  drop_na(MOMID, PREGID) %>%
+  distinct (MOMID, PREGID, M04_TYPE_VISIT, .keep_all = TRUE)
+
+mnh_list[["mnh05"]] <- mnh_list[["mnh05"]] %>%
+  filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
+  drop_na(MOMID, PREGID) %>%
+  distinct (MOMID, PREGID, M05_TYPE_VISIT, .keep_all = TRUE)
 
 mnh_list[["mnh11"]] <- mnh_list[["mnh11"]] %>%
   filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
@@ -239,6 +280,11 @@ mnh_list[["mnh15"]] <- mnh_list[["mnh15"]] %>%
   filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
   filter(!is.na(MOMID)) %>%
   distinct (MOMID, PREGID, M15_TYPE_VISIT, .keep_all = TRUE)
+
+mnh_list[["mnh19"]] <- mnh_list[["mnh19"]] %>%
+  filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
+  drop_na(MOMID, PREGID) %>%
+  distinct (MOMID, PREGID, M19_TYPE_VISIT, .keep_all = TRUE)
 
 mnh_list[["mnh26"]] <- mnh_list[["mnh26"]] %>%
   filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
@@ -274,10 +320,6 @@ for (form_name in names(mnh_list)) {
    # filter(!is.na(MOMID)) 
 }
 # distinct (MOMID, PREGID, paste0(var_prefix, '_TYPE_VISIT'), .keep_all = TRUE) %>%
-
-temp.df <- mnh_list[['mnh01']] %>% select(M01_TYPE_VISIT, MOMID, PREGID, SCRNID) %>%
-  group_by( M01_TYPE_VISIT, MOMID, PREGID, SCRNID) %>%
-  summarise(n = n())
 
 # View(mnh_list_wide)
 ```
