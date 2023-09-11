@@ -73,7 +73,7 @@ The varname structure for the newly integrated forms (hospitalizations, adverse 
 For CSV files in AWS:
 ```{r}
 ########################################################################################
-recreate_mnh_list <- TRUE #if I want to recreate the big data list then set this to TRUE
+recreate_mnh_list <- FALSE #if I want to recreate the big data list then set this to TRUE
 ########################################################################################
 tic <- Sys.time()
 if(recreate_mnh_list == TRUE){
@@ -742,11 +742,16 @@ mnh_merged_df <- mnh_merged_df %>%
                                                  ifelse((!is.na(M06_HB_POC_LBORRES_1) & between(M06_HB_POC_LBORRES_1, 7.0, 9.9)), "moderate",
                                                         ifelse((!is.na(M08_CBC_HB_LBORRES_1) & between(M08_CBC_HB_LBORRES_1, 0.0, 6.9)), "severe",
                                                                ifelse((!is.na(M06_HB_POC_LBORRES_1) & between(M06_HB_POC_LBORRES_1, 0.0, 6.9)), "severe",
-                                                                      ifelse((!is.na(M08_CBC_HB_LBORRES_1) & M08_CBC_HB_LBORRES_1 > 12.9), "excess_hb",
-                                                                             ifelse((!is.na(M06_HB_POC_LBORRES_1) & M06_HB_POC_LBORRES_1 > 12.9), "excess_hb",
-                                                                                    ifelse((!is.na(M08_CBC_HB_LBORRES_1) & between(M08_CBC_HB_LBORRES_1, 11, 12.9)), "normal",
-                                                                                           ifelse((!is.na(M06_HB_POC_LBORRES_1) & between(M06_HB_POC_LBORRES_1, 11, 12.9)), "normal",
-                                                                                                  as.character(NA)))))))))))) 
+                                                                      ifelse((!is.na(M08_CBC_HB_LBORRES_1) & between(M08_CBC_HB_LBORRES_1, 13.1, 14.9)), "high hb 13-<15g/dl",
+                                                                             ifelse((!is.na(M06_HB_POC_LBORRES_1) & between(M06_HB_POC_LBORRES_1, 13.1, 14.9)), "high hb 13-<15g/dl",
+                                                                                    ifelse((!is.na(M08_CBC_HB_LBORRES_1) & M08_CBC_HB_LBORRES_1 > 14.9), "high hb >=15g/dl",
+                                                                                           ifelse((!is.na(M06_HB_POC_LBORRES_1) & M06_HB_POC_LBORRES_1 > 14.9), "high hb >=15g/dl",
+                                                                                                  ifelse((!is.na(M08_CBC_HB_LBORRES_1) & between(M08_CBC_HB_LBORRES_1, 11, 13.0)), "normal",
+                                                                                                         ifelse((!is.na(M06_HB_POC_LBORRES_1) & between(M06_HB_POC_LBORRES_1, 11, 13.0)), "normal",
+                                                                                                                as.character(NA)))))))))))))) 
+
+temp.df <- mnh_merged_df %>%
+  select(SITE, MOMID, PREGID, M08_CBC_HB_LBORRES_1, M06_HB_POC_LBORRES_1, MAT_ANEMIA_MEAS1)
 
 table(mnh_merged_df$MAT_ANEMIA_MEAS1, useNA = "always", mnh_merged_df$SITE)
 
@@ -759,11 +764,13 @@ mnh_merged_df <- mnh_merged_df %>%
                                                  ifelse((!is.na(M06_HB_POC_LBORRES_2) & between(M06_HB_POC_LBORRES_2, 7.0, 9.9)), "moderate",
                                                         ifelse((!is.na(M08_CBC_HB_LBORRES_2) & between(M08_CBC_HB_LBORRES_2, 0.0, 6.9)), "severe",
                                                                ifelse((!is.na(M06_HB_POC_LBORRES_2) & between(M06_HB_POC_LBORRES_2, 0.0, 6.9)), "severe",
-                                                                      ifelse((!is.na(M08_CBC_HB_LBORRES_2) & M08_CBC_HB_LBORRES_2 > 12.9), "excess_hb",
-                                                                             ifelse((!is.na(M06_HB_POC_LBORRES_2) & M06_HB_POC_LBORRES_2 > 12.9), "excess_hb",
-                                                                                    ifelse((!is.na(M08_CBC_HB_LBORRES_2) & between(M08_CBC_HB_LBORRES_2, 11, 12.9)), "normal",
-                                                                                           ifelse((!is.na(M06_HB_POC_LBORRES_2) & between(M06_HB_POC_LBORRES_2, 11, 12.9)), "normal",
-                                                                                                  as.character(NA)))))))))))) 
+                                                                      ifelse((!is.na(M08_CBC_HB_LBORRES_2) & between(M08_CBC_HB_LBORRES_2, 13.1, 14.9)), "high hb 13-<15g/dl",
+                                                                             ifelse((!is.na(M06_HB_POC_LBORRES_2) & between(M06_HB_POC_LBORRES_2, 13.1, 14.9)), "high hb 13-<15g/dl",
+                                                                                    ifelse((!is.na(M08_CBC_HB_LBORRES_2) & M08_CBC_HB_LBORRES_2 > 14.9), "high hb >=15g/dl",
+                                                                                           ifelse((!is.na(M06_HB_POC_LBORRES_2) & M06_HB_POC_LBORRES_2 > 14.9), "high hb >=15g/dl",
+                                                                                                  ifelse((!is.na(M08_CBC_HB_LBORRES_2) & between(M08_CBC_HB_LBORRES_2, 11, 13.0)), "normal",
+                                                                                                         ifelse((!is.na(M06_HB_POC_LBORRES_2) & between(M06_HB_POC_LBORRES_2, 11, 13.0)), "normal",
+                                                                                                                as.character(NA)))))))))))))) 
 
 table(mnh_merged_df$MAT_ANEMIA_MEAS2, useNA = "always", mnh_merged_df$SITE)
   
@@ -778,11 +785,13 @@ mnh_merged_df <- mnh_merged_df %>%
                                                  ifelse((!is.na(M06_HB_POC_LBORRES_3) & between(M06_HB_POC_LBORRES_3, 7.0, 9.9)), "moderate",
                                                         ifelse((!is.na(M08_CBC_HB_LBORRES_3) & between(M08_CBC_HB_LBORRES_3, 0.0, 6.9)), "severe",
                                                                ifelse((!is.na(M06_HB_POC_LBORRES_3) & between(M06_HB_POC_LBORRES_3, 0.0, 6.9)), "severe",
-                                                                      ifelse((!is.na(M08_CBC_HB_LBORRES_3) & M08_CBC_HB_LBORRES_3 > 12.9), "excess_hb",
-                                                                             ifelse((!is.na(M06_HB_POC_LBORRES_3) & M06_HB_POC_LBORRES_3 > 12.9), "excess_hb",
-                                                                                    ifelse((!is.na(M08_CBC_HB_LBORRES_3) & between(M08_CBC_HB_LBORRES_3, 11, 12.9)), "normal",
-                                                                                           ifelse((!is.na(M06_HB_POC_LBORRES_3) & between(M06_HB_POC_LBORRES_3, 11, 12.9)), "normal",
-                                                                                                  as.character(NA))))))))))))
+                                                                      ifelse((!is.na(M08_CBC_HB_LBORRES_3) & between(M08_CBC_HB_LBORRES_3, 13.1, 14.9)), "high hb 13-<15g/dl",
+                                                                             ifelse((!is.na(M06_HB_POC_LBORRES_3) & between(M06_HB_POC_LBORRES_3, 13.1, 14.9)), "high hb 13-<15g/dl",
+                                                                                    ifelse((!is.na(M08_CBC_HB_LBORRES_3) & M08_CBC_HB_LBORRES_3 > 14.9), "high hb >=15g/dl",
+                                                                                           ifelse((!is.na(M06_HB_POC_LBORRES_3) & M06_HB_POC_LBORRES_3 > 14.9), "high hb >=15g/dl",
+                                                                                                  ifelse((!is.na(M08_CBC_HB_LBORRES_3) & between(M08_CBC_HB_LBORRES_3, 11, 13.0)), "normal",
+                                                                                                         ifelse((!is.na(M06_HB_POC_LBORRES_3) & between(M06_HB_POC_LBORRES_3, 11, 13.0)), "normal",
+                                                                                                                as.character(NA)))))))))))))) 
 
 table(mnh_merged_df$MAT_ANEMIA_MEAS3, useNA = "always", mnh_merged_df$SITE)
   
@@ -795,11 +804,13 @@ mnh_merged_df <- mnh_merged_df %>%
                                                  ifelse((!is.na(M06_HB_POC_LBORRES_4) & between(M06_HB_POC_LBORRES_4, 7.0, 9.9)), "moderate",
                                                         ifelse((!is.na(M08_CBC_HB_LBORRES_4) & between(M08_CBC_HB_LBORRES_4, 0.0, 6.9)), "severe",
                                                                ifelse((!is.na(M06_HB_POC_LBORRES_4) & between(M06_HB_POC_LBORRES_4, 0.0, 6.9)), "severe",
-                                                                      ifelse((!is.na(M08_CBC_HB_LBORRES_4) & M08_CBC_HB_LBORRES_4 > 12.9), "excess_hb",
-                                                                             ifelse((!is.na(M06_HB_POC_LBORRES_4) & M06_HB_POC_LBORRES_4 > 12.9), "excess_hb",
-                                                                                    ifelse((!is.na(M08_CBC_HB_LBORRES_4) & between(M08_CBC_HB_LBORRES_4, 11, 12.9)), "normal",
-                                                                                           ifelse((!is.na(M06_HB_POC_LBORRES_4) & between(M06_HB_POC_LBORRES_4, 11, 12.9)), "normal",
-                                                                                                  as.character(NA))))))))))))
+                                                                      ifelse((!is.na(M08_CBC_HB_LBORRES_4) & between(M08_CBC_HB_LBORRES_4, 13.1, 14.9)), "high hb 13-<15g/dl",
+                                                                             ifelse((!is.na(M06_HB_POC_LBORRES_4) & between(M06_HB_POC_LBORRES_4, 13.1, 14.9)), "high hb 13-<15g/dl",
+                                                                                    ifelse((!is.na(M08_CBC_HB_LBORRES_4) & M08_CBC_HB_LBORRES_4 > 14.9), "high hb >=15g/dl",
+                                                                                           ifelse((!is.na(M06_HB_POC_LBORRES_4) & M06_HB_POC_LBORRES_4 > 14.9), "high hb >=15g/dl",
+                                                                                                  ifelse((!is.na(M08_CBC_HB_LBORRES_4) & between(M08_CBC_HB_LBORRES_4, 11, 13.0)), "normal",
+                                                                                                         ifelse((!is.na(M06_HB_POC_LBORRES_4) & between(M06_HB_POC_LBORRES_4, 11, 13.0)), "normal",
+                                                                                                                as.character(NA)))))))))))))) 
   
 
 table(mnh_merged_df$MAT_ANEMIA_MEAS4, useNA = "always", mnh_merged_df$SITE)
@@ -813,11 +824,13 @@ mnh_merged_df <- mnh_merged_df %>%
                                                  ifelse((!is.na(M06_HB_POC_LBORRES_5) & between(M06_HB_POC_LBORRES_5, 7.0, 9.9)), "moderate",
                                                         ifelse((!is.na(M08_CBC_HB_LBORRES_5) & between(M08_CBC_HB_LBORRES_5, 0.0, 6.9)), "severe",
                                                                ifelse((!is.na(M06_HB_POC_LBORRES_5) & between(M06_HB_POC_LBORRES_5, 0.0, 6.9)), "severe",
-                                                                      ifelse((!is.na(M08_CBC_HB_LBORRES_5) & M08_CBC_HB_LBORRES_5 > 12.9), "excess_hb",
-                                                                             ifelse((!is.na(M06_HB_POC_LBORRES_5) & M06_HB_POC_LBORRES_5 > 12.9), "excess_hb",
-                                                                                    ifelse((!is.na(M08_CBC_HB_LBORRES_5) & between(M08_CBC_HB_LBORRES_5, 11, 12.9)), "normal",
-                                                                                           ifelse((!is.na(M06_HB_POC_LBORRES_5) & between(M06_HB_POC_LBORRES_5, 11, 12.9)), "normal",
-                                                                                                  as.character(NA))))))))))))
+                                                                      ifelse((!is.na(M08_CBC_HB_LBORRES_5) & between(M08_CBC_HB_LBORRES_5, 13.1, 14.9)), "high hb 13-<15g/dl",
+                                                                             ifelse((!is.na(M06_HB_POC_LBORRES_5) & between(M06_HB_POC_LBORRES_5, 13.1, 14.9)), "high hb 13-<15g/dl",
+                                                                                    ifelse((!is.na(M08_CBC_HB_LBORRES_5) & M08_CBC_HB_LBORRES_5 > 14.9), "high hb >=15g/dl",
+                                                                                           ifelse((!is.na(M06_HB_POC_LBORRES_5) & M06_HB_POC_LBORRES_5 > 14.9), "high hb >=15g/dl",
+                                                                                                  ifelse((!is.na(M08_CBC_HB_LBORRES_5) & between(M08_CBC_HB_LBORRES_5, 11, 13.0)), "normal",
+                                                                                                         ifelse((!is.na(M06_HB_POC_LBORRES_5) & between(M06_HB_POC_LBORRES_5, 11, 13.0)), "normal",
+                                                                                                                as.character(NA)))))))))))))) 
   
 
 table(mnh_merged_df$MAT_ANEMIA_MEAS5, useNA = "always", mnh_merged_df$SITE)
@@ -830,11 +843,13 @@ mnh_merged_df <- mnh_merged_df %>%
                                                  ifelse((!is.na(M06_HB_POC_LBORRES_6) & between(M06_HB_POC_LBORRES_6, 7.0, 9.9)), "moderate",
                                                         ifelse((!is.na(M08_CBC_HB_LBORRES_6) & between(M08_CBC_HB_LBORRES_6, 0.0, 6.9)), "severe",
                                                                ifelse((!is.na(M06_HB_POC_LBORRES_6) & between(M06_HB_POC_LBORRES_6, 0.0, 6.9)), "severe",
-                                                                      ifelse((!is.na(M08_CBC_HB_LBORRES_6) & M08_CBC_HB_LBORRES_6 > 12.9), "excess_hb",
-                                                                             ifelse((!is.na(M06_HB_POC_LBORRES_6) & M06_HB_POC_LBORRES_6 > 12.9), "excess_hb",
-                                                                                    ifelse((!is.na(M08_CBC_HB_LBORRES_6) & between(M08_CBC_HB_LBORRES_6, 11, 12.9)), "normal",
-                                                                                           ifelse((!is.na(M06_HB_POC_LBORRES_6) & between(M06_HB_POC_LBORRES_6, 11, 12.9)), "normal",
-                                                                                                  as.character(NA))))))))))))
+                                                                      ifelse((!is.na(M08_CBC_HB_LBORRES_6) & between(M08_CBC_HB_LBORRES_6, 13.1, 14.9)), "high hb 13-<15g/dl",
+                                                                             ifelse((!is.na(M06_HB_POC_LBORRES_6) & between(M06_HB_POC_LBORRES_6, 13.1, 14.9)), "high hb 13-<15g/dl",
+                                                                                    ifelse((!is.na(M08_CBC_HB_LBORRES_6) & M08_CBC_HB_LBORRES_6 > 14.9), "high hb >=15g/dl",
+                                                                                           ifelse((!is.na(M06_HB_POC_LBORRES_6) & M06_HB_POC_LBORRES_6 > 14.9), "high hb >=15g/dl",
+                                                                                                  ifelse((!is.na(M08_CBC_HB_LBORRES_6) & between(M08_CBC_HB_LBORRES_6, 11, 13.0)), "normal",
+                                                                                                         ifelse((!is.na(M06_HB_POC_LBORRES_6) & between(M06_HB_POC_LBORRES_6, 11, 13.0)), "normal",
+                                                                                                                as.character(NA)))))))))))))) 
 
 table(mnh_merged_df$MAT_ANEMIA_MEAS6, useNA = "always", mnh_merged_df$SITE)
 
@@ -843,17 +858,19 @@ table(mnh_merged_df$MAT_ANEMIA_MEAS6, useNA = "always", mnh_merged_df$SITE)
 #########################################################################################  
 #SETTING UP VISIT 10 - PNC 6.
 mnh_merged_df <- mnh_merged_df %>% 
-mutate(MAT_ANEMIA_MEAS10 = ifelse((!is.na(M08_CBC_HB_LBORRES_10) & between(M08_CBC_HB_LBORRES_10, 10, 10.9)), "mild",
-                                  ifelse((!is.na(M06_HB_POC_LBORRES_10) & between(M06_HB_POC_LBORRES_10, 10, 10.9)), "mild",
-                                         ifelse((!is.na(M08_CBC_HB_LBORRES_10) & between(M08_CBC_HB_LBORRES_10, 7.0, 9.9)), "moderate",
-                                                ifelse((!is.na(M06_HB_POC_LBORRES_10) & between(M06_HB_POC_LBORRES_10, 7.0, 9.9)), "moderate",
-                                                       ifelse((!is.na(M08_CBC_HB_LBORRES_10) & between(M08_CBC_HB_LBORRES_10, 0.0, 6.9)), "severe",
-                                                              ifelse((!is.na(M06_HB_POC_LBORRES_10) & between(M06_HB_POC_LBORRES_10, 0.0, 6.9)), "severe",
-                                                                     ifelse((!is.na(M08_CBC_HB_LBORRES_10) & M08_CBC_HB_LBORRES_10 > 12.9), "excess_hb",
-                                                                            ifelse((!is.na(M06_HB_POC_LBORRES_10) & M06_HB_POC_LBORRES_10 > 12.9), "excess_hb",
-                                                                                   ifelse((!is.na(M08_CBC_HB_LBORRES_10) & between(M08_CBC_HB_LBORRES_10, 11, 12.9)), "normal",
-                                                                                          ifelse((!is.na(M06_HB_POC_LBORRES_10) & between(M06_HB_POC_LBORRES_10, 11, 12.9)), "normal",
-                                                                                                 as.character(NA))))))))))))
+  mutate(MAT_ANEMIA_MEAS10 = ifelse((!is.na(M08_CBC_HB_LBORRES_10) & between(M08_CBC_HB_LBORRES_10, 10, 10.9)), "mild",
+                                   ifelse((!is.na(M06_HB_POC_LBORRES_10) & between(M06_HB_POC_LBORRES_10, 10, 10.9)), "mild",
+                                          ifelse((!is.na(M08_CBC_HB_LBORRES_10) & between(M08_CBC_HB_LBORRES_10, 7.0, 9.9)), "moderate",
+                                                 ifelse((!is.na(M06_HB_POC_LBORRES_10) & between(M06_HB_POC_LBORRES_10, 7.0, 9.9)), "moderate",
+                                                        ifelse((!is.na(M08_CBC_HB_LBORRES_10) & between(M08_CBC_HB_LBORRES_10, 0.0, 6.9)), "severe",
+                                                               ifelse((!is.na(M06_HB_POC_LBORRES_10) & between(M06_HB_POC_LBORRES_10, 0.0, 6.9)), "severe",
+                                                                      ifelse((!is.na(M08_CBC_HB_LBORRES_10) & between(M08_CBC_HB_LBORRES_10, 13.1, 14.9)), "high hb 13-<15g/dl",
+                                                                             ifelse((!is.na(M06_HB_POC_LBORRES_10) & between(M06_HB_POC_LBORRES_10, 13.1, 14.9)), "high hb 13-<15g/dl",
+                                                                                    ifelse((!is.na(M08_CBC_HB_LBORRES_10) & M08_CBC_HB_LBORRES_10 > 14.9), "high hb >=15g/dl",
+                                                                                           ifelse((!is.na(M06_HB_POC_LBORRES_10) & M06_HB_POC_LBORRES_10 > 14.9), "high hb >=15g/dl",
+                                                                                                  ifelse((!is.na(M08_CBC_HB_LBORRES_10) & between(M08_CBC_HB_LBORRES_10, 11, 13.0)), "normal",
+                                                                                                         ifelse((!is.na(M06_HB_POC_LBORRES_10) & between(M06_HB_POC_LBORRES_10, 11, 13.0)), "normal",
+                                                                                                                as.character(NA)))))))))))))) 
   
 
 table(mnh_merged_df$MAT_ANEMIA_MEAS10, useNA = "always", mnh_merged_df$SITE)
@@ -861,16 +878,18 @@ table(mnh_merged_df$MAT_ANEMIA_MEAS10, useNA = "always", mnh_merged_df$SITE)
   #SETTING UP VISIT 11 - PNC 26.
 mnh_merged_df <- mnh_merged_df %>% 
   mutate(MAT_ANEMIA_MEAS11 = ifelse((!is.na(M08_CBC_HB_LBORRES_11) & between(M08_CBC_HB_LBORRES_11, 10, 10.9)), "mild",
-                                    ifelse((!is.na(M06_HB_POC_LBORRES_11) & between(M06_HB_POC_LBORRES_11, 10, 10.9)), "mild",
-                                           ifelse((!is.na(M08_CBC_HB_LBORRES_11) & between(M08_CBC_HB_LBORRES_11, 7.0, 9.9)), "moderate",
-                                                  ifelse((!is.na(M06_HB_POC_LBORRES_11) & between(M06_HB_POC_LBORRES_11, 7.0, 9.9)), "moderate",
-                                                         ifelse((!is.na(M08_CBC_HB_LBORRES_11) & between(M08_CBC_HB_LBORRES_11, 0.0, 6.9)), "severe",
-                                                                ifelse((!is.na(M06_HB_POC_LBORRES_11) & between(M06_HB_POC_LBORRES_11, 0.0, 6.9)), "severe",
-                                                                       ifelse((!is.na(M08_CBC_HB_LBORRES_11) & M08_CBC_HB_LBORRES_11 > 12.9), "excess_hb",
-                                                                              ifelse((!is.na(M06_HB_POC_LBORRES_11) & M06_HB_POC_LBORRES_11 > 12.9), "excess_hb",
-                                                                                     ifelse((!is.na(M08_CBC_HB_LBORRES_11) & between(M08_CBC_HB_LBORRES_11, 11, 12.9)), "normal",
-                                                                                            ifelse((!is.na(M06_HB_POC_LBORRES_11) & between(M06_HB_POC_LBORRES_11, 11, 12.9)), "normal",
-                                                                                                   as.character(NA))))))))))))
+                                   ifelse((!is.na(M06_HB_POC_LBORRES_11) & between(M06_HB_POC_LBORRES_11, 10, 10.9)), "mild",
+                                          ifelse((!is.na(M08_CBC_HB_LBORRES_11) & between(M08_CBC_HB_LBORRES_11, 7.0, 9.9)), "moderate",
+                                                 ifelse((!is.na(M06_HB_POC_LBORRES_11) & between(M06_HB_POC_LBORRES_11, 7.0, 9.9)), "moderate",
+                                                        ifelse((!is.na(M08_CBC_HB_LBORRES_11) & between(M08_CBC_HB_LBORRES_11, 0.0, 6.9)), "severe",
+                                                               ifelse((!is.na(M06_HB_POC_LBORRES_11) & between(M06_HB_POC_LBORRES_11, 0.0, 6.9)), "severe",
+                                                                      ifelse((!is.na(M08_CBC_HB_LBORRES_11) & between(M08_CBC_HB_LBORRES_11, 13.1, 14.9)), "high hb 13-<15g/dl",
+                                                                             ifelse((!is.na(M06_HB_POC_LBORRES_11) & between(M06_HB_POC_LBORRES_11, 13.1, 14.9)), "high hb 13-<15g/dl",
+                                                                                    ifelse((!is.na(M08_CBC_HB_LBORRES_11) & M08_CBC_HB_LBORRES_11 > 14.9), "high hb >=15g/dl",
+                                                                                           ifelse((!is.na(M06_HB_POC_LBORRES_11) & M06_HB_POC_LBORRES_11 > 14.9), "high hb >=15g/dl",
+                                                                                                  ifelse((!is.na(M08_CBC_HB_LBORRES_11) & between(M08_CBC_HB_LBORRES_11, 11, 13.0)), "normal",
+                                                                                                         ifelse((!is.na(M06_HB_POC_LBORRES_11) & between(M06_HB_POC_LBORRES_11, 11, 13.0)), "normal",
+                                                                                                                as.character(NA)))))))))))))) 
 
 
   table(mnh_merged_df$MAT_ANEMIA_MEAS11, useNA = "always", mnh_merged_df$SITE)
@@ -878,16 +897,18 @@ mnh_merged_df <- mnh_merged_df %>%
 #TODO - these thresholds will change. anything after 42 days of birth, thresholds change to non-pregnant.  
 mnh_merged_df <- mnh_merged_df %>% 
   mutate(MAT_ANEMIA_MEAS12 = ifelse((!is.na(M08_CBC_HB_LBORRES_12) & between(M08_CBC_HB_LBORRES_12, 10, 10.9)), "mild",
-                                    ifelse((!is.na(M06_HB_POC_LBORRES_12) & between(M06_HB_POC_LBORRES_12, 10, 10.9)), "mild",
-                                           ifelse((!is.na(M08_CBC_HB_LBORRES_12) & between(M08_CBC_HB_LBORRES_12, 7.0, 9.9)), "moderate",
-                                                  ifelse((!is.na(M06_HB_POC_LBORRES_12) & between(M06_HB_POC_LBORRES_12, 7.0, 9.9)), "moderate",
-                                                         ifelse((!is.na(M08_CBC_HB_LBORRES_12) & between(M08_CBC_HB_LBORRES_12, 0.0, 6.9)), "severe",
-                                                                ifelse((!is.na(M06_HB_POC_LBORRES_12) & between(M06_HB_POC_LBORRES_12, 0.0, 6.9)), "severe",
-                                                                       ifelse((!is.na(M08_CBC_HB_LBORRES_12) & M08_CBC_HB_LBORRES_12 > 12.9), "excess_hb",
-                                                                              ifelse((!is.na(M06_HB_POC_LBORRES_12) & M06_HB_POC_LBORRES_12 > 12.9), "excess_hb",
-                                                                                     ifelse((!is.na(M08_CBC_HB_LBORRES_12) & between(M08_CBC_HB_LBORRES_12, 11, 12.9)), "normal",
-                                                                                            ifelse((!is.na(M06_HB_POC_LBORRES_12) & between(M06_HB_POC_LBORRES_12, 11, 12.9)), "normal",
-                                                                                                   as.character(NA))))))))))))
+                                   ifelse((!is.na(M06_HB_POC_LBORRES_12) & between(M06_HB_POC_LBORRES_12, 10, 10.9)), "mild",
+                                          ifelse((!is.na(M08_CBC_HB_LBORRES_12) & between(M08_CBC_HB_LBORRES_12, 7.0, 9.9)), "moderate",
+                                                 ifelse((!is.na(M06_HB_POC_LBORRES_12) & between(M06_HB_POC_LBORRES_12, 7.0, 9.9)), "moderate",
+                                                        ifelse((!is.na(M08_CBC_HB_LBORRES_12) & between(M08_CBC_HB_LBORRES_12, 0.0, 6.9)), "severe",
+                                                               ifelse((!is.na(M06_HB_POC_LBORRES_12) & between(M06_HB_POC_LBORRES_12, 0.0, 6.9)), "severe",
+                                                                      ifelse((!is.na(M08_CBC_HB_LBORRES_12) & between(M08_CBC_HB_LBORRES_12, 13.1, 14.9)), "high hb 13-<15g/dl",
+                                                                             ifelse((!is.na(M06_HB_POC_LBORRES_12) & between(M06_HB_POC_LBORRES_12, 13.1, 14.9)), "high hb 13-<15g/dl",
+                                                                                    ifelse((!is.na(M08_CBC_HB_LBORRES_12) & M08_CBC_HB_LBORRES_12 > 14.9), "high hb >=15g/dl",
+                                                                                           ifelse((!is.na(M06_HB_POC_LBORRES_12) & M06_HB_POC_LBORRES_12 > 14.9), "high hb >=15g/dl",
+                                                                                                  ifelse((!is.na(M08_CBC_HB_LBORRES_12) & between(M08_CBC_HB_LBORRES_12, 11, 13.0)), "normal",
+                                                                                                         ifelse((!is.na(M06_HB_POC_LBORRES_12) & between(M06_HB_POC_LBORRES_12, 11, 13.0)), "normal",
+                                                                                                                as.character(NA)))))))))))))) 
 
 table(mnh_merged_df$MAT_ANEMIA_MEAS12, useNA = "always", mnh_merged_df$SITE)
 
@@ -921,9 +942,11 @@ mnh_merged_df <- mnh_merged_df %>%
   mutate(MAT_ANEMIA_MEAS7 = ifelse((!is.na(M06_HB_POC_LBORRES_7) & between(M06_HB_POC_LBORRES_7, 10, 10.9)), "mild",
                                    ifelse((!is.na(M06_HB_POC_LBORRES_7) & between(M06_HB_POC_LBORRES_7, 7.0, 9.9)), "moderate",
                                           ifelse((!is.na(M06_HB_POC_LBORRES_7) & between(M06_HB_POC_LBORRES_7, 0.0, 6.9)), "severe",
-                                                 ifelse((!is.na(M06_HB_POC_LBORRES_7) & M06_HB_POC_LBORRES_7 > 12.9), "excess_hb",
-                                                        ifelse((!is.na(M06_HB_POC_LBORRES_7) & between(M06_HB_POC_LBORRES_7, 11, 12.9)), "normal",
-                                                               as.character(NA)))))))
+                                                 ifelse((!is.na(M06_HB_POC_LBORRES_7) & between(M06_HB_POC_LBORRES_7, 13.1, 14.9)), "high hb 13-<15g/dl",
+                                                        ifelse((!is.na(M06_HB_POC_LBORRES_7) & M06_HB_POC_LBORRES_7 > 14.9), "high hb >=15g/dl",
+                                                        ifelse((!is.na(M06_HB_POC_LBORRES_7) & between(M06_HB_POC_LBORRES_7, 11, 13.0)), "normal",
+                                                               as.character(NA))))))))
+
 
 table(mnh_merged_df$MAT_ANEMIA_MEAS7, useNA = "always", mnh_merged_df$SITE)
 
@@ -932,9 +955,10 @@ mnh_merged_df <- mnh_merged_df %>%
   mutate(MAT_ANEMIA_MEAS8 = ifelse((!is.na(M06_HB_POC_LBORRES_8) & between(M06_HB_POC_LBORRES_8, 10, 10.9)), "mild",
                                    ifelse((!is.na(M06_HB_POC_LBORRES_8) & between(M06_HB_POC_LBORRES_8, 7.0, 9.9)), "moderate",
                                           ifelse((!is.na(M06_HB_POC_LBORRES_8) & between(M06_HB_POC_LBORRES_8, 0.0, 6.9)), "severe",
-                                                 ifelse((!is.na(M06_HB_POC_LBORRES_8) & M06_HB_POC_LBORRES_8 > 12.9), "excess_hb",
-                                                        ifelse((!is.na(M06_HB_POC_LBORRES_8) & between(M06_HB_POC_LBORRES_8, 11, 12.9)), "normal",
-                                                               as.character(NA)))))))
+                                                 ifelse((!is.na(M06_HB_POC_LBORRES_8) & between(M06_HB_POC_LBORRES_8, 13.1, 14.9)), "high hb 13-<15g/dl",
+                                                        ifelse((!is.na(M06_HB_POC_LBORRES_8) & M06_HB_POC_LBORRES_8 > 14.9), "high hb >=15g/dl",
+                                                        ifelse((!is.na(M06_HB_POC_LBORRES_8) & between(M06_HB_POC_LBORRES_8, 11, 13.0)), "normal",
+                                                               as.character(NA))))))))
 
 table(mnh_merged_df$MAT_ANEMIA_MEAS8, useNA = "always", mnh_merged_df$SITE)
 
@@ -943,13 +967,14 @@ mnh_merged_df <- mnh_merged_df %>%
   mutate(MAT_ANEMIA_MEAS9 = ifelse((!is.na(M06_HB_POC_LBORRES_9) & between(M06_HB_POC_LBORRES_9, 10, 10.9)), "mild",
                                    ifelse((!is.na(M06_HB_POC_LBORRES_9) & between(M06_HB_POC_LBORRES_9, 7.0, 9.9)), "moderate",
                                           ifelse((!is.na(M06_HB_POC_LBORRES_9) & between(M06_HB_POC_LBORRES_9, 0.0, 6.9)), "severe",
-                                                 ifelse((!is.na(M06_HB_POC_LBORRES_9) & M06_HB_POC_LBORRES_9 > 12.9), "excess_hb",
-                                                        ifelse((!is.na(M06_HB_POC_LBORRES_9) & between(M06_HB_POC_LBORRES_9, 11, 12.9)), "normal",
-                                                               as.character(NA)))))))
+                                                 ifelse((!is.na(M06_HB_POC_LBORRES_9) & between(M06_HB_POC_LBORRES_9, 13.1, 14.9)), "high hb 13-<15g/dl",
+                                                        ifelse((!is.na(M06_HB_POC_LBORRES_9) & M06_HB_POC_LBORRES_9 > 14.9), "high hb >=15g/dl",
+                                                        ifelse((!is.na(M06_HB_POC_LBORRES_9) & between(M06_HB_POC_LBORRES_9, 11, 13.0)), "normal",
+                                                               as.character(NA))))))))
 
 table(mnh_merged_df$MAT_ANEMIA_MEAS9, useNA = "always", mnh_merged_df$SITE)
 
-temp.df2 <- mnh_merged_df %>% select(M06_HB_POC_LBORRES_7,MAT_ANEMIA_MEAS7)
+temp.df2 <- mnh_merged_df %>% select(M06_HB_POC_LBORRES_8,MAT_ANEMIA_MEAS7)
 table(ANEMIA_PNC0=mnh_merged_df$MAT_ANEMIA_MEAS7, useNA = "always")
 table(ANEMIA_PNC1=mnh_merged_df$MAT_ANEMIA_MEAS8, useNA = "always")
 table(ANEMIA_PNC4=mnh_merged_df$MAT_ANEMIA_MEAS9, useNA = "always")
@@ -976,7 +1001,8 @@ mnh_merged_df <- mnh_merged_df %>%
                                                               MAT_ANEMIA_MEAS4 == "normal" | MAT_ANEMIA_MEAS5 == "normal" | MAT_ANEMIA_MEAS6 == "normal" | 
                                                               MAT_ANEMIA_MEAS7 == "normal" | MAT_ANEMIA_MEAS8 == "normal" | MAT_ANEMIA_MEAS9 == "normal"), "normal", NA)))))
 
-table(mnh_merged_df$MAT_ANEMIA_MEAS_ANY, mnh_merged_df$SITE, useNA = "always```
+table(mnh_merged_df$MAT_ANEMIA_MEAS_ANY, mnh_merged_df$SITE, useNA = "always")
+```
 
 ***MATERNAL DEATH***
 Death from any cause related to or aggravated by pregnancy or its management (excluding accidental or incidental causes) during pregnancy and childbirth or within 42 days of termination of pregnancy, irrespective of the duration and site of the pregnancy.
