@@ -980,7 +980,7 @@ table(ANEMIA_PNC1=mnh_merged_df$MAT_ANEMIA_MEAS8, useNA = "always")
 table(ANEMIA_PNC4=mnh_merged_df$MAT_ANEMIA_MEAS9, useNA = "always")
 ```
 
-Anemia prevalence by GA: what percent of women are anemic for each visit window? Stratify by mild, moderate and severe. Also, calculate for any anemia (< 11 for pregnancy and PNC-1,2,3). 
+Email from ES and Gates on Sept 10, 2023: Anemia prevalence by GA: what percent of women are anemic for each visit window? Stratify by mild, moderate and severe. Also, calculate for any anemia (< 11 for pregnancy and PNC-1,2,3). 
 
 Any anemia during pregnancy and PNC1,2,3 
 ```{r}
