@@ -36,6 +36,7 @@ ReMAPP Protocol: https://www.dropbox.com/scl/fi/9rimh5a8rpkxe6a4qfdku/ReMAPP-Pro
 # 6. Fix is.na for all of anemia. It should be a !is.na statement & between () - DONE
 # 7. Fix Anemia categories for trimesters and for PNC visits - make them specific. 
 # 8. Add Add non-schedule PNC visits - TYPE_VISIT=14 to LATE_MAT_DEATH
+# 9. Add MNH_19 13_1, 13_2 based on date (OBSSTDAT)
 
 NOTES:
 - If a visit hasn't happened for even a single woman say PNC26 (VISIT11) then those variables won't be there when you create the wider version b/c the TYPE_VISIT=11 doesn't exist. This is the case for M08_CBC_HB_LBORRES_11 or M08_CBC_HB_LBORRES_12 let's say).
@@ -65,9 +66,9 @@ The varname structure for the newly integrated forms (hospitalizations, adverse 
 # path_to_data <- 'Z:/SynapseCSVs/Kenya/2023-07-28/' # If MNH*.xlsx files are located elsewhere, set this to, for example, 'data/' or '//TNT/...'
 # path_to_data <- 'Z:/Processed Data/2023-07-28/'
 
- path_to_data <- 'Z:/Stacked Data/2023-09-01' 
+ # path_to_data <- 'Z:/Stacked Data/2023-09-01' - for AWS data
 
-# path_to_data <- 'data'- for Mac R.
+path_to_data <- 'data' # for Mac R.
 ```
 
 For CSV files in AWS:
@@ -90,27 +91,28 @@ if(recreate_mnh_list == TRUE){
 toc <- Sys.time() 
 print(toc - tic)
 
-mnh_list <- readRDS(paste0("MNH_list_", basename(path_to_data), ".RDS"))  #read in the RDS objects with all the MNH files as a massive list.  
+# mnh_list <- readRDS(paste0("MNH_list_", basename(path_to_data), ".RDS"))  #read in the RDS objects with all the MNH files as a massive list.  
 ```
 
+For SAS files from Test data.
 ```{r}
 ########################################################################################
-# recreate_mnh_list <- FALSE #if I want to recreate the big data list then set this to TRUE
+ recreate_mnh_list <- FALSE #if I want to recreate the big data list then set this to TRUE
 ########################################################################################
 
-# if(recreate_mnh_list == TRUE){
-#   mnh_list <- list() # create an empty list first.
-#   list_mnh <- dir(path = path_to_data, pattern = "*.sas7bdat", full.names = TRUE) #creates a list of all the csv files in the directory
-#   for (data_file in list_mnh[]) { #can test by just bringing in a small number (add 1:2 inside the bracket to do so)
-#     form_num <- substr(basename(data_file), 1,5) #substr pulls out the 1:5 spaces in a char (will pull out "mnh00" etc);
-#     #basename() pulls out just the name of the file from the entire directory/path. 
-#     print(paste("Reading", form_num))
-#     mnh_list[[form_num]] <- read_sas(data_file, )
-#   }
-#   saveRDS(mnh_list, file = paste0("MNH_list_", basename(path_to_data), ".RDS")) 
-# }
-# 
-# mnh_list <- readRDS("MNH_list_data.RDS")  #read in the RDS objects with all the MNH files as a massive list. 
+if(recreate_mnh_list == TRUE){
+  mnh_list <- list() # create an empty list first.
+  list_mnh <- dir(path = path_to_data, pattern = "*.sas7bdat", full.names = TRUE) #creates a list of all the csv files in the directory
+  for (data_file in list_mnh[]) { #can test by just bringing in a small number (add 1:2 inside the bracket to do so)
+    form_num <- substr(basename(data_file), 1,5) #substr pulls out the 1:5 spaces in a char (will pull out "mnh00" etc);
+    #basename() pulls out just the name of the file from the entire directory/path.
+    print(paste("Reading", form_num))
+    mnh_list[[form_num]] <- read_sas(data_file, )
+  }
+  saveRDS(mnh_list, file = paste0("MNH_list_", basename(path_to_data), ".RDS"))
+}
+
+mnh_list <- readRDS("MNH_list_data.RDS")  #read in the RDS objects with all the MNH files as a massive list.
 
 ```
 
@@ -188,6 +190,21 @@ if("mnh19" %in% names(mnh_list)){
 
 ```
 
+
+Create a SITE variable for Test data only on Mac. 
+```{r}
+
+# mnh_list[["mnh00"]] <- append(mnh_list[["mnh00"]], "SITE", after = 2)
+# 
+# for(i in 1:names(mnh_list)) {
+#   mnh_list[[i]] <- append(mnh_list[[i]], "SITE", after = 2)
+# }
+# 
+# sort(colnames(mnh_list[["mnh00"]]))
+```
+
+
+
 Change wrong values for MNH01 TYPE_VISIT (value was 36 but SL mentioned it probably is week 36 so visit 5)
 ```{r}
    
@@ -195,43 +212,45 @@ Change wrong values for MNH01 TYPE_VISIT (value was 36 but SL mentioned it proba
  #  mutate(M01_TYPE_VISIT = ifelse(M01_TYPE_VISIT == 36, 5, M01_TYPE_VISIT))
 ```
 
+
 MNH01 doesn't have MOMID and PREGID in Kenya data. Merge it in from MNH02. 
+Keep an eye on SITE variable. 
 ```{r}
-mnh_list[["mnh00"]] <- mnh_list[["mnh00"]] %>% select(-PREGID, -MOMID, -SITE) # Only need to run this line outside of AWS when I need to add Mxx prefix.
-# View(mnh_list[["mnh00"]])
+mnh_list[["mnh00"]] <- mnh_list[["mnh00"]] %>% select(-PREGID, -MOMID) # , -SITE) # Only need to run this line outside of AWS when I need to add Mxx prefix.
+
 # mnh_list[["mnh00"]] <- mnh_list[["mnh00"]] %>% filter(!is.na(SCRN_OBSSTDAT)) # had to remove 2 rows of garbage. 
-# mnh_list[["mnh00"]]$SCRNID <- as.double(mnh_list[["mnh00"]]$SCRNID)
+mnh_list[["mnh00"]]$SCRNID <- as.double(mnh_list[["mnh00"]]$SCRNID) # Just for Test Kenya data on Mac
 
 mnh_list[["mnh00"]] <- left_join(mnh_list[["mnh00"]], 
-                                 mnh_list[["mnh02"]] %>% select(SCRNID, MOMID, PREGID, SITE),
+                                 mnh_list[["mnh02"]] %>% select(SCRNID, MOMID, PREGID), #, SITE),
                                  by = "SCRNID")
 
-mnh_list[["mnh01"]] <- mnh_list[["mnh01"]] %>% select(-PREGID, -MOMID, -SITE)
+mnh_list[["mnh01"]] <- mnh_list[["mnh01"]] %>% select(-PREGID, -MOMID) #, -SITE)
 mnh_list[["mnh01"]] <- left_join(mnh_list[["mnh01"]], 
-                                 mnh_list[["mnh02"]] %>% select(SCRNID, MOMID, PREGID, SITE),
+                                 mnh_list[["mnh02"]] %>% select(SCRNID, MOMID, PREGID), #, SITE),
                                  by = "SCRNID")
 
 ```
 
-Adding a prefix of M_XX:
+Adding a prefix of M_XX: Just for Test Kenya data on mac
 Using modify() from Purrr library and a lambda function.
 ```{r}
 #############################################################################################################################################
 # THIS DOESN'T NOT NEED TO BE RUN WHEN RUNNING IN AWS DATA - THIS IS ONLY NEEDED FOR TEST DATA OUTSIDE B/C THOSE VARS DIDN'T HAVE PREFIX Mxx
 #############################################################################################################################################
-# dont_fix <- c("SCRNID", "MOMID", "PREGID", "SITE")
-# 
-# for (form_name in names(mnh_list)) {
-#   print(form_name)
-#   
-#   col_names_vec <- names(mnh_list[[form_name]])
-#   var_prefix <- paste0('M',substr(form_name, 4, 5))
-#   names(mnh_list[[form_name]]) <- modify(col_names_vec, 
-#                                          function(x) {
-#     ifelse(x %in% dont_fix | startsWith(x, var_prefix), #second part is checking if variable already has M_XX.
-#            x, 
-#            paste0(var_prefix, "_", x))}) #x is whatever name is passed in.
-# }
+dont_fix <- c("SCRNID", "MOMID", "PREGID") 
+
+for (form_name in names(mnh_list)) {
+  print(form_name)
+
+  col_names_vec <- names(mnh_list[[form_name]])
+  var_prefix <- paste0('M',substr(form_name, 4, 5))
+  names(mnh_list[[form_name]]) <- modify(col_names_vec,
+                                         function(x) {
+    ifelse(x %in% dont_fix | startsWith(x, var_prefix), #second part is checking if variable already has M_XX.
+           x,
+           paste0(var_prefix, "_", x))}) #x is whatever name is passed in.
+}
 ```
 
 ```{r}
@@ -313,7 +332,7 @@ for (form_name in names(mnh_list)) {
    # mnh_list_wide[!duplicated(mnh_list_wide)] %>%
   # distinct (MOMID, PREGID, paste0(var_prefix, '_TYPE_VISIT'), .keep_all = TRUE) %>%
   mnh_list_wide[[form_name]] <- mnh_list[[form_name]] %>% # do the pivot here
-    pivot_wider(id_cols = c('MOMID', 'PREGID', 'SITE'),
+    pivot_wider(id_cols = c('MOMID', 'PREGID'), # 'SITE'),
                 names_from = paste0(var_prefix, '_TYPE_VISIT'),
                 values_from = starts_with(var_prefix) & !ends_with('_TYPE_VISIT'),
                 values_fill = NA)
@@ -325,21 +344,21 @@ for (form_name in names(mnh_list)) {
 # View(mnh_list_wide)
 ```
 
- 
+ADD VARIABLES HERE
 ```{r}
 # mnh_list[["mnh01"]]$SCRNID # how to access a variable in a particular form list. This works in dplyr also
 
 #########
 # MNH00 #
 #########
-mnh00_df <- mnh_list_wide[["mnh00"]] %>% dplyr::select(MOMID, PREGID, SITE, #TODO: NOTE: Taking out SITE for now.
+mnh00_df <- mnh_list_wide[["mnh00"]] %>% dplyr::select(MOMID, PREGID,# SITE, #TODO: 
                                                   M00_KNOWN_DOBYN_SCORRES_1, 
                                                   M00_BRTHDAT_1, M00_ESTIMATED_AGE_1)
 
 #########
 # MNH01 #
 #########
-mnh01_df <- mnh_list_wide[["mnh01"]] %>% dplyr::select(MOMID, PREGID, M01_US_OHOLOC_1, SITE,
+mnh01_df <- mnh_list_wide[["mnh01"]] %>% dplyr::select(MOMID, PREGID, M01_US_OHOLOC_1, # SITE,
                                                        M01_GA_LMP_WEEKS_SCORRES_1, M01_GA_LMP_DAYS_SCORRES_1,
                                                        M01_US_GA_WKS_AGE_FTS1_1,
                                                        M01_US_GA_WKS_AGE_FTS2_1, M01_US_GA_WKS_AGE_FTS2_1,
@@ -347,13 +366,14 @@ mnh01_df <- mnh_list_wide[["mnh01"]] %>% dplyr::select(MOMID, PREGID, M01_US_OHO
                                                        M01_US_GA_DAYS_AGE_FTS1_1, M01_US_GA_DAYS_AGE_FTS2_1,
                                                        M01_US_GA_DAYS_AGE_FTS3_1, M01_US_GA_DAYS_AGE_FTS4_1,
                                                        M01_GA_LMP_WEEKS_SCORRES_1, M01_GA_LMP_DAYS_SCORRES_1,
-                                                       starts_with(c("M01_US_OHOSTDAT")))
+                                                       starts_with(c("M01_US_OHOSTDAT")),
+                                                       M01_US_GA_WKS_AGE_FTS1_1)
 
 #########
 # MNH04 #
 #########
 mnh04_df <- mnh_list_wide[["mnh04"]] %>% 
-  dplyr::select(MOMID, PREGID, SITE,
+  dplyr::select(MOMID, PREGID, # SITE,
                 M04_FETAL_LOSS_DSSTDAT_1, M04_FETAL_LOSS_DSSTDAT_2,
                 M04_FETAL_LOSS_DSSTDAT_3, M04_FETAL_LOSS_DSSTDAT_4, 
                 M04_FETAL_LOSS_DSSTDAT_5,
@@ -368,25 +388,29 @@ mnh04_df <- mnh_list_wide[["mnh04"]] %>%
                 M04_FETAL_LOSS_DSSTDAT_5, 
                 M04_FETAL_LOSS_DSDECOD_1, M04_FETAL_LOSS_DSDECOD_2,
                 M04_FETAL_LOSS_DSDECOD_3, M04_FETAL_LOSS_DSDECOD_4,
-                M04_FETAL_LOSS_DSDECOD_5)
+                M04_FETAL_LOSS_DSDECOD_5,
+                starts_with(c("M04_HTN_EVER_MHOCCUR")),
+                starts_with("M04_HTN_CMTRT_"))
 
 #########
 # MNH06 #
 #########
-mnh06_df <- mnh_list_wide[["mnh06"]] %>% dplyr::select(MOMID, PREGID, SITE,  
+mnh06_df <- mnh_list_wide[["mnh06"]] %>% dplyr::select(MOMID, PREGID, # SITE,  
                                                        # Maternal anemia:
-                                                       starts_with(c("M06_DIAG_VSDAT_", "M06_TYPE_VISIT_", "M06_HB_POC_LBORRES_")))
+                                                       starts_with(c("M06_DIAG_VSDAT_", "M06_TYPE_VISIT_", "M06_HB_POC_LBORRES_")),
+                                                       starts_with("M06_BP_SYS_VSORRES_"),
+                                                       starts_with("M06_BP_DIA_VSORRES_"))
 
 #########
 # MNH08 #
 #########
-mnh08_df <- mnh_list_wide[["mnh08"]] %>% dplyr::select(MOMID, PREGID, SITE, 
+mnh08_df <- mnh_list_wide[["mnh08"]] %>% dplyr::select(MOMID, PREGID, # SITE, 
                                                        starts_with(c("M08_LBSTDAT_", "M08_TYPE_VISIT_", "M08_CBC_HB_LBORRES")))
 
 #################################
 # MNH09 - Maternal L&D Outcomes #
 #################################
-mnh09_df <- mnh_list_wide[["mnh09"]] %>% dplyr::select(MOMID, PREGID, SITE,                                        
+mnh09_df <- mnh_list_wide[["mnh09"]] %>% dplyr::select(MOMID, PREGID, # SITE,                                        
                                                        M09_CRY_CEOCCUR_INF1_6, M09_FHR_VSTAT_INF1_6, 
                                                        M09_MACER_CEOCCUR_INF1_6,M09_CORD_PULS_CEOCCUR_INF1_6,
                                                        M09_BIRTH_DSTERM_INF1_6, M09_BIRTH_DSTERM_INF2_6, 
@@ -399,20 +423,20 @@ mnh09_df <- mnh_list_wide[["mnh09"]] %>% dplyr::select(MOMID, PREGID, SITE,
 #########
 # MNH10 #
 #########
-mnh10_df <- mnh_list_wide[["mnh10"]] %>% dplyr::select(MOMID, PREGID, SITE,
+mnh10_df <- mnh_list_wide[["mnh10"]] %>% dplyr::select(MOMID, PREGID, # SITE,
                                                 M10_MAT_DSTERM_6, M10_TRANSFER_OHOLOC_6)
 
 ###############
 # MNH11 - PNC #
 ###############
-mnh11_df <- mnh_list_wide[["mnh11"]] %>% dplyr::select(MOMID, PREGID, SITE,
+mnh11_df <- mnh_list_wide[["mnh11"]] %>% dplyr::select(MOMID, PREGID, # SITE,
                                                 M11_DTHDAT_6)
 
 ###############
 # MNH 12- PNC #
 # This dataset has no MNH12 yet# 
 ###############
-mnh12_df <- mnh_list_wide[["mnh12"]] %>% dplyr::select(MOMID, PREGID, SITE,
+mnh12_df <- mnh_list_wide[["mnh12"]] %>% dplyr::select(MOMID, PREGID,#  SITE,
                                                       M12_MAT_VITAL_MNH12_7, M12_MAT_VITAL_MNH12_8, M12_MAT_VITAL_MNH12_9, 
                                                       M12_MAT_VITAL_MNH12_10, M12_MAT_VITAL_MNH12_11)
 
@@ -423,14 +447,14 @@ mnh12_df <- mnh_list_wide[["mnh12"]] %>% dplyr::select(MOMID, PREGID, SITE,
 # is the visit number based on total number of visits or To see the total number of MNH19 
 #forms filled out by an individual, refer to M19_VISITS_TOT)
 if("mnh19" %in% names(mnh_list_wide)){
-mnh19_df <- mnh_list_wide[["mnh19"]] %>% dplyr::select(MOMID, PREGID, SITE,
+mnh19_df <- mnh_list_wide[["mnh19"]] %>% dplyr::select(MOMID, PREGID,#  SITE,
                                                        M19_OBSSTDAT_13, M19_TX_PROCCUR_1_13, M19_TX_PROCCUR_2_13,
                                                        M19_TX_PROCCUR_3_13, M19_TX_PROCCUR_4_13, M19_TX_PROCCUR_5_13, 
                                                        M19_TX_PROCCUR_6_13, M19_TX_PROCCUR_77_13,
                                                 starts_with(c("M19_TIMING_OHOCAT", "M19_CBC_LBDAT", 
                                                               "M19_CBC_HB_LBORRES",
                                                               "M19_HB_POC_LBTSTDAT", "M19_HB_POC_LBORRES")),
-                                                M19_HDP_HTN_MHOCCUR_3_13)
+                                                M19_HDP_HTN_MHOCCUR_3_13, M19_BP_SYS_VSORRES_13, M19_BP_DIA_VSORRES_13)
 } else{
   "MNH19 does not exist in the wide format"
 }
@@ -440,7 +464,7 @@ mnh19_df <- mnh_list_wide[["mnh19"]] %>% dplyr::select(MOMID, PREGID, SITE,
 # MNH23 - Maternal Closeout #
 #############################
 if("mnh23" %in% names(mnh_list_wide)){
-mnh23_df <- mnh_list_wide[["mnh23"]] %>% dplyr::select(MOMID, PREGID, SITE, 
+mnh23_df <- mnh_list_wide[["mnh23"]] %>% dplyr::select(MOMID, PREGID, # SITE, 
                                                 M23_CLOSE_DSDECOD, M23_ACC_DDORRES, M23_DTHDAT,
                                                 M23_CLOSE_DSDECOD, M23_DTHDAT)
 } else{
@@ -452,7 +476,7 @@ mnh23_df <- mnh_list_wide[["mnh23"]] %>% dplyr::select(MOMID, PREGID, SITE,
 # MNH24 - Infant Closeout #
 ###########################
 if("mnh24" %in% names(mnh_list_wide)){
-mnh24_df <- mnh_list_wide[["mnh24"]] %>% dplyr::select(MOMID, PREGID, SITE, 
+mnh24_df <- mnh_list_wide[["mnh24"]] %>% dplyr::select(MOMID, PREGID, # SITE, 
                                                 M24_DTHDAT)
 } else{
   "MNH24 does not exist in the wide format"
@@ -460,13 +484,15 @@ mnh24_df <- mnh_list_wide[["mnh24"]] %>% dplyr::select(MOMID, PREGID, SITE,
 
 ```
 
+
 # Merge together all the forms.
 ```{r}
-mnh_merged_df <- mnh00_df
+mnh_merged_df <- mnh00_df 
+
 for(i in 1:26) {
   form_name <- paste0("mnh", sprintf(fmt="%02d", i), "_df") #sprintf adds a leading 0 to digits below 10.
   if(exists(form_name)) {
-    mnh_merged_df <- left_join(mnh_merged_df, get(form_name), by = c("MOMID", "PREGID", "SITE")) #"SITE", 
+    mnh_merged_df <- left_join(mnh_merged_df, get(form_name), by = c("MOMID", "PREGID")) #, "SITE"))
   }
 }
 ```
@@ -1229,6 +1255,75 @@ table(LATE_MAT_DEATH = temp.df$LATE_MAT_DEATH, useNA = "always")
 #TODO Convert M23 info for closeout response and date into an OR not AND.
 ```
 
+
+***GESTATIONAL HYPERTENSION (gHTN)***
+"ANC
+Wk 20, 28, 32, 36 (VISITS 2-4),
+Then, IPD (VISIT 6), then: MNH19 Hospitalization.
+
+L&D"	we don't MNH04 at L&D so won't have those vars. 
+MNH01	US_GA_WKS_AGE_FTS1	1st fetus: GA by ultrasound at TODAY’s visit:  weeks
+		MNH04	HTN_EVER_MHOCCUR	Have you ever been diagnosed with chronic hypertension?
+		MNH04	HPD_MHTERM	Specify type of HPD
+		MNH06	TYPE_VISIT	Indicate type of visit when PoC measurements were performed:
+		MNH06	BP_SYS_VSORRES_1	Record first BP measurement:  (systolic) mm Hg
+		MNH06	BP_SYS_VSORRES_2	Record 2nd BP measurement:  (systolic) mm Hg
+		MNH06	BP_SYS_VSORRES_3	Record 3rd BP measurement:  (systolic) mm Hg
+		MNH06	BP_DIA_VSORRES_1	Record first BP measurement: (diastolic) mm Hg   
+		MNH06	BP_DIA_VSORRES_2	Record 2nd BP measurement: (diastolic) mm Hg
+		MNH06	BP_DIA_VSORRES_3	Record 3rd BP measurement: (diastolic) mm Hg 
+		
+		
+Medications include magnesium sulfate, hydralazine, methyldopa (aldomet), atenolol, nifedipine, betamethasone, labetalol, and dexamethasone. 
+```{r}
+##################################################################################
+#TODO 
+# NOTES: 
+# 1. Currently coded without medication prescribed variables M04_HTN_CMTRT_ #
+      # b/c most of these are 0 or NA even when gHTN ==1. 
+##################################################################################
+temp.df <- mnh_merged_df %>% 
+  select(MOMID, PREGID,
+         M19_BP_SYS_VSORRES_13, M19_BP_DIA_VSORRES_13,
+         starts_with(c("M06_BP_SYS_VSORRES_", "M06_BP_DIA_VSORRES_", "M04_HTN_CMTRT_"))) %>%
+  rowwise() %>% 
+  mutate(meanSBP_ANC20 = mean(c(M06_BP_SYS_VSORRES_1_2, M06_BP_SYS_VSORRES_2_2, M06_BP_SYS_VSORRES_3_2), na.rm = TRUE),
+         meanDBP_ANC20 = mean(c(M06_BP_DIA_VSORRES_1_2, M06_BP_DIA_VSORRES_2_2, M06_BP_DIA_VSORRES_3_2), na.rm = TRUE), 
+         
+         meanSBP_ANC28 = mean(c(M06_BP_SYS_VSORRES_1_3, M06_BP_SYS_VSORRES_2_3, M06_BP_SYS_VSORRES_3_3), na.rm = TRUE),
+         meanDBP_ANC28 = mean(c(M06_BP_DIA_VSORRES_1_3, M06_BP_DIA_VSORRES_2_3, M06_BP_DIA_VSORRES_3_3), na.rm = TRUE),
+         
+         meanSBP_ANC32 = mean(c(M06_BP_SYS_VSORRES_1_4, M06_BP_SYS_VSORRES_2_4, M06_BP_SYS_VSORRES_3_4), na.rm = TRUE),
+         meanDBP_ANC32 = mean(c(M06_BP_DIA_VSORRES_1_4, M06_BP_DIA_VSORRES_2_4, M06_BP_DIA_VSORRES_3_4), na.rm = TRUE),
+         
+         meanSBP_ANC36 = mean(c(M06_BP_SYS_VSORRES_1_5, M06_BP_SYS_VSORRES_2_5, M06_BP_SYS_VSORRES_3_5), na.rm = TRUE),
+         meanDBP_ANC36 = mean(c(M06_BP_DIA_VSORRES_1_5, M06_BP_DIA_VSORRES_2_5, M06_BP_DIA_VSORRES_3_5), na.rm = TRUE),
+         
+         meanSBP_IPC = mean(c(M06_BP_SYS_VSORRES_1_6, M06_BP_SYS_VSORRES_2_6, M06_BP_SYS_VSORRES_3_6), na.rm = TRUE),
+         meanDBP_IPC = mean(c(M06_BP_DIA_VSORRES_1_6, M06_BP_DIA_VSORRES_2_6, M06_BP_DIA_VSORRES_3_6), na.rm = TRUE),
+         
+         meanSBP_Hosp = M19_BP_SYS_VSORRES_13,
+         meanDBP_Hosp = M19_BP_DIA_VSORRES_13)
+
+temp.df <- temp.df %>% 
+  mutate(GEST_HYPER_MEAS = case_when((meanSBP_ANC20 >=140 | meanDBP_ANC20 >=90 |
+                                     meanSBP_ANC28 >=140 | meanDBP_ANC28 >=90 |
+                                     meanSBP_ANC32 >=140 | meanDBP_ANC32 >=90 |
+                                     meanSBP_ANC36 >=140 | meanDBP_ANC36 >=90 |
+                                     meanSBP_IPC >=140 | meanDBP_IPC >=90 |
+                                     meanSBP_Hosp >=140 | meanDBP_Hosp >=90) ~ 1, 
+                                     TRUE  ~ as.numeric(0)))
+
+table(temp.df$GEST_HYPER_MEAS, useNA = "always")
+temp2.df <- temp.df %>% select(MOMID, PREGID, GEST_HYPER_MEAS, starts_with("M04_HTN_CMTRT_"))
+
+        M04_HTN_CMTRT_3==1 | M04_HTN_CMTRT_4==1 | M04_HTN_CMTRT_4==1 | M04_HTN_CMTRT_5==1 |
+                                       M04_HTN_CMTRT_6 ==1 | M04_HTN_CMTRT_7 ==1 | M04_HTN_CMTRT_8 == 1 | M04_HTN_CMTRT_9 ==1 | 
+                             M04_HTN_CMTRT_9
+                             
+                                     )
+```
+
 ***PREECLAMPSIA (DIAGNOSED) - SECONDARY OUTCOME: PRE_DIAG***
 LnD:
 MNH09	HDP_HTN_MHOCCUR_3	Was mother diagnosed with any of the following hypertensive disorders of pregnancy (HDP)? Preeclampsia
@@ -1245,8 +1340,16 @@ temp.df <- temp.df %>%
 table(temp.df$PRE_DIAG, useNA = "always")
 ```
 
-FETAL OUTCOMES:
 
+
+
+******************************************************************************************************
+******************************************************************************************************
+******************************************************************************************************
+                                          FETAL OUTCOMES:
+******************************************************************************************************
+******************************************************************************************************
+******************************************************************************************************
 Neonatal mortality (Death of a live born baby during the first 28 days of life from any cause. )
 
 L&D: M09_DELIV_DSSTDAT_INF1	Date of delivery:
