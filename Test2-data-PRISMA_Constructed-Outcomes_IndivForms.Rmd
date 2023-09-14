@@ -191,54 +191,50 @@ if("mnh19" %in% names(mnh_list)){
 ```
 
 
-Create a SITE variable for Test data only on Mac. 
+Create a SITE variable for Test data only on Mac - can let it run in AWS.
 ```{r}
+for(form_name in names(mnh_list)) { 
+  if(!('SITE' %in% names(form_name))) {
+    mnh_list[[form_name]]$SITE <- NA
+  }
+}
 
-# mnh_list[["mnh00"]] <- append(mnh_list[["mnh00"]], "SITE", after = 2)
-# 
-# for(i in 1:names(mnh_list)) {
-#   mnh_list[[i]] <- append(mnh_list[[i]], "SITE", after = 2)
-# }
-# 
-# sort(colnames(mnh_list[["mnh00"]]))
 ```
-
-
 
 Change wrong values for MNH01 TYPE_VISIT (value was 36 but SL mentioned it probably is week 36 so visit 5)
 ```{r}
    
-#mnh_list[["mnh01"]] <- mnh_list[["mnh01"]] %>% 
- #  mutate(M01_TYPE_VISIT = ifelse(M01_TYPE_VISIT == 36, 5, M01_TYPE_VISIT))
+# mnh_list[["mnh01"]] <- mnh_list[["mnh01"]] %>% 
+ # mutate(M01_TYPE_VISIT = ifelse(M01_TYPE_VISIT == 36, 5, M01_TYPE_VISIT))
 ```
 
 
 MNH01 doesn't have MOMID and PREGID in Kenya data. Merge it in from MNH02. 
 Keep an eye on SITE variable. 
 ```{r}
-mnh_list[["mnh00"]] <- mnh_list[["mnh00"]] %>% select(-PREGID, -MOMID) # , -SITE) # Only need to run this line outside of AWS when I need to add Mxx prefix.
+mnh_list[["mnh00"]] <- mnh_list[["mnh00"]] %>% select(-PREGID, -MOMID , -SITE) # Only need to run this line outside of AWS when I need to add Mxx prefix.
 
 # mnh_list[["mnh00"]] <- mnh_list[["mnh00"]] %>% filter(!is.na(SCRN_OBSSTDAT)) # had to remove 2 rows of garbage. 
 mnh_list[["mnh00"]]$SCRNID <- as.double(mnh_list[["mnh00"]]$SCRNID) # Just for Test Kenya data on Mac
 
 mnh_list[["mnh00"]] <- left_join(mnh_list[["mnh00"]], 
-                                 mnh_list[["mnh02"]] %>% select(SCRNID, MOMID, PREGID), #, SITE),
+                                 mnh_list[["mnh02"]] %>% select(SCRNID, MOMID, PREGID, SITE),
                                  by = "SCRNID")
 
-mnh_list[["mnh01"]] <- mnh_list[["mnh01"]] %>% select(-PREGID, -MOMID) #, -SITE)
+mnh_list[["mnh01"]] <- mnh_list[["mnh01"]] %>% select(-PREGID, -MOMID, -SITE)
 mnh_list[["mnh01"]] <- left_join(mnh_list[["mnh01"]], 
-                                 mnh_list[["mnh02"]] %>% select(SCRNID, MOMID, PREGID), #, SITE),
+                                 mnh_list[["mnh02"]] %>% select(SCRNID, MOMID, PREGID, SITE),
                                  by = "SCRNID")
 
 ```
 
-Adding a prefix of M_XX: Just for Test Kenya data on mac
+Adding a prefix of M_XX: *Just for Test Kenya data on mac*
 Using modify() from Purrr library and a lambda function.
 ```{r}
 #############################################################################################################################################
 # THIS DOESN'T NOT NEED TO BE RUN WHEN RUNNING IN AWS DATA - THIS IS ONLY NEEDED FOR TEST DATA OUTSIDE B/C THOSE VARS DIDN'T HAVE PREFIX Mxx
 #############################################################################################################################################
-dont_fix <- c("SCRNID", "MOMID", "PREGID") 
+dont_fix <- c("SCRNID", "MOMID", "PREGID", "SITE") 
 
 for (form_name in names(mnh_list)) {
   print(form_name)
@@ -332,7 +328,7 @@ for (form_name in names(mnh_list)) {
    # mnh_list_wide[!duplicated(mnh_list_wide)] %>%
   # distinct (MOMID, PREGID, paste0(var_prefix, '_TYPE_VISIT'), .keep_all = TRUE) %>%
   mnh_list_wide[[form_name]] <- mnh_list[[form_name]] %>% # do the pivot here
-    pivot_wider(id_cols = c('MOMID', 'PREGID'), # 'SITE'),
+    pivot_wider(id_cols = c('MOMID', 'PREGID', 'SITE'),
                 names_from = paste0(var_prefix, '_TYPE_VISIT'),
                 values_from = starts_with(var_prefix) & !ends_with('_TYPE_VISIT'),
                 values_fill = NA)
@@ -344,155 +340,164 @@ for (form_name in names(mnh_list)) {
 # View(mnh_list_wide)
 ```
 
-ADD VARIABLES HERE
+
+CONVERT LISTS INTO DATAFRAMES. 
 ```{r}
-# mnh_list[["mnh01"]]$SCRNID # how to access a variable in a particular form list. This works in dplyr also
-
-#########
-# MNH00 #
-#########
-mnh00_df <- mnh_list_wide[["mnh00"]] %>% dplyr::select(MOMID, PREGID,# SITE, #TODO: 
-                                                  M00_KNOWN_DOBYN_SCORRES_1, 
-                                                  M00_BRTHDAT_1, M00_ESTIMATED_AGE_1)
-
-#########
-# MNH01 #
-#########
-mnh01_df <- mnh_list_wide[["mnh01"]] %>% dplyr::select(MOMID, PREGID, M01_US_OHOLOC_1, # SITE,
-                                                       M01_GA_LMP_WEEKS_SCORRES_1, M01_GA_LMP_DAYS_SCORRES_1,
-                                                       M01_US_GA_WKS_AGE_FTS1_1,
-                                                       M01_US_GA_WKS_AGE_FTS2_1, M01_US_GA_WKS_AGE_FTS2_1,
-                                                       M01_US_GA_WKS_AGE_FTS3_1, M01_US_GA_WKS_AGE_FTS4_1,
-                                                       M01_US_GA_DAYS_AGE_FTS1_1, M01_US_GA_DAYS_AGE_FTS2_1,
-                                                       M01_US_GA_DAYS_AGE_FTS3_1, M01_US_GA_DAYS_AGE_FTS4_1,
-                                                       M01_GA_LMP_WEEKS_SCORRES_1, M01_GA_LMP_DAYS_SCORRES_1,
-                                                       starts_with(c("M01_US_OHOSTDAT")),
-                                                       M01_US_GA_WKS_AGE_FTS1_1)
-
-#########
-# MNH04 #
-#########
-mnh04_df <- mnh_list_wide[["mnh04"]] %>% 
-  dplyr::select(MOMID, PREGID, # SITE,
-                M04_FETAL_LOSS_DSSTDAT_1, M04_FETAL_LOSS_DSSTDAT_2,
-                M04_FETAL_LOSS_DSSTDAT_3, M04_FETAL_LOSS_DSSTDAT_4, 
-                M04_FETAL_LOSS_DSSTDAT_5,
-                M04_FETAL_LOSS_DSSTDAT_1, M04_FETAL_LOSS_DSSTDAT_2, 
-                M04_FETAL_LOSS_DSSTDAT_3, M04_FETAL_LOSS_DSSTDAT_4,
-                M04_FETAL_LOSS_DSSTDAT_5,
-                M04_FETAL_LOSS_DSDECOD_1, M04_FETAL_LOSS_DSDECOD_2, 
-                M04_FETAL_LOSS_DSDECOD_3, M04_FETAL_LOSS_DSDECOD_4,
-                M04_FETAL_LOSS_DSDECOD_5, 
-                M04_FETAL_LOSS_DSSTDAT_1, M04_FETAL_LOSS_DSSTDAT_2, 
-                M04_FETAL_LOSS_DSSTDAT_3, M04_FETAL_LOSS_DSSTDAT_4, 
-                M04_FETAL_LOSS_DSSTDAT_5, 
-                M04_FETAL_LOSS_DSDECOD_1, M04_FETAL_LOSS_DSDECOD_2,
-                M04_FETAL_LOSS_DSDECOD_3, M04_FETAL_LOSS_DSDECOD_4,
-                M04_FETAL_LOSS_DSDECOD_5,
-                starts_with(c("M04_HTN_EVER_MHOCCUR")),
-                starts_with("M04_HTN_CMTRT_"))
-
-#########
-# MNH06 #
-#########
-mnh06_df <- mnh_list_wide[["mnh06"]] %>% dplyr::select(MOMID, PREGID, # SITE,  
-                                                       # Maternal anemia:
-                                                       starts_with(c("M06_DIAG_VSDAT_", "M06_TYPE_VISIT_", "M06_HB_POC_LBORRES_")),
-                                                       starts_with("M06_BP_SYS_VSORRES_"),
-                                                       starts_with("M06_BP_DIA_VSORRES_"))
-
-#########
-# MNH08 #
-#########
-mnh08_df <- mnh_list_wide[["mnh08"]] %>% dplyr::select(MOMID, PREGID, # SITE, 
-                                                       starts_with(c("M08_LBSTDAT_", "M08_TYPE_VISIT_", "M08_CBC_HB_LBORRES")))
-
-#################################
-# MNH09 - Maternal L&D Outcomes #
-#################################
-mnh09_df <- mnh_list_wide[["mnh09"]] %>% dplyr::select(MOMID, PREGID, # SITE,                                        
-                                                       M09_CRY_CEOCCUR_INF1_6, M09_FHR_VSTAT_INF1_6, 
-                                                       M09_MACER_CEOCCUR_INF1_6,M09_CORD_PULS_CEOCCUR_INF1_6,
-                                                       M09_BIRTH_DSTERM_INF1_6, M09_BIRTH_DSTERM_INF2_6, 
-                                                       M09_BIRTH_DSTERM_INF3_6, M09_BIRTH_DSTERM_INF4_6,
-                                                       M09_PPH_TRNSFSN_PROCCUR_6, M09_PPH_TRNSFSN_PROCCUR_6, 
-                                                       M09_PPH_FAORRES_5_6, M09_RUPT_UTERUS_CEOCCUR_6, M09_PPH_COMP_3_6,
-                                                       starts_with(c("M09_DELIV_DSSTDAT_INF",
-                                                                     "M09_BIRTH_DSTERM_INF")),
-                                                       M09_HDP_HTN_MHOCCUR_3_6)
-#########
-# MNH10 #
-#########
-mnh10_df <- mnh_list_wide[["mnh10"]] %>% dplyr::select(MOMID, PREGID, # SITE,
-                                                M10_MAT_DSTERM_6, M10_TRANSFER_OHOLOC_6)
-
-###############
-# MNH11 - PNC #
-###############
-mnh11_df <- mnh_list_wide[["mnh11"]] %>% dplyr::select(MOMID, PREGID, # SITE,
-                                                M11_DTHDAT_6)
-
-###############
-# MNH 12- PNC #
-# This dataset has no MNH12 yet# 
-###############
-mnh12_df <- mnh_list_wide[["mnh12"]] %>% dplyr::select(MOMID, PREGID,#  SITE,
-                                                      M12_MAT_VITAL_MNH12_7, M12_MAT_VITAL_MNH12_8, M12_MAT_VITAL_MNH12_9, 
-                                                      M12_MAT_VITAL_MNH12_10, M12_MAT_VITAL_MNH12_11)
-
-#########
-# MNH19 #
-#########
-#M19_PREG_FAORES (try: the variable is there but called M19_PREG_FAORRES_VISIT{x} where {x} 
-# is the visit number based on total number of visits or To see the total number of MNH19 
-#forms filled out by an individual, refer to M19_VISITS_TOT)
-if("mnh19" %in% names(mnh_list_wide)){
-mnh19_df <- mnh_list_wide[["mnh19"]] %>% dplyr::select(MOMID, PREGID,#  SITE,
-                                                       M19_OBSSTDAT_13, M19_TX_PROCCUR_1_13, M19_TX_PROCCUR_2_13,
-                                                       M19_TX_PROCCUR_3_13, M19_TX_PROCCUR_4_13, M19_TX_PROCCUR_5_13, 
-                                                       M19_TX_PROCCUR_6_13, M19_TX_PROCCUR_77_13,
-                                                starts_with(c("M19_TIMING_OHOCAT", "M19_CBC_LBDAT", 
-                                                              "M19_CBC_HB_LBORRES",
-                                                              "M19_HB_POC_LBTSTDAT", "M19_HB_POC_LBORRES")),
-                                                M19_HDP_HTN_MHOCCUR_3_13, M19_BP_SYS_VSORRES_13, M19_BP_DIA_VSORRES_13)
-} else{
-  "MNH19 does not exist in the wide format"
+for(form_name in names(mnh_list)){
+assign(paste0(form_name, "_df"), mnh_list_wide[[form_name]]) # assign is the opposite of get()
 }
-                                                              
-
-#############################
-# MNH23 - Maternal Closeout #
-#############################
-if("mnh23" %in% names(mnh_list_wide)){
-mnh23_df <- mnh_list_wide[["mnh23"]] %>% dplyr::select(MOMID, PREGID, # SITE, 
-                                                M23_CLOSE_DSDECOD, M23_ACC_DDORRES, M23_DTHDAT,
-                                                M23_CLOSE_DSDECOD, M23_DTHDAT)
-} else{
-  "MNH23 does not exist in the wide format"
-}
+```
 
 
-###########################
-# MNH24 - Infant Closeout #
-###########################
-if("mnh24" %in% names(mnh_list_wide)){
-mnh24_df <- mnh_list_wide[["mnh24"]] %>% dplyr::select(MOMID, PREGID, # SITE, 
-                                                M24_DTHDAT)
-} else{
-  "MNH24 does not exist in the wide format"
-}
+```{r}
+# 
+# MERGE - ADD VARIABLES HERE
+# ```{r}
+# #########
+# # MNH00 #
+# #########
+# mnh00_df <- mnh_list_wide[["mnh00"]] %>% dplyr::select(MOMID, PREGID,# SITE, #TODO: 
+#                                                   M00_KNOWN_DOBYN_SCORRES_1, 
+#                                                   M00_BRTHDAT_1, M00_ESTIMATED_AGE_1)
+# 
+# #########
+# # MNH01 #
+# #########
+# mnh01_df <- mnh_list_wide[["mnh01"]] %>% dplyr::select(MOMID, PREGID, M01_US_OHOLOC_1, # SITE,
+#                                                        M01_GA_LMP_WEEKS_SCORRES_1, M01_GA_LMP_DAYS_SCORRES_1,
+#                                                        M01_US_GA_WKS_AGE_FTS1_1,
+#                                                        M01_US_GA_WKS_AGE_FTS2_1, M01_US_GA_WKS_AGE_FTS2_1,
+#                                                        M01_US_GA_WKS_AGE_FTS3_1, M01_US_GA_WKS_AGE_FTS4_1,
+#                                                        M01_US_GA_DAYS_AGE_FTS1_1, M01_US_GA_DAYS_AGE_FTS2_1,
+#                                                        M01_US_GA_DAYS_AGE_FTS3_1, M01_US_GA_DAYS_AGE_FTS4_1,
+#                                                        M01_GA_LMP_WEEKS_SCORRES_1, M01_GA_LMP_DAYS_SCORRES_1,
+#                                                        starts_with(c("M01_US_OHOSTDAT")),
+#                                                        M01_US_GA_WKS_AGE_FTS1_1)
+# 
+# #########
+# # MNH04 #
+# #########
+# mnh04_df <- mnh_list_wide[["mnh04"]] %>% 
+#   dplyr::select(MOMID, PREGID, # SITE,
+#                 M04_FETAL_LOSS_DSSTDAT_1, M04_FETAL_LOSS_DSSTDAT_2,
+#                 M04_FETAL_LOSS_DSSTDAT_3, M04_FETAL_LOSS_DSSTDAT_4, 
+#                 M04_FETAL_LOSS_DSSTDAT_5,
+#                 M04_FETAL_LOSS_DSSTDAT_1, M04_FETAL_LOSS_DSSTDAT_2, 
+#                 M04_FETAL_LOSS_DSSTDAT_3, M04_FETAL_LOSS_DSSTDAT_4,
+#                 M04_FETAL_LOSS_DSSTDAT_5,
+#                 M04_FETAL_LOSS_DSDECOD_1, M04_FETAL_LOSS_DSDECOD_2, 
+#                 M04_FETAL_LOSS_DSDECOD_3, M04_FETAL_LOSS_DSDECOD_4,
+#                 M04_FETAL_LOSS_DSDECOD_5, 
+#                 M04_FETAL_LOSS_DSSTDAT_1, M04_FETAL_LOSS_DSSTDAT_2, 
+#                 M04_FETAL_LOSS_DSSTDAT_3, M04_FETAL_LOSS_DSSTDAT_4, 
+#                 M04_FETAL_LOSS_DSSTDAT_5, 
+#                 M04_FETAL_LOSS_DSDECOD_1, M04_FETAL_LOSS_DSDECOD_2,
+#                 M04_FETAL_LOSS_DSDECOD_3, M04_FETAL_LOSS_DSDECOD_4,
+#                 M04_FETAL_LOSS_DSDECOD_5,
+#                 starts_with(c("M04_HTN_EVER_MHOCCUR")),
+#                 starts_with("M04_HTN_CMTRT_"))
+# 
+# #########
+# # MNH06 #
+# #########
+# mnh06_df <- mnh_list_wide[["mnh06"]] %>% dplyr::select(MOMID, PREGID, # SITE,  
+#                                                        # Maternal anemia:
+#                                                        starts_with(c("M06_DIAG_VSDAT_", "M06_TYPE_VISIT_", "M06_HB_POC_LBORRES_")),
+#                                                        starts_with("M06_BP_SYS_VSORRES_"),
+#                                                        starts_with("M06_BP_DIA_VSORRES_"))
+# 
+# #########
+# # MNH08 #
+# #########
+# mnh08_df <- mnh_list_wide[["mnh08"]] %>% dplyr::select(MOMID, PREGID, # SITE, 
+#                                                        starts_with(c("M08_LBSTDAT_", "M08_TYPE_VISIT_", "M08_CBC_HB_LBORRES")))
+# 
+# #################################
+# # MNH09 - Maternal L&D Outcomes #
+# #################################
+# mnh09_df <- mnh_list_wide[["mnh09"]] %>% dplyr::select(MOMID, PREGID, # SITE,                                        
+#                                                        M09_CRY_CEOCCUR_INF1_6, M09_FHR_VSTAT_INF1_6, 
+#                                                        M09_MACER_CEOCCUR_INF1_6,M09_CORD_PULS_CEOCCUR_INF1_6,
+#                                                        M09_BIRTH_DSTERM_INF1_6, M09_BIRTH_DSTERM_INF2_6, 
+#                                                        M09_BIRTH_DSTERM_INF3_6, M09_BIRTH_DSTERM_INF4_6,
+#                                                        M09_PPH_TRNSFSN_PROCCUR_6, M09_PPH_TRNSFSN_PROCCUR_6, 
+#                                                        M09_PPH_FAORRES_5_6, M09_RUPT_UTERUS_CEOCCUR_6, M09_PPH_COMP_3_6,
+#                                                        starts_with(c("M09_DELIV_DSSTDAT_INF",
+#                                                                      "M09_BIRTH_DSTERM_INF")),
+#                                                        M09_HDP_HTN_MHOCCUR_3_6)
+# #########
+# # MNH10 #
+# #########
+# mnh10_df <- mnh_list_wide[["mnh10"]] %>% dplyr::select(MOMID, PREGID, # SITE,
+#                                                 M10_MAT_DSTERM_6, M10_TRANSFER_OHOLOC_6)
+# 
+# ###############
+# # MNH11 - PNC #
+# ###############
+# mnh11_df <- mnh_list_wide[["mnh11"]] %>% dplyr::select(MOMID, PREGID, # SITE,
+#                                                 M11_DTHDAT_6)
+# 
+# ###############
+# # MNH 12- PNC #
+# # This dataset has no MNH12 yet# 
+# ###############
+# mnh12_df <- mnh_list_wide[["mnh12"]] %>% dplyr::select(MOMID, PREGID,#  SITE,
+#                                                       M12_MAT_VITAL_MNH12_7, M12_MAT_VITAL_MNH12_8, M12_MAT_VITAL_MNH12_9, 
+#                                                       M12_MAT_VITAL_MNH12_10, M12_MAT_VITAL_MNH12_11)
+# 
+# #########
+# # MNH19 #
+# #########
+# #M19_PREG_FAORES (try: the variable is there but called M19_PREG_FAORRES_VISIT{x} where {x} 
+# # is the visit number based on total number of visits or To see the total number of MNH19 
+# #forms filled out by an individual, refer to M19_VISITS_TOT)
+# if("mnh19" %in% names(mnh_list_wide)){
+# mnh19_df <- mnh_list_wide[["mnh19"]] %>% dplyr::select(MOMID, PREGID,#  SITE,
+#                                                        M19_OBSSTDAT_13, M19_TX_PROCCUR_1_13, M19_TX_PROCCUR_2_13,
+#                                                        M19_TX_PROCCUR_3_13, M19_TX_PROCCUR_4_13, M19_TX_PROCCUR_5_13, 
+#                                                        M19_TX_PROCCUR_6_13, M19_TX_PROCCUR_77_13,
+#                                                 starts_with(c("M19_TIMING_OHOCAT", "M19_CBC_LBDAT", 
+#                                                               "M19_CBC_HB_LBORRES",
+#                                                               "M19_HB_POC_LBTSTDAT", "M19_HB_POC_LBORRES")),
+#                                                 M19_HDP_HTN_MHOCCUR_3_13, M19_BP_SYS_VSORRES_13, M19_BP_DIA_VSORRES_13)
+# } else{
+#   "MNH19 does not exist in the wide format"
+# }
+#                                                               
+# 
+# #############################
+# # MNH23 - Maternal Closeout #
+# #############################
+# if("mnh23" %in% names(mnh_list_wide)){
+# mnh23_df <- mnh_list_wide[["mnh23"]] %>% dplyr::select(MOMID, PREGID, # SITE, 
+#                                                 M23_CLOSE_DSDECOD, M23_ACC_DDORRES, M23_DTHDAT,
+#                                                 M23_CLOSE_DSDECOD, M23_DTHDAT)
+# } else{
+#   "MNH23 does not exist in the wide format"
+# }
+# 
+# 
+# ###########################
+# # MNH24 - Infant Closeout #
+# ###########################
+# if("mnh24" %in% names(mnh_list_wide)){
+# mnh24_df <- mnh_list_wide[["mnh24"]] %>% dplyr::select(MOMID, PREGID, # SITE, 
+#                                                 M24_DTHDAT)
+# } else{
+#   "MNH24 does not exist in the wide format"
+# }
 
 ```
 
 
-# Merge together all the forms.
+# MERGE together all the forms.
 ```{r}
 mnh_merged_df <- mnh00_df 
 
 for(i in 1:26) {
   form_name <- paste0("mnh", sprintf(fmt="%02d", i), "_df") #sprintf adds a leading 0 to digits below 10.
   if(exists(form_name)) {
-    mnh_merged_df <- left_join(mnh_merged_df, get(form_name), by = c("MOMID", "PREGID")) #, "SITE"))
+    mnh_merged_df <- left_join(mnh_merged_df, get(form_name), by = c("MOMID", "PREGID", "SITE"))
   }
 }
 ```
@@ -520,7 +525,7 @@ Fetal/Infant outcomes
 2. Use the biggest infant using US and GA_LMP_WEEKS_SCORRES and GA_LMP_DAYS to calc. variable GA_DIFF_WKS and GA_DIFF_DAYS 
 ```{r}
 # STEP 1:
-temp.df <- mnh_merged_df %>% select(PREGID, MOMID, 
+temp.df <- mnh_merged_df %>% select(PREGID, MOMID, SITE,
                                     M01_US_GA_WKS_AGE_FTS1_1, M01_US_GA_DAYS_AGE_FTS1_1, 
                                     M01_US_GA_WKS_AGE_FTS2_1, M01_US_GA_DAYS_AGE_FTS2_1,
                                     M01_US_GA_WKS_AGE_FTS3_1, M01_US_GA_DAYS_AGE_FTS3_1,
@@ -752,7 +757,7 @@ mnh_merged_df$M12_MAT_VITAL_MNH12_12 <- ifelse("M12_MAT_VITAL_MNH12_12" %in% nam
 
 
 temp.df<- mnh_merged_df %>% #[1:200, ] %>%
-  select(MOMID, PREGID, #SITE,
+  select(MOMID, PREGID, SITE,
          (starts_with(c("M06_DIAG_VSDAT_", "M06_TYPE_VISIT_", "M06_HB_POC_LBORRES_", "M08_LBSTDAT_"))),
          starts_with(c("M08_TYPE_VISIT_", "M08_CBC_HB_LBORRES", "M09_DELIV_DSSTDAT_INF",
                        "M19_TIMING_OHOCAT_VISIT", "M19_CBC_LBDAT_VISIT", "M19_CBC_HB_LBORRES_VISIT",
@@ -1064,7 +1069,7 @@ Id10096
 
 If maternal status after delivery ==3 (died) or CLOSE_DSDECOD == 3(died) and (M23_ACC_DDORRES==0 or 99 OR all VA ==0, then calculate delivery date and death date and if it is <42 days then MAT_DEATH==1. 
 ```{r}
-temp.df <- mnh_merged_df %>% select(MOMID, PREGID, M09_DELIV_DSSTDAT_INF1_6,M09_DELIV_DSSTDAT_INF2_6,
+temp.df <- mnh_merged_df %>% select(MOMID, PREGID, SITE, M09_DELIV_DSSTDAT_INF1_6,M09_DELIV_DSSTDAT_INF2_6,
   M09_DELIV_DSSTDAT_INF3_6, M09_DELIV_DSSTDAT_INF4_6, M10_MAT_DSTERM_6, M23_CLOSE_DSDECOD, M23_DTHDAT, M23_ACC_DDORRES)
 
 temp.df <- mnh_merged_df %>%
@@ -1224,7 +1229,7 @@ MNH27	Id10096
 ```{r}
 # Add M12_MAT_VITAL_MNH12_7-12
 #TODO Why is M23_DTHDAT NA for a women who died during PNC visit 9.
-temp.df <- mnh_merged_df %>% select(MOMID, PREGID, 
+temp.df <- mnh_merged_df %>% select(MOMID, PREGID, SITE,
                                     starts_with("M12_MAT_VITAL_MNH12_"), 
                                     M23_CLOSE_DSDECOD, M23_DTHDAT, M23_ACC_DDORRES)
 
@@ -1283,9 +1288,11 @@ Medications include magnesium sulfate, hydralazine, methyldopa (aldomet), atenol
       # b/c most of these are 0 or NA even when gHTN ==1. 
 ##################################################################################
 temp.df <- mnh_merged_df %>% 
-  select(MOMID, PREGID,
+  select(MOMID, PREGID, SITE,
          M19_BP_SYS_VSORRES_13, M19_BP_DIA_VSORRES_13,
-         starts_with(c("M06_BP_SYS_VSORRES_", "M06_BP_DIA_VSORRES_", "M04_HTN_CMTRT_"))) %>%
+         starts_with(c("M06_BP_SYS_VSORRES_", "M06_BP_DIA_VSORRES_", "M04_HTN_CMTRT_"))) 
+
+mnh_merged_df <- mnh_merged_df %>% 
   rowwise() %>% 
   mutate(meanSBP_ANC20 = mean(c(M06_BP_SYS_VSORRES_1_2, M06_BP_SYS_VSORRES_2_2, M06_BP_SYS_VSORRES_3_2), na.rm = TRUE),
          meanDBP_ANC20 = mean(c(M06_BP_DIA_VSORRES_1_2, M06_BP_DIA_VSORRES_2_2, M06_BP_DIA_VSORRES_3_2), na.rm = TRUE), 
@@ -1315,14 +1322,165 @@ temp.df <- temp.df %>%
                                      TRUE  ~ as.numeric(0)))
 
 table(temp.df$GEST_HYPER_MEAS, useNA = "always")
+
 temp2.df <- temp.df %>% select(MOMID, PREGID, GEST_HYPER_MEAS, starts_with("M04_HTN_CMTRT_"))
 
-        M04_HTN_CMTRT_3==1 | M04_HTN_CMTRT_4==1 | M04_HTN_CMTRT_4==1 | M04_HTN_CMTRT_5==1 |
-                                       M04_HTN_CMTRT_6 ==1 | M04_HTN_CMTRT_7 ==1 | M04_HTN_CMTRT_8 == 1 | M04_HTN_CMTRT_9 ==1 | 
-                             M04_HTN_CMTRT_9
-                             
-                                     )
+# M04_HTN_CMTRT_3==1 | M04_HTN_CMTRT_4==1 | M04_HTN_CMTRT_4==1 | M04_HTN_CMTRT_5==1 |
+#   M04_HTN_CMTRT_6 ==1 | M04_HTN_CMTRT_7 ==1 | M04_HTN_CMTRT_8 == 1 | M04_HTN_CMTRT_9 ==1 | 
+#   M04_HTN_CMTRT_9)
 ```
+
+***GESTATIONAL DIABETES - SECONDARY OUTCOME: GEST_DIAB***
+
+Look at: 
+- MNH04 ANC28, 32, 36
+- MNH06 ANC 28
+- MNH08 <20, 28
+- MNH09 L&D/IPC: M09_GEST_DIAB_MHOCCUR_6
+- MNH19 Hospitalization visit
+
+```{r}
+##################################################################################
+#TODO 
+# NOTES: 
+# 1. Need to additional conditions for the DIAGNOSED # 
+# 2. All of MEASURED variables are NA - FASTING OGTT, HbA1c# 
+
+##################################################################################
+
+# This is DIAGNOSED at enrollment, ANC28, 32, 36 through MNH04.
+temp.df <- mnh_merged_df %>% select(M04_DIABETES_EVER_MHOCCUR_2, 
+                                    M04_DIABETES_EVER_MHOCCUR_3, M04_DIABETES_EVER_MHOCCUR_4,
+                                    M09_GEST_DIAB_MHOCCUR_6, M09_INDUCED_PROCCUR_6,
+                                    M19_PRIMARY_MHTERM_13, M19_LD_COMPL_MHTERM_3_13) %>%
+  
+  mutate(GEST_DIAB_DIAG = ifelse( !is.na(M04_DIABETES_EVER_MHOCCUR_2==1) & M04_DIABETES_EVER_MHOCCUR_2==1 |
+                                  !is.na(M04_DIABETES_EVER_MHOCCUR_3==1) & M04_DIABETES_EVER_MHOCCUR_3==1 | 
+                                  !is.na(M04_DIABETES_EVER_MHOCCUR_4) & M04_DIABETES_EVER_MHOCCUR_4==1, 1, 0))
+
+temp.df <- mnh_merged_df %>% select(M06_BGLUC_POC_MMOLL_LBORRES_2, 
+                                    M08_BGLUC_PRETEST_MMOLL_LBORRES_1, M08_BGLUC_PRETEST_MMOLL_LBORRES_2, M08_BGLUC_PRETEST_MMOLL_LBORRES_3,
+                                    M08_HBA1C_LBORRES_1, ) %>%
+  
+  mutate(GEST_DIAB_MEAS = ifelse(!is.na(M08_HBA1C_LBORRES_1) & M08_HBA1C_LBORRES_1>=6.5 | # confirm HbA1C at enrollment is high
+                                   (!is.na(M06_BGLUC_POC_MMOLL_LBORRES_2) & M06_BGLUC_POC_MMOLL_LBORRES_2>5.1 & # At ANC28, POC diagnostics in fasting is >5.1
+                                      (!is.na(M08_BGLUC_PRETEST_MMOLL_LBORRES_1) & M08_BGLUC_PRETEST_MMOLL_LBORRES_1>5.1 & # confirm pre test (fasting) OGTT is high
+                                       (!is.na(M08_BGLUC_PRETEST_MMOLL_LBORRES_2) & M08_BGLUC_PRETEST_MMOLL_LBORRES_2>=10.0 | # when fasting OGTT is high, then 1-hr or 2-hr should be also high 
+                                         !is.na(M08_BGLUC_PRETEST_MMOLL_LBORRES_3) & M08_BGLUC_PRETEST_MMOLL_LBORRES_3 >=8.5))),
+                                 1, 0))
+
+table(temp.df$GEST_DIAB_MEAS, useNA = "always")
+
+```
+
+***ANTEPARTUM HEMORRHAGE = MAT_APH*** 
+Bleeding from or into the genital tract, occurring from ≥24 weeks gestation and prior to delivery.
+ANC TP: 28, 32, 36
+ANC Hospitalization
+```{r}
+temp.df <- mnh_merged_df %>% 
+  select(M04_APH_CEOCCUR_3, M04_APH_CEOCCUR_4, M04_APH_CEOCCUR_5, M09_APH_CEOCCUR_6, M19_VAG_BLEED_CEOCCUR_13, M19_LD_COMPL_MHTERM_4_13) %>%
+  mutate(MAT_APH = ifelse(!is.na(M04_APH_CEOCCUR_3) & M04_APH_CEOCCUR_3==1 |
+                            !is.na(M04_APH_CEOCCUR_4) & M04_APH_CEOCCUR_4==1 |
+                            !is.na(M04_APH_CEOCCUR_5) & M04_APH_CEOCCUR_5==1 |
+                            !is.na(M09_APH_CEOCCUR_6) & M09_APH_CEOCCUR_6==1 |
+                            !is.na(M19_VAG_BLEED_CEOCCUR_13) & M19_VAG_BLEED_CEOCCUR_13==1 |
+                            !is.na(M19_LD_COMPL_MHTERM_4_13) & M19_LD_COMPL_MHTERM_4_13==1, 1, 0))
+```
+
+***POSTPARTUM HEMORRHAGE = MAT_PPH***
+Defined as estimated blood loss of 500 mL or more within 24 hours after birth OR clinician diagnosis of PPH.
+LnD
+PNC: 0 (TP 7)
+Hospitalization
+
+***LATE PPH***
+Late PPH: Estimated blood loss of ≥500 mL from 24 hours after birth through 6 weeks postpartum.
+PNC 1, 4, 6 (TP: 8-10)
+
+***SEVERE POSTPARTUM HEMORRHAGE = MAT_PPH_SEV***
+Abnormal bleeding (1000 ml or more) OR any bleeding with hypotension or blood transfusion, within 24 hours after birth.
+- Will use vars that were used to create MAT_PPH plus BP vars or blood transfusion.
+ 
+Hospitalization
+```{r}
+#################################################################################
+#TODO 
+# NOTES: 
+# 1. M09_PPH_CEOCCUR_6 == 0 for many where M09_PPH_ESTIMATE_FAORRES_6 >=500 - #
+# ----- for now, making this an OR statement then. # 
+# 2. Should we look at ANC0 weeks for PPH within 24 hours or put that in late PPH? # 
+# 3. Should M19_LD_COMPL_MHTERM_5_13 and M19_LD_COMPL_ML_13 be used for MAT_PPH or Late? #  
+
+##################################################################################
+
+temp.df <- mnh_merged_df %>%
+  select(M09_PPH_CEOCCUR_6, M09_PPH_ESTIMATE_FAORRES_6,
+         M12_BIRTH_COMPL_MHTERM_1_7, M12_BIRTH_COMPL_MHTERM_1_8, M12_BIRTH_COMPL_MHTERM_1_9, 
+         M12_BIRTH_COMPL_MHTERM_1_10,
+         M12_VAG_BLEED_LOSS_ML_7, M12_VAG_BLEED_LOSS_ML_8, M12_VAG_BLEED_LOSS_ML_9, 
+         M12_VAG_BLEED_LOSS_ML_10,
+         M19_LD_COMPL_MHTERM_5_13, M19_LD_COMPL_ML_13,
+         starts_with(c("M06_BP_SYS_VSORRES_", "M06_BP_DIA_VSORRES_")), # will just need TP 7,8,9,10 BP
+         M09_PPH_TRNSFSN_PROCCUR_6, M19_TX_PROCCUR_1_13, M19_BP_LT90_SYS_VSORRES_13, M19_BP_LT90_DIA_VSORRES_13) %>%
+  
+  mutate(MAT_PPH = ifelse((!is.na(M09_PPH_CEOCCUR_6) & M09_PPH_CEOCCUR_6==1 | # looking for PPH at L&D
+                             !is.na(M09_PPH_ESTIMATE_FAORRES_6) & M09_PPH_ESTIMATE_FAORRES_6>=500 |
+                             
+                             !is.na(M12_BIRTH_COMPL_MHTERM_1_7) & M12_BIRTH_COMPL_MHTERM_1_7==1 & # looking for PPH at week 0 
+                             !is.na(M12_VAG_BLEED_LOSS_ML_7) & M12_VAG_BLEED_LOSS_ML_7 >=500 |
+                             
+                             !is.na(M19_LD_COMPL_MHTERM_5_13) & M19_LD_COMPL_MHTERM_5_13==1 & # looking for PPH at L&D at hospitalization 
+                             !is.na(M19_LD_COMPL_ML_13) & M19_LD_COMPL_ML_13>=500), 1,0)) %>% 
+  #***********# 
+  #**LATE-PPH**
+  #***********# 
+  mutate(MAT_PPH_LATE = ifelse((!is.na(M12_BIRTH_COMPL_MHTERM_1_8) & M12_BIRTH_COMPL_MHTERM_1_8==1 &
+                                  !is.na(M12_VAG_BLEED_LOSS_ML_8) & M12_VAG_BLEED_LOSS_ML_8 >=500 |
+                                  
+                                  !is.na(M12_BIRTH_COMPL_MHTERM_1_9) & M12_BIRTH_COMPL_MHTERM_1_9==1 &
+                                  !is.na(M12_VAG_BLEED_LOSS_ML_9) & M12_VAG_BLEED_LOSS_ML_9 >=500 |
+                                  
+                                  !is.na(M12_BIRTH_COMPL_MHTERM_1_10) & M12_BIRTH_COMPL_MHTERM_1_10==1 &
+                                  !is.na(M12_VAG_BLEED_LOSS_ML_10) & M12_VAG_BLEED_LOSS_ML_10 >=500), 1, 0)) %>% 
+  
+  #***********# 
+  #**SEV-PPH**
+  #***********# 
+  
+  rowwise() %>% 
+  mutate(meanSBP_IPC = mean(c(M06_BP_SYS_VSORRES_1_6, M06_BP_SYS_VSORRES_2_6, M06_BP_SYS_VSORRES_3_6), na.rm = TRUE), # at L&D BP
+         meanDBP_IPC = mean(c(M06_BP_DIA_VSORRES_1_6, M06_BP_DIA_VSORRES_2_6, M06_BP_DIA_VSORRES_3_6), na.rm = TRUE), 
+         
+         meanSBP_PNC0 = mean(c(M06_BP_SYS_VSORRES_1_7, M06_BP_SYS_VSORRES_2_7, M06_BP_SYS_VSORRES_3_7), na.rm = TRUE), # at PNC0 TP (within 24hr of birth?)
+         meanDBP_PNC0 = mean(c(M06_BP_DIA_VSORRES_1_7, M06_BP_DIA_VSORRES_2_7, M06_BP_DIA_VSORRES_3_7), na.rm = TRUE)) %>%
+  
+  mutate(MAT_PPH_SEV = ifelse((((#!is.na(M09_PPH_CEOCCUR_6) & M09_PPH_CEOCCUR_6==1 | # looking for PPH at L&D
+    !is.na(M09_PPH_ESTIMATE_FAORRES_6) & M09_PPH_ESTIMATE_FAORRES_6>=1000)  | # bleeding >=1000mL
+      (!is.na(M09_PPH_ESTIMATE_FAORRES_6) & M09_PPH_ESTIMATE_FAORRES_6>0 & # any bleeding and hypotension
+         (!is.na(meanSBP_IPC) & meanSBP_IPC <90 |
+            !is.na(meanDBP_IPC) & meanDBP_IPC <60)) | 
+      
+      (# !is.na(M12_BIRTH_COMPL_MHTERM_1_7) & M12_BIRTH_COMPL_MHTERM_1_7==1 & # looking for PPH at week 0 
+        !is.na(M12_VAG_BLEED_LOSS_ML_7) & M12_VAG_BLEED_LOSS_ML_7 >=1000) |
+      (!is.na(M12_BIRTH_COMPL_MHTERM_1_7) & M12_BIRTH_COMPL_MHTERM_1_7>0) &
+         (!is.na(meanSBP_IPC) & meanSBP_PNC0 <90 |
+            !is.na(meanDBP_IPC) & meanDBP_PNC0 <60)) | 
+      
+      (#!is.na(M19_LD_COMPL_MHTERM_5_13) & M19_LD_COMPL_MHTERM_5_13==1 & # looking for PPH at L&D at hospitalization 
+        !is.na(M19_LD_COMPL_ML_13) & M19_LD_COMPL_ML_13>=1000)) | 
+      !is.na(M09_PPH_TRNSFSN_PROCCUR_6) & M09_PPH_TRNSFSN_PROCCUR_6==1 | # did mother need a transfusion
+      !is.na(M19_TX_PROCCUR_1_13) & M19_TX_PROCCUR_1_13==1 | # did the mother receive transfusion while hosp.
+      !is.na(M19_BP_LT90_SYS_VSORRES_13) & M19_BP_LT90_SYS_VSORRES_13<90 | 
+      (!is.na(M19_BP_LT90_DIA_VSORRES_13) & M19_BP_LT90_DIA_VSORRES_13<60), 1,0)) %>%
+  
+  select(MAT_PPH_SEV, M09_PPH_ESTIMATE_FAORRES_6, meanSBP_IPC, meanDBP_IPC, 
+         M12_VAG_BLEED_LOSS_ML_7, meanSBP_PNC0, meanDBP_PNC0,
+         M19_LD_COMPL_ML_13, M09_PPH_TRNSFSN_PROCCUR_6, 
+         M19_TX_PROCCUR_1_13, M19_BP_LT90_SYS_VSORRES_13, M19_BP_LT90_DIA_VSORRES_13)
+                            
+```
+
 
 ***PREECLAMPSIA (DIAGNOSED) - SECONDARY OUTCOME: PRE_DIAG***
 LnD:
@@ -1339,7 +1497,6 @@ temp.df <- temp.df %>%
 
 table(temp.df$PRE_DIAG, useNA = "always")
 ```
-
 
 
 
