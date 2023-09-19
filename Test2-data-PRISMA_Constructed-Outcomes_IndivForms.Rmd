@@ -632,7 +632,7 @@ table(mnh_merged_df$M01_GA_LMP_DAYS_CALC_1, useNA = "always") #SITE taken out
 #MATERNAL OUTCOMES:
 ####################
 
-*Pregnancy-related death:*
+***PRIMARY: Pregnancy-related death - PREG_DEATH***
 "Death from any cause during pregnancy and childbirth or within 42 days of termination of pregnancy, irrespective of the duration and site of the pregnancy.
 
 M09_DELIV_DSSTDAT_INF1,2,3,4
@@ -651,6 +651,68 @@ M10_MAT_DSTERM = 2 (Complication requiring higher level of care)
 M10_MAT_DSTERM = 3 (Died after admission for labor and delivery)
 
 ```{r echo=FALSE}
+##################################################################################
+#TODO 
+# NOTES: 
+# - TURN ALL NA TO 0
+##################################################################################
+
+temp.df <- mnh_merged_df %>% select(MOMID, PREGID, M09_DELIV_DSSTDAT_INF1_6,M09_DELIV_DSSTDAT_INF2_6,
+  M09_DELIV_DSSTDAT_INF3_6, M09_DELIV_DSSTDAT_INF4_6, M10_MAT_DSTERM_6, M23_CLOSE_DSDECOD, M23_DTHDAT)
+
+temp.df <- temp.df %>% 
+  mutate(var_w_deliverydate = any(!is.na(c(M09_DELIV_DSSTDAT_INF1_6, #'any' is checking if anything in these columns by row dplyr is doing the by-row part is NA.
+  M09_DELIV_DSSTDAT_INF2_6,
+  M09_DELIV_DSSTDAT_INF3_6,
+  M09_DELIV_DSSTDAT_INF4_6))))
+
+# JUST CREATING DAYS DIFF HERE FIRST
+temp.df <- temp.df %>% 
+  mutate(PREG_DEATH_DIFF_DAYS = as.numeric(as.Date(M23_DTHDAT, na.rm = TRUE) - as.Date(max(M09_DELIV_DSSTDAT_INF1_6,
+                                                                          M09_DELIV_DSSTDAT_INF2_6, 
+                                                                          M09_DELIV_DSSTDAT_INF3_6,
+                                                                          M09_DELIV_DSSTDAT_INF4_6, 
+                                                                          na.rm = TRUE))))
+
+temp.df <- mnh_merged_df %>% select(MOMID, PREGID, PREG_DEATH_DIFF_DAYS,
+                                    M23_DTHDAT, 
+                                    M09_DELIV_DSSTDAT_INF1_6,
+                                    M09_DELIV_DSSTDAT_INF2_6, 
+                                    M09_DELIV_DSSTDAT_INF3_6,
+                                    M09_DELIV_DSSTDAT_INF4_6)
+mnh_merged_df <- mnh_merged_df %>% 
+  rowwise() %>%
+  mutate(PREG_DEATH = if_else(M23_CLOSE_DSDECOD == 3 | !is.na(M23_DTHDAT) | M10_MAT_DSTERM_6==3, 
+                              if_else(var_w_deliverydate,
+                                      as.numeric(as.Date(M23_DTHDAT) - as.Date(max(M09_DELIV_DSSTDAT_INF1_6,
+                                                                          M09_DELIV_DSSTDAT_INF2_6, 
+                                                                          M09_DELIV_DSSTDAT_INF3_6,
+                                                                          M09_DELIV_DSSTDAT_INF4_6, 
+                                                                          na.rm = TRUE)) <
+                                                   as.difftime(43, units = "days")),
+                                      1), 
+                              0)) %>% 
+  mutate(PREG_DEATH = if_else(M23_CLOSE_DSDECOD==4 | M23_CLOSE_DSDECOD==5, 9, PREG_DEATH))
+
+table(PREG_DEATH=mnh_merged_df$PREG_DEATH, useNA = "always") # data is molsty 2=Alive or 4 = loss to follow up or NA. 
+ 
+```
+
+***SECONDARY: LATE PREGNANCY-RELATED DEATH: LATE_PREG_DEATH***
+Death from any cause related to or aggravated by pregnancy or its management, irrespective of the duration and site of the pregnancy, from 42 days postpartum up to one year.
+
+MNH09	DELIV_DSSTDAT_INF1
+MNH10	MAT_DSTERM
+MNH23	CLOSE_DSDECOD
+MNH23	DTHDAT
+
+```{r}
+##################################################################################
+#TODO 
+# NOTES: 
+# - NEED TO FIX THIS - HAVE TO CALCULATE BETWEEN 42 DAYS AND 1 YEAR. 
+##################################################################################
+
 temp.df <- mnh_merged_df %>% select(MOMID, PREGID, M09_DELIV_DSSTDAT_INF1_6,M09_DELIV_DSSTDAT_INF2_6,
   M09_DELIV_DSSTDAT_INF3_6, M09_DELIV_DSSTDAT_INF4_6, M10_MAT_DSTERM_6, M23_CLOSE_DSDECOD, M23_DTHDAT)
 
@@ -662,39 +724,31 @@ mnh_merged_df <- mnh_merged_df %>%
   
 mnh_merged_df <- mnh_merged_df %>% 
   rowwise() %>%
-  mutate(PREG_DEATH = if_else(M23_CLOSE_DSDECOD == 3 | !is.na(M23_DTHDAT) | M10_MAT_DSTERM_6==3, 
-                              if_else(var_w_deliverydate,
-                                      as.numeric(as.Date(M23_DTHDAT) - as.Date(max(M09_DELIV_DSSTDAT_INF1_6,
+  mutate(LATE_PREG_DEATH = if_else(M23_CLOSE_DSDECOD == 3 | !is.na(M23_DTHDAT) | M10_MAT_DSTERM_6==3, 
+                              if_else(var_w_deliverydate, # THIS IS A TRUE/FALSE.
+                                      ((as.numeric(as.Date(M23_DTHDAT) - as.Date(max(M09_DELIV_DSSTDAT_INF1_6,
                                                                           M09_DELIV_DSSTDAT_INF2_6, 
                                                                           M09_DELIV_DSSTDAT_INF3_6,
                                                                           M09_DELIV_DSSTDAT_INF4_6, 
-                                                                          na.rm = TRUE))<
-                                                   as.difftime(42, units = "days")),
-                                      1), 
-                              0)) %>% 
-  mutate(PREG_DEATH = if_else(M23_CLOSE_DSDECOD==4 | M23_CLOSE_DSDECOD==5, 9, PREG_DEATH))
-
-mnh_merged_df <- mnh_merged_df %>%
-  mutate(var_w_deliverydate = any(!is.na(c(M09_DELIV_DSSTDAT_INF1_6, #'any' is checking if anything in these columns by row(dplyr is doing the by-row part) is NA.
-  M09_DELIV_DSSTDAT_INF2_6,
-  M09_DELIV_DSSTDAT_INF3_6,
-  M09_DELIV_DSSTDAT_INF4_6)))) %>% 
-  rowwise() %>%
-  mutate(PREG_DEATH = if_else(M23_CLOSE_DSDECOD == 3 | !is.na(M23_DTHDAT) | M10_MAT_DSTERM_6==3, 
-                              if_else(var_w_deliverydate,
-                                      as.numeric(as.Date(M23_DTHDAT) - as.Date(max(M09_DELIV_DSSTDAT_INF1_6,
+                                                                          na.rm = TRUE)) >
+                                                   as.difftime(42, units = "days"))) & 
+                                        (as.numeric(as.Date(M23_DTHDAT) - as.Date(max(M09_DELIV_DSSTDAT_INF1_6,
                                                                           M09_DELIV_DSSTDAT_INF2_6, 
                                                                           M09_DELIV_DSSTDAT_INF3_6,
                                                                           M09_DELIV_DSSTDAT_INF4_6, 
-                                                                          na.rm = TRUE))<
-                                                   as.difftime(42, units = "days")),
+                                                                          na.rm = TRUE)) <
+                                                   as.difftime(366, units = "days")))),
                                       1), 
                               0)) %>% 
-  mutate(PREG_DEATH = if_else(M23_CLOSE_DSDECOD==4 | M23_CLOSE_DSDECOD==5, 9, PREG_DEATH))
+  mutate(LATE_PREG_DEATH = if_else(M23_CLOSE_DSDECOD==4 | M23_CLOSE_DSDECOD==5, 9, LATE_PREG_DEATH))
 
-table(PREG_DEATH=mnh_merged_df$PREG_DEATH, useNA = "always") # data is molsty 2=Alive or 4 = loss to follow up or NA. 
+
+
+table(LATE_PREG_DEATH=mnh_merged_df$LATE_PREG_DEATH, useNA = "always") # data is molsty 2=Alive or 4 = loss to follow up or NA. 
  
 ```
+
+
 
 *Maternal Anemia*
 Definition: Low hemoglobin levels and/or diagnosis of anemia in pregnancy, at labor and delivery, and through 6 months postpartum. 
@@ -1600,8 +1654,71 @@ mnh_merged_df <- mnh_merged_df %>%
 table(MAT_DYS = mnh_merged_df$MAT_DYS)
 ```
 
-***SEVERE FEATURES OF PREECLAMPSIA - PRE_FEATURE***
 
+***SECONDARY: HELLP = MAT_HELLP***
+MNH08	AST_ul_LBORRES
+Constructed	MAT_ANEMIA_ANY
+MNH08	TBILIRUBIN_LBORRES
+MNH08	DBILIRUBIN_LBORRES
+MNH08	ALP_LBORRES
+MNH08	GAMMAGT_LBORRES
+MNH08	CBC_PLATE_LBORRES
+
+Severe gestational hypertension (systolic >160 mmHg OR a diastolic >110 mmHg on two occasions at least 1 minute apart >20 weeks gestation or one occasion at delivery)
+Hepatic abnormality (serum transaminase concentration AST or ALT ≥2 times the upper limit of the normal range)
+Thrombocytopenia (<100,000 platelets/microL)
+Hemolysis (serum bilirubin ≥1.2 mg/dL (20.52 umol/L) and hemoglobin <7 g/dL)
+Rental insufficiency (serum creatinine >1.1 mg/dL)
+
+
+```{r}
+##################################################################################
+#TODO 
+# NOTES: 
+# - WHAT IS THE UPPER LIMIT OF NORMAL RANGE FOR AST OR ALT - NEED TO LOOK UP.
+# - WHERE IS THE ALT VARIABLE? 
+
+##################################################################################
+temp.df <- mnh_merged_df %>% 
+  select(M08_AST_ul_LBORRES_1)
+```
+
+***SEVERE FEATURES OF PREECLAMPSIA - MAT_PRE_SEV_MEAS***
+
+SEVERE_GEST_HYPER	Severe gestational hypertension
+MAT_DYS	Organ dysfunction
+MAT_HELLP	HELLP (measured)
+AST_ul_LBORRES	Provide AST/SGOT test results:  Units/L
+CBC_PLATE_LBORRES	Provide results: Platelets count:  x10³/mm³
+CREAT_umoll_LBORRES	Provide Serum creatinine test results:  µmol/L
+OTHR_CEOCCUR_10	Did mother have any other signs/symptoms of illness? Upper abdomen pain
+ORG_FAIL_MHOCCUR_5	Did mother experience any type of organ failure? Neurological dysfunction
+HEADACHE_CEOCCUR	Severe headache?
+PREECLAMPSIA_CEOCCUR_4	If mother was diagnosed with preeclampsia, were there any of the following severe features? Pulmonary edema
+PREECLAMPSIA_CEOCCUR_1	If mother was diagnosed with preeclampsia, were there any of the following severe features? Eclampsia or seizures
+EPIGASTR_PAIN_CEOCCUR	Did the mother have any of the following signs of complication after delivery? Epigastric pain
+HEADACHE_CEOCCUR	Did the mother have any of the following signs of complication after delivery? Severe headaches
+FAINT_CEOCCUR	Did the mother have any of the following signs of complication after delivery? Feeling faint of dizzy
+EPIGASTR_CEOCCUR	Epigastric or right upper quadrant pain?
+Headache_CEOCCUR	Severe headache?
+FAINT_CEOCCUR	Feeling faint or dizzy?
+PULM_EDEMA_MHOCCUR	Was mother diagnosed with pulmonary edema?
+RUQ_PAIN_CEOCCUR	"Were any of the following signs or symptoms of illness or pregnancy complication noted while hospitalized?
+Right upper quadrant pain"
+EPIGASTR_PAIN_CEOCCUR	"Were any of the following signs or symptoms of illness or pregnancy complication noted while hospitalized?
+Epigastric pain (pain/discomfort in upper abdomen directly below ribs) "
+ORGAN_FAIL_MHTERM_5	"Specify type of organ failure noted in the clinical record 
+ Neurological dysfunction"
+HEADACHE_CEOCCUR	"Were any of the following signs or symptoms of illness or pregnancy complication noted while hospitalized?
+Severe headaches"
+FAINT_CEOCCUR	"Were any of the following signs or symptoms of illness or pregnancy complication noted while hospitalized?
+Feeling faint or dizzy"
+CREAT_LBORRESU	serum creatinine result µmol/L
+PREECLAMPSIA_CEOCCUR_4	"If mother was diagnosed with preeclampsia, were there any of the following severe features?
+ Pulmonary edema"
+PREECLAMPSIA_CEOCCUR_1	"If mother was diagnosed with preeclampsia, were there any of the following severe features?
+ Eclampsia or seizures"
+ 
 ```{r echo=FALSE}
 temp.df <- mnh_merged_df %>% 
   select(M08_CBC_LBPERF_1_1, M08_CBC_HB_LBORRES_1)
@@ -1620,6 +1737,24 @@ Suggested change:
 ```{r echo=FALSE}
 
 ```
+
+
+***PREECLAMPSIA (DIAGNOSED) - SECONDARY OUTCOME: PRE_DIAG***
+LnD:
+MNH09	HDP_HTN_MHOCCUR_3	Was mother diagnosed with any of the following hypertensive disorders of pregnancy (HDP)? Preeclampsia
+
+Hospitalization:
+MNH19	HDP_HTN_MHOCCUR_3	(If antenatal period) Was mother diagnosed with any of the following hypertensive disorders of pregnancy (HDP) while hospitalized? Preeclampsia
+```{r}
+temp.df <- mnh_merged_df %>% select(MOMID, PREGID, #,SITE
+                                    M09_HDP_HTN_MHOCCUR_3_6, M19_HDP_HTN_MHOCCUR_3_13)
+
+temp.df <- temp.df %>%
+  mutate(PRE_DIAG = if_else(!is.na(M09_HDP_HTN_MHOCCUR_3_6) & M09_HDP_HTN_MHOCCUR_3_6==1, 1, 0))
+
+table(temp.df$PRE_DIAG, useNA = "always")
+```
+
 
 ***GESTATIONAL DIABETES - SECONDARY OUTCOME: GEST_DIAB***
 
@@ -1783,23 +1918,7 @@ table(MAT_PPH = mnh_merged_df$MAT_PPH, useNA = "always")
 ```
 
 
-***PREECLAMPSIA (DIAGNOSED) - SECONDARY OUTCOME: PRE_DIAG***
-LnD:
-MNH09	HDP_HTN_MHOCCUR_3	Was mother diagnosed with any of the following hypertensive disorders of pregnancy (HDP)? Preeclampsia
-
-Hospitalization:
-MNH19	HDP_HTN_MHOCCUR_3	(If antenatal period) Was mother diagnosed with any of the following hypertensive disorders of pregnancy (HDP) while hospitalized? Preeclampsia
-```{r}
-temp.df <- mnh_merged_df %>% select(MOMID, PREGID, #,SITE
-                                    M09_HDP_HTN_MHOCCUR_3_6, M19_HDP_HTN_MHOCCUR_3_13)
-
-temp.df <- temp.df %>%
-  mutate(PRE_DIAG = if_else(!is.na(M09_HDP_HTN_MHOCCUR_3_6) & M09_HDP_HTN_MHOCCUR_3_6==1, 1, 0))
-
-table(temp.df$PRE_DIAG, useNA = "always")
-```
-
-***PROLONGED LABOR - PRO_LABOR***
+***PROLONGED LABOR - TERTIARY OUTCOME: PRO_LABOR***
 Prolonged labor is defined as a first stage of labor lasting ≥20 hours for primipara and ≥14 hours for multipara.
 ```{r}
 temp.df <- mnh_merged_df %>% select(MOMID, PREGID, M04_PH_PREV_RPORRES_1, M09_LABOR_MHSTDAT_6, M09_LABOR_MHSTTIM_6, M09_DELIV_DSSTDAT_INF1_6, M09_DELIV_DSSTTIM_INF1_6)
@@ -1827,6 +1946,33 @@ mnh_merged_df <- mnh_merged_df %>%
 table(mnh_merged_df$PRO_LABOR, useNA = "always")
 ```
 
+
+***TERTIARY: UNPLANNED SURGERY - UN_SURGERY***
+The occurrence of medically-indicated or emergent surgical procedure during labor and delivery. Includes: (1) Hysterectomy, defined as the removal of the uterus (i.e. partial) or of the uterus and the cervix (i.e. total hysterectomy). (2) Cesarean section, defined as a surgical procedure used to deliver a baby through incisions in the abdomen and uterus.
+
+MNH09	PPH_FAORRES_5	Were any of the following procedures carried out for PPH: Hysterectomy
+MNH09	CES_PROCCUR_INF1	Was Cesarean delivery emergent or planned?
+MNH19	TX_PROCCUR_5	Did the mother receive any of the following interventions while hospitalized at this location? Hysterectomy
+
+```{r}
+#################################################################################
+#TODO 
+# NOTES: 
+# - DO WE NEED PPH_FAORRES_5 = HYSTERECTOMY FOR PPH in MNH09. 
+
+##################################################################################
+
+temp.df <- mnh_merged_df %>% 
+  select(M09_PPH_FAORRES_5_6, M09_DELIV_PRROUTE_INF1_6, M09_DELIV_PRROUTE_INF2_6, M09_DELIV_PRROUTE_INF3_6, M09_DELIV_PRROUTE_INF4_6, M09_CES_PROCCUR_INF1_6, M19_TX_PROCCUR_2_13, M19_TX_PROCCUR_5_13) %>% 
+  mutate(UN_SURGERY = case_when(M09_PPH_FAORRES_5_6==1 |
+                               (M09_DELIV_PRROUTE_INF1_6==2 | M09_DELIV_PRROUTE_INF2_6==2 | 
+                                  M09_DELIV_PRROUTE_INF3_6==2 | M09_DELIV_PRROUTE_INF4_6==2 & 
+                                  M09_CES_PROCCUR_INF1_6==1) |
+                               M19_TX_PROCCUR_2_13==1 | M19_TX_PROCCUR_5_13==1 ~ 1, 
+                               TRUE ~ as.numeric(0)))
+table(temp.df$UN_SURGERY)
+
+```
 
 ******************************************************************************************************
 ******************************************************************************************************
