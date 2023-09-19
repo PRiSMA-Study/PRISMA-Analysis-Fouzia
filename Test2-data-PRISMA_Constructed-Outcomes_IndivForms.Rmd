@@ -655,45 +655,49 @@ M10_MAT_DSTERM = 3 (Died after admission for labor and delivery)
 #TODO 
 # NOTES: 
 # - TURN ALL NA TO 0
+# - THIS VARIABLE IS GOOD TO GO OTHERWISE - 09/19/2023
 ##################################################################################
 
-temp.df <- mnh_merged_df %>% select(MOMID, PREGID, M09_DELIV_DSSTDAT_INF1_6,M09_DELIV_DSSTDAT_INF2_6,
-  M09_DELIV_DSSTDAT_INF3_6, M09_DELIV_DSSTDAT_INF4_6, M10_MAT_DSTERM_6, M23_CLOSE_DSDECOD, M23_DTHDAT)
+# temp.df <- mnh_merged_df %>% select(MOMID, PREGID, M09_DELIV_DSSTDAT_INF1_6,M09_DELIV_DSSTDAT_INF2_6,
+  # M09_DELIV_DSSTDAT_INF3_6, M09_DELIV_DSSTDAT_INF4_6, M10_MAT_DSTERM_6, M23_CLOSE_DSDECOD, M23_DTHDAT)
 
-temp.df <- temp.df %>% 
+#temp.df$M23_DTHDAT[1] <- '2023-06-12'
+# temp.df$M23_DTHDAT[2] <- '2023-08-05'
+
+mnh_merged_df <- mnh_merged_df %>% 
   mutate(var_w_deliverydate = any(!is.na(c(M09_DELIV_DSSTDAT_INF1_6, #'any' is checking if anything in these columns by row dplyr is doing the by-row part is NA.
   M09_DELIV_DSSTDAT_INF2_6,
   M09_DELIV_DSSTDAT_INF3_6,
   M09_DELIV_DSSTDAT_INF4_6))))
 
 # JUST CREATING DAYS DIFF HERE FIRST
-temp.df <- temp.df %>% 
+mnh_merged_df <- mnh_merged_df %>% 
   mutate(PREG_DEATH_DIFF_DAYS = as.numeric(as.Date(M23_DTHDAT, na.rm = TRUE) - as.Date(max(M09_DELIV_DSSTDAT_INF1_6,
                                                                           M09_DELIV_DSSTDAT_INF2_6, 
                                                                           M09_DELIV_DSSTDAT_INF3_6,
                                                                           M09_DELIV_DSSTDAT_INF4_6, 
                                                                           na.rm = TRUE))))
 
-temp.df <- mnh_merged_df %>% select(MOMID, PREGID, PREG_DEATH_DIFF_DAYS,
-                                    M23_DTHDAT, 
-                                    M09_DELIV_DSSTDAT_INF1_6,
-                                    M09_DELIV_DSSTDAT_INF2_6, 
-                                    M09_DELIV_DSSTDAT_INF3_6,
-                                    M09_DELIV_DSSTDAT_INF4_6)
+
+
 mnh_merged_df <- mnh_merged_df %>% 
-  rowwise() %>%
-  mutate(PREG_DEATH = if_else(M23_CLOSE_DSDECOD == 3 | !is.na(M23_DTHDAT) | M10_MAT_DSTERM_6==3, 
+  #rowwise() %>%
+  mutate(PREG_DEATH = if_else((!is.na(M23_CLOSE_DSDECOD) & M23_CLOSE_DSDECOD == 3) | 
+                                !is.na(M23_DTHDAT) | 
+                                (!is.na(M10_MAT_DSTERM_6) & M10_MAT_DSTERM_6==3), 
                               if_else(var_w_deliverydate,
-                                      as.numeric(as.Date(M23_DTHDAT) - as.Date(max(M09_DELIV_DSSTDAT_INF1_6,
-                                                                          M09_DELIV_DSSTDAT_INF2_6, 
-                                                                          M09_DELIV_DSSTDAT_INF3_6,
-                                                                          M09_DELIV_DSSTDAT_INF4_6, 
-                                                                          na.rm = TRUE)) <
-                                                   as.difftime(43, units = "days")),
+                                      PREG_DEATH_DIFF_DAYS < as.difftime(43, units = "days"),
                                       1), 
                               0)) %>% 
-  mutate(PREG_DEATH = if_else(M23_CLOSE_DSDECOD==4 | M23_CLOSE_DSDECOD==5, 9, PREG_DEATH))
+  mutate(PREG_DEATH = if_else((!is.na(M23_CLOSE_DSDECOD) & M23_CLOSE_DSDECOD==4) | (!is.na(M23_CLOSE_DSDECOD) & M23_CLOSE_DSDECOD==5), 9, PREG_DEATH))
 
+  temp.df <- mnh_merged_df %>% select(MOMID, PREGID, PREG_DEATH, PREG_DEATH_DIFF_DAYS, 
+                                      M09_DELIV_DSSTDAT_INF1_6,
+                                      M09_DELIV_DSSTDAT_INF2_6,
+                                      M09_DELIV_DSSTDAT_INF3_6, 
+                                      M09_DELIV_DSSTDAT_INF4_6, 
+                                      M10_MAT_DSTERM_6, M23_CLOSE_DSDECOD, M23_DTHDAT)
+  
 table(PREG_DEATH=mnh_merged_df$PREG_DEATH, useNA = "always") # data is molsty 2=Alive or 4 = loss to follow up or NA. 
  
 ```
@@ -713,39 +717,36 @@ MNH23	DTHDAT
 # - NEED TO FIX THIS - HAVE TO CALCULATE BETWEEN 42 DAYS AND 1 YEAR. 
 ##################################################################################
 
-temp.df <- mnh_merged_df %>% select(MOMID, PREGID, M09_DELIV_DSSTDAT_INF1_6,M09_DELIV_DSSTDAT_INF2_6,
-  M09_DELIV_DSSTDAT_INF3_6, M09_DELIV_DSSTDAT_INF4_6, M10_MAT_DSTERM_6, M23_CLOSE_DSDECOD, M23_DTHDAT)
+# temp.df <- mnh_merged_df %>% select(MOMID, PREGID, M09_DELIV_DSSTDAT_INF1_6,M09_DELIV_DSSTDAT_INF2_6,
+  # M09_DELIV_DSSTDAT_INF3_6, M09_DELIV_DSSTDAT_INF4_6, M10_MAT_DSTERM_6, M23_CLOSE_DSDECOD, M23_DTHDAT)
+
+# temp.df$M23_DTHDAT[1] <- '2023-07-12'
+# temp.df$M23_DTHDAT[2] <- '2023-08-05'
 
 mnh_merged_df <- mnh_merged_df %>% 
   mutate(var_w_deliverydate = any(!is.na(c(M09_DELIV_DSSTDAT_INF1_6, #'any' is checking if anything in these columns by row dplyr is doing the by-row part is NA.
   M09_DELIV_DSSTDAT_INF2_6,
   M09_DELIV_DSSTDAT_INF3_6,
   M09_DELIV_DSSTDAT_INF4_6))))
-  
+
+# JUST CREATING DAYS DIFF HERE FIRST
 mnh_merged_df <- mnh_merged_df %>% 
-  rowwise() %>%
+  mutate(PREG_DEATH_DIFF_DAYS = as.numeric(as.Date(M23_DTHDAT, na.rm = TRUE) - as.Date(max(M09_DELIV_DSSTDAT_INF1_6,
+                                                                          M09_DELIV_DSSTDAT_INF2_6, 
+                                                                          M09_DELIV_DSSTDAT_INF3_6,
+                                                                          M09_DELIV_DSSTDAT_INF4_6, 
+                                                                          na.rm = TRUE))))
+
+mnh_merged_df <- mnh_merged_df %>% 
+  #rowwise() %>%
   mutate(LATE_PREG_DEATH = if_else(M23_CLOSE_DSDECOD == 3 | !is.na(M23_DTHDAT) | M10_MAT_DSTERM_6==3, 
-                              if_else(var_w_deliverydate, # THIS IS A TRUE/FALSE.
-                                      ((as.numeric(as.Date(M23_DTHDAT) - as.Date(max(M09_DELIV_DSSTDAT_INF1_6,
-                                                                          M09_DELIV_DSSTDAT_INF2_6, 
-                                                                          M09_DELIV_DSSTDAT_INF3_6,
-                                                                          M09_DELIV_DSSTDAT_INF4_6, 
-                                                                          na.rm = TRUE)) >
-                                                   as.difftime(42, units = "days"))) & 
-                                        (as.numeric(as.Date(M23_DTHDAT) - as.Date(max(M09_DELIV_DSSTDAT_INF1_6,
-                                                                          M09_DELIV_DSSTDAT_INF2_6, 
-                                                                          M09_DELIV_DSSTDAT_INF3_6,
-                                                                          M09_DELIV_DSSTDAT_INF4_6, 
-                                                                          na.rm = TRUE)) <
-                                                   as.difftime(366, units = "days")))),
+                              if_else(var_w_deliverydate,
+                                      between(as.numeric(PREG_DEATH_DIFF_DAYS), 43, 365),
                                       1), 
                               0)) %>% 
-  mutate(LATE_PREG_DEATH = if_else(M23_CLOSE_DSDECOD==4 | M23_CLOSE_DSDECOD==5, 9, LATE_PREG_DEATH))
-
-
+  mutate(LATE_PREG_DEATH = if_else((!is.na(M23_CLOSE_DSDECOD) & M23_CLOSE_DSDECOD==4) | (!is.na(M23_CLOSE_DSDECOD) & M23_CLOSE_DSDECOD==5), 9, LATE_PREG_DEATH))
 
 table(LATE_PREG_DEATH=mnh_merged_df$LATE_PREG_DEATH, useNA = "always") # data is molsty 2=Alive or 4 = loss to follow up or NA. 
- 
 ```
 
 
@@ -1218,8 +1219,8 @@ mnh_merged <- mnh_merged_df %>%
                                                                           M09_DELIV_DSSTDAT_INF2_6, 
                                                                           M09_DELIV_DSSTDAT_INF3_6,
                                                                           M09_DELIV_DSSTDAT_INF4_6, 
-                                                                          na.rm = TRUE))<
-                                                   as.difftime(42, units = "days")),
+                                                                          na.rm = TRUE)) <
+                                                   as.difftime(43, units = "days")),
                                       1), 
                               0)) %>% 
   mutate(MAT_DEATH = if_else(M23_CLOSE_DSDECOD==4 | M23_CLOSE_DSDECOD==5, 9, MAT_DEATH))
@@ -1244,9 +1245,12 @@ M19_TX_PROCCUR_2
 M19_TX_PROCCUR_3
 M19_TX_PROCCUR_5
 
-*ADD in W/IN 42 DAYS AFTER TERMINATION OF PREGNANCY*
 ```{r, echo=FALSE}
-#TODO add in Hospitalization vars.
+#######################################################
+#TODO 
+# - ADD HOPITALIZATION VARS
+# - FIX NA TO 0
+######################################################
 
 temp.df <- mnh_merged_df %>%
   select(MOMID, PREGID, 
@@ -1806,6 +1810,14 @@ Bleeding from or into the genital tract, occurring from ≥24 weeks gestation an
 ANC TP: 28, 32, 36
 ANC Hospitalization
 ```{r echo=FALSE}
+#################################################################################
+#TODO 
+# NOTES: 
+# NEED to create HEMORRHAGE ANY.
+# - LYNDA HAS N=7; FF HAS N=9.  
+# LET LYNDA KNOW HER VARIABLE IS OFF
+##################################################################################
+
 temp.df <- mnh_merged_df %>% 
   select(M04_APH_CEOCCUR_3, M04_APH_CEOCCUR_4, M04_APH_CEOCCUR_5, M09_APH_CEOCCUR_6, M19_VAG_BLEED_CEOCCUR_13, M19_LD_COMPL_MHTERM_4_13) 
 
@@ -1840,11 +1852,12 @@ Hospitalization
 #TODO 
 # NOTES: 
 # NEED to create HEMORRHAGE ANY.
-# 1. M09_PPH_CEOCCUR_6 == 0 for many where M09_PPH_ESTIMATE_FAORRES_6 >=500 - #
+# -  M09_PPH_CEOCCUR_6 == 0 for many where M09_PPH_ESTIMATE_FAORRES_6 >=500 - #
 # ----- for now, making this an OR statement then. # 
 # 2. Should we look at ANC0 weeks for PPH within 24 hours or put that in late PPH? # 
 # 3. Should M19_LD_COMPL_MHTERM_5_13 and M19_LD_COMPL_ML_13 be used for MAT_PPH or Late? #  
-
+# - LYNNDA HAS N=5 FOR SEVERE HEMORRHAGE. 
+# DO WE HAVE PNC0 TIME? THEN WE CAN'T PNC0. JUST BETTER TO USE IPC.  - SOME SITES MAY FILL MNH06 - POC BUT THIS OPTIONAL. 
 ##################################################################################
 
 temp.df <- mnh_merged_df %>%
@@ -1914,6 +1927,8 @@ mnh_merged_df <- mnh_merged_df %>%
   #        M19_TX_PROCCUR_1_13, M19_BP_LT90_SYS_VSORRES_13, M19_BP_LT90_DIA_VSORRES_13)
 
 table(MAT_PPH = mnh_merged_df$MAT_PPH, useNA = "always")
+
+table(MAT_PPH_SEV = mnh_merged_df$MAT_PPH_SEV, useNA = "always") #TODO LYNDA HAS N=5
                             
 ```
 
@@ -1972,6 +1987,123 @@ temp.df <- mnh_merged_df %>%
                                TRUE ~ as.numeric(0)))
 table(temp.df$UN_SURGERY)
 
+```
+
+***SECONDARY: MATERNAL INFECTION AND SEPSIS (PREGNANCY) - MAT_INFECT_ANC***
+Any infection and/or organ dysfunction resulting from infection during pregnancy.
+
+Constructed	MAT_DYS
+MNH04	HIV_MHOCCUR
+MNH04	SYPH_MHOCCUR
+MNH04	OTHR_STI_MHOCCUR
+MNH04	GONORRHEA_MHOCCUR
+MNH04	CHLAMYDIA_MHOCCUR
+MNH04	CHANC_MHOCCUR
+MNH04	GENULCER_MHOCCUR
+MNH04	STI_OTHR_MHOCCUR
+MNH04	MALARIA_EVER_MHOCCUR
+MNH04	TB_MHOCCUR
+MNH04	SYPH_CMTRT_1
+MNH04	SYPH_CMTRT_2
+MNH04	SYPH_CMTRT_88
+MNH04	GONORRHEA_CMTRT_1
+MNH04	GONORRHEA_CMTRT_2
+MNH04	GONORRHEA_CMTRT_3
+MNH04	GONORRHEA_CMTRT_88
+MNH04	CHLAMYDIA_CMTRT_1
+MNH04	CHLAMYDIA_CMTRT_2
+MNH04	CHLAMYDIA_CMTRT_3
+MNH04	CHLAMYDIA_CMTRT_4
+MNH04	CHLAMYDIA_CMTRT_88
+MNH04	CHANC_CMTRT_1
+MNH04	CHANC_CMTRT_2
+MNH04	CHANC_CMTRT_3
+MNH04	CHANC_CMTRT_4
+MNH04	CHANC_CMTRT_88
+MNH04	STI_OTHR_CMOCCUR
+MNH04	MALARIA_EVER_CMTRT_1
+MNH04	MALARIA_EVER_CMTRT_2
+MNH04	MALARIA_EVER_CMTRT_3
+MNH04	MALARIA_EVER_CMTRT_88
+MNH04	TB_CMTRT_1
+MNH04	TB_CMTRT_2
+MNH04	TB_CMTRT_3
+MNH04	TB_CMTRT_4
+MNH04	TB_CMTRT_5
+MNH04	TB_CMTRT_88
+MNH04	ANTIBX_CMOCCUR
+MNH04	ANTIBX_CMTRT_1
+MNH04	ANTIBX_CMTRT_2
+MNH04	ANTIBX_CMTRT_3
+MNH04	ANTIBX_CMTRT_4
+MNH04	ANTIBX_CMTRT_5
+MNH04	ANTIBX_CMTRT_6
+MNH04	ANTIBX_CMTRT_7
+MNH04	ANTIBX_CMTRT_8
+MNH04	ANTIBX_CMTRT_9
+MNH04	ANTIBX_CMTRT_88
+MNH04	ANTIBX_CMINDC
+```{r}
+temp.df <- mnh_merged_df %>% 
+  mutate(MAT_INFECT_ANC = case_when(MAT_DYS==1 | 
+                                      M04_HIV_CMOCCUR_1==1 | M04_HIV_CMOCCUR_2==1 | M04_HIV_CMOCCUR_3==1 | 
+                                      M04_HIV_CMOCCUR_4==1 | M04_HIV_CMOCCUR_5==1 |
+                                      M04_SYPH_MHOCCUR_1==1 | M04_SYPH_MHOCCUR_2==1 | M04_SYPH_MHOCCUR_3==1 | 
+                                      M04_SYPH_MHOCCUR_4==1 | M04_SYPH_MHOCCUR_4==1 | 
+                                      M04_OTHR_STI_MHOCCUR_1==1 | M04_OTHR_STI_MHOCCUR_2==1 | M04_OTHR_STI_MHOCCUR_3==1 | 
+                                      M04_OTHR_STI_MHOCCUR_4==1 | M04_OTHR_STI_MHOCCUR_5==1 | 
+                                      M04_GONORRHEA_MHOCCUR_1==1 | M04_GONORRHEA_MHOCCUR_2==1 | M04_GONORRHEA_MHOCCUR_3==1 |
+                                      M04_GONORRHEA_MHOCCUR_4==1 | M04_GONORRHEA_MHOCCUR_5==1 | 
+                                      M04_CHLAMYDIA_MHOCCUR_1==1 | M04_CHLAMYDIA_MHOCCUR_2==1 | M04_CHLAMYDIA_MHOCCUR_3==1 |
+                                      M04_CHLAMYDIA_MHOCCUR_4==1 | M04_CHLAMYDIA_MHOCCUR_5==1 | 
+                                      M04_CHANC_MHOCCUR_1==1 | M04_CHANC_MHOCCUR_2==1 | M04_CHANC_MHOCCUR_3==1 | 
+                                      M04_CHANC_MHOCCUR_4==1 | M04_CHANC_MHOCCUR_5==1 | 
+                                      M04_GENULCER_MHOCCUR_1==1 | M04_GENULCER_MHOCCUR_2==1 | M04_GENULCER_MHOCCUR_3==1 | 
+                                      M04_GENULCER_MHOCCUR_4==1 | M04_GENULCER_MHOCCUR_5==1 |
+                                      M04_STI_OTHR_MHOCCUR_1==1 | M04_STI_OTHR_MHOCCUR_2==1 | M04_STI_OTHR_MHOCCUR_3==1 |
+                                      M04_STI_OTHR_MHOCCUR_4==1 | M04_STI_OTHR_MHOCCUR_5==1 |
+                                      M04_MALARIA_EVER_MHOCCUR_1==1 | M04_MALARIA_EVER_MHOCCUR_2==1 | M04_MALARIA_EVER_MHOCCUR_3==1 |
+                                      M04_MALARIA_EVER_MHOCCUR_4==1 | M04_MALARIA_EVER_MHOCCUR_5==1 |
+                                      M04_TB_MHOCCUR_1==1 | M04_TB_MHOCCUR_2==1 | M04_TB_MHOCCUR_3==1 | 
+                                      M04_TB_MHOCCUR_4==1 | M04_TB_MHOCCUR_5==1 |
+                                      M04_SYPH_CMTRT_1_1==1 | M04_SYPH_CMTRT_1_2==1 | M04_SYPH_CMTRT_1_3==1 |
+                                      M04_SYPH_CMTRT_1_4==1 | M04_SYPH_CMTRT_1_5==1 | 
+                                      M04_SYPH_CMTRT_2_1==1 | M04_SYPH_CMTRT_2_2==1 | M04_SYPH_CMTRT_2_3==1 |
+                                      M04_SYPH_CMTRT_2_4==1 | M04_SYPH_CMTRT_2_5==1 | 
+                                      M04_SYPH_CMTRT_88_1==1 | M04_SYPH_CMTRT_88_2==1 | M04_SYPH_CMTRT_88_3==1 | 
+                                      M04_SYPH_CMTRT_88_4==1 | M04_SYPH_CMTRT_88_5==1 | 
+                                      M04_GONORRHEA_CMTRT_1_1==1 | M04_GONORRHEA_CMTRT_1_2==1 | M04_GONORRHEA_CMTRT_1_3==1 | 
+                                      M04_GONORRHEA_CMTRT_1_4==1 | M04_GONORRHEA_CMTRT_1_5==1 | 
+                                      M04_GONORRHEA_CMTRT_2_1==1 | M04_GONORRHEA_CMTRT_2_2==1 | M04_GONORRHEA_CMTRT_2_3==1 | 
+                                      M04_GONORRHEA_CMTRT_2_4==1 | M04_GONORRHEA_CMTRT_2_5==1 | 
+                                      M04_GONORRHEA_CMTRT_3_1==1 | M04_GONORRHEA_CMTRT_3_2==1 | M04_GONORRHEA_CMTRT_3_3==1 | 
+                                      M04_GONORRHEA_CMTRT_3_4==1 | M04_GONORRHEA_CMTRT_3_5==1 | 
+                                      M04_GONORRHEA_CMTRT_88_1==1 | M04_GONORRHEA_CMTRT_88_2==1 | M04_GONORRHEA_CMTRT_88_3==1 | 
+                                      M04_GONORRHEA_CMTRT_88_4==1 | M04_GONORRHEA_CMTRT_88_5==1 | 
+                                      M04_CHLAMYDIA_CMTRT_1_1==1 | M04_CHLAMYDIA_CMTRT_1_2==1 | M04_CHLAMYDIA_CMTRT_1_3==1 | 
+                                      M04_CHLAMYDIA_CMTRT_1_4==1 | M04_CHLAMYDIA_CMTRT_1_5==1 |
+                                      M04_CHLAMYDIA_CMTRT_2_1==1 | M04_CHLAMYDIA_CMTRT_2_2==1 | M04_CHLAMYDIA_CMTRT_2_3==1 |
+                                      M04_CHLAMYDIA_CMTRT_2_4==1 | M04_CHLAMYDIA_CMTRT_2_5==1 | 
+                                      M04_CHLAMYDIA_CMTRT_3_1==1 | M04_CHLAMYDIA_CMTRT_3_2==1 | M04_CHLAMYDIA_CMTRT_3_3==1 |
+                                      M04_CHLAMYDIA_CMTRT_3_4==1 | M04_CHLAMYDIA_CMTRT_3_5==1 |
+                                      M04_CHLAMYDIA_CMTRT_4_1==1 | M04_CHLAMYDIA_CMTRT_4_2==1 | M04_CHLAMYDIA_CMTRT_4_3==1 | 
+                                      M04_CHLAMYDIA_CMTRT_4_4==1 | M04_CHLAMYDIA_CMTRT_4_5==1 | 
+                                      M04_CHLAMYDIA_CMTRT_88_1==1 | M04_CHLAMYDIA_CMTRT_88_2==1 | M04_CHLAMYDIA_CMTRT_88_3==1 |
+                                      M04_CHLAMYDIA_CMTRT_88_4==1 | M04_CHLAMYDIA_CMTRT_88_5==1 | 
+                                      M04_CHANC_CMTRT_1_1==1 | M04_CHANC_CMTRT_1_2==1 | M04_CHANC_CMTRT_1_3==1 |
+                                      M04_CHANC_CMTRT_1_4==1 | M04_CHANC_CMTRT_1_5==1 | 
+                                      M04_CHANC_CMTRT_2_1==1 | M04_CHANC_CMTRT_2_2==1 | M04_CHANC_CMTRT_2_3==1 |
+                                      M04_CHANC_CMTRT_2_4==1 | M04_CHANC_CMTRT_2_5==1 |
+                                      M04_CHANC_CMTRT_3_1==1 | M04_CHANC_CMTRT_3_2==1 | M04_CHANC_CMTRT_3_3==1 |
+                                      M04_CHANC_CMTRT_3_4==1 | M04_CHANC_CMTRT_3_5==1 | 
+                                      M04_CHANC_CMTRT_4_1==1 | M04_CHANC_CMTRT_4_2==1 | M04_CHANC_CMTRT_4_5==1 |
+                                      M04_CHANC_CMTRT_88_1==1 | M04_CHANC_CMTRT_88_2==1 | M04_CHANC_CMTRT_88_3==1 | 
+                                      M04_CHANC_CMTRT_88_4==1 | M04_CHANC_CMTRT_88_5==1 | 
+                                      M04_STI_OTHR_CMOCCUR_1==1 | M04_STI_OTHR_CMOCCUR_2==1 | M04_STI_OTHR_CMOCCUR_3==1 |
+                                      M04_STI_OTHR_CMOCCUR_4==1 | M04_STI_OTHR_CMOCCUR_5==1 |
+                                      M04_MALARIA_EVER_CMTRT_1_1==1 | M04_MALARIA_EVER_CMTRT_1_2==1 | M04_MALARIA_EVER_CMTRT_1_3==1 | 
+                                      M04_MALARIA_EVER_CMTRT_1_4==1 | M04_MALARIA_EVER_CMTRT_1_5==1 | 
+                                      M04_MALARIA_EVER_CMTRT_2_1==1 | ))
 ```
 
 ******************************************************************************************************
