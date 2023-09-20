@@ -549,7 +549,9 @@ mnh_merged_df <- mnh_merged_df %>% #b/c I am passing in the entire dataframe, I 
             })
 ```
 
-Fetal/Infant outcomes
+*RUN CODE ABOVE*
+
+***Fetal/Infant outcomes***
 1. GA_BOE: use US_GA_DAYS_AGE_FTS1,2,3,4 and US_GA_WKS_AGE_FTS1,2,3,4 to calculate the biggest fetus.  Use the biggest fetus to do the calculations for GA_DIFF_WKS and GA_DIFF_DAYS.  In the constructed outcomes sheets, it is not listed correctly (b/c only asking to use first fetus)
 2. Use the biggest infant using US and GA_LMP_WEEKS_SCORRES and GA_LMP_DAYS to calc. variable GA_DIFF_WKS and GA_DIFF_DAYS 
 ```{r echo=FALSE}
@@ -884,6 +886,128 @@ mnh_merged_df$M08_UA_PROT_LBORRES_13 <- ifelse("M08_UA_PROT_LBORRES_13" %in% nam
 
 mnh_merged_df$M08_UA_PROT_LBORRES_14 <- ifelse("M08_UA_PROT_LBORRES_14" %in% names(mnh_merged_df),
                                             mnh_merged_df$M08_UA_PROT_LBORRES_14, NA)
+
+# INFECTION VARS - SITES HAVEN'T STARTED USING THESE TESTS YETS - 09/20/2023
+M08_SYPH_TITER_LBPERF_1_1 <- ifelse("M08_SYPH_TITER_LBPERF_1_1" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_SYPH_TITER_LBPERF_1_1, NA)
+
+M08_SYPH_TITER_LBPERF_1_2 <- ifelse("M08_SYPH_TITER_LBPERF_1_2" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_SYPH_TITER_LBPERF_1_2, NA)
+
+M08_SYPH_TITER_LBPERF_1_3 <- ifelse("M08_SYPH_TITER_LBPERF_1_3" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_SYPH_TITER_LBPERF_1_3, NA)
+
+M08_SYPH_TITER_LBPERF_1_4 <- ifelse("M08_SYPH_TITER_LBPERF_1_4" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_SYPH_TITER_LBPERF_1_4, NA)
+
+M08_SYPH_TITER_LBPERF_1_5 <- ifelse("M08_SYPH_TITER_LBPERF_1_1" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_SYPH_TITER_LBPERF_1_5, NA)
+
+M08_HEV_IGM_LBORRES_1 <- ifelse("M08_HEV_IGM_LBORRES_1" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_HEV_IGM_LBORRES_1, NA)
+
+M08_HEV_IGM_LBORRES_2 <- ifelse("M08_HEV_IGM_LBORRES_2" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_HEV_IGM_LBORRES_2, NA)
+
+M08_HEV_IGM_LBORRES_3 <- ifelse("M08_HEV_IGM_LBORRES_3" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_HEV_IGM_LBORRES_3, NA)
+
+M08_HEV_IGM_LBORRES_4 <- ifelse("M08_HEV_IGM_LBORRES_4" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_HEV_IGM_LBORRES_4, NA)
+
+M08_HEV_IGM_LBORRES_5 <- ifelse("M08_HEV_IGM_LBORRES_5" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_HEV_IGM_LBORRES_5, NA)
+
+M08_CTNG_CT_LBORRES_1 <- ifelse("M08_CTNG_CT_LBORRES_1" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_CTNG_CT_LBORRES_1, NA)
+
+M08_CTNG_CT_LBORRES_2 <- ifelse("M08_CTNG_CT_LBORRES_2" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_CTNG_CT_LBORRES_2, NA)
+
+M08_CTNG_CT_LBORRES_3 <- ifelse("M08_CTNG_CT_LBORRES_3" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_CTNG_CT_LBORRES_3, NA)
+
+M08_CTNG_CT_LBORRES_4 <- ifelse("M08_CTNG_CT_LBORRES_4" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_CTNG_CT_LBORRES_4, NA)
+
+M08_CTNG_CT_LBORRES_5 <- ifelse("M08_CTNG_CT_LBORRES_4" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_CTNG_CT_LBORRES_5, NA)
+
+M08_CTNG_NG_LBORRES_1 <- ifelse("M08_CTNG_NG_LBORRES_1" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_CTNG_NG_LBORRES_1, NA)
+
+M08_CTNG_NG_LBORRES_2 <- ifelse("M08_CTNG_NG_LBORRES_2" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_CTNG_NG_LBORRES_2, NA)
+
+M08_CTNG_NG_LBORRES_3 <- ifelse("M08_CTNG_NG_LBORRES_3" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_CTNG_NG_LBORRES_3, NA)
+
+M08_CTNG_NG_LBORRES_4 <- ifelse("M08_CTNG_NG_LBORRES_4" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_CTNG_NG_LBORRES_4, NA)
+
+M08_CTNG_NG_LBORRES_5 <- ifelse("M08_CTNG_NG_LBORRES_5" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_CTNG_NG_LBORRES_5, NA)
+
+M08_ZCD_ZIKIGM_LBORRES_1 <- ifelse("M08_ZCD_ZIKIGM_LBORRES_1" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_ZCD_ZIKIGM_LBORRES_1, NA)
+
+M08_ZCD_ZIKIGM_LBORRES_2 <- ifelse("M08_ZCD_ZIKIGM_LBORRES_2" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_ZCD_ZIKIGM_LBORRES_2, NA)
+
+M08_ZCD_ZIKIGM_LBORRES_3 <- ifelse("M08_ZCD_ZIKIGM_LBORRES_3" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_ZCD_ZIKIGM_LBORRES_3, NA)
+
+M08_ZCD_ZIKIGM_LBORRES_4 <- ifelse("M08_ZCD_ZIKIGM_LBORRES_4" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_ZCD_ZIKIGM_LBORRES_4, NA)
+
+M08_ZCD_ZIKIGM_LBORRES_5 <- ifelse("M08_ZCD_ZIKIGM_LBORRES_5" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_ZCD_ZIKIGM_LBORRES_5, NA)
+
+M08_ZCD_CHKIGM_LBORRES_1 <- ifelse("M08_ZCD_CHKIGM_LBORRES_1" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_ZCD_CHKIGM_LBORRES_1, NA)
+
+M08_ZCD_CHKIGM_LBORRES_2 <- ifelse("M08_ZCD_CHKIGM_LBORRES_2" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_ZCD_CHKIGM_LBORRES_2, NA)
+
+M08_ZCD_CHKIGM_LBORRES_3 <- ifelse("M08_ZCD_CHKIGM_LBORRES_3" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_ZCD_CHKIGM_LBORRES_3, NA)
+
+M08_ZCD_CHKIGM_LBORRES_4 <- ifelse("M08_ZCD_CHKIGM_LBORRES_4" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_ZCD_CHKIGM_LBORRES_4, NA)
+
+M08_ZCD_CHKIGM_LBORRES_5 <- ifelse("M08_ZCD_CHKIGM_LBORRES_5" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_ZCD_CHKIGM_LBORRES_5, NA)
+
+M08_ZCD_DENIGM_LBORRES_1 <- ifelse("M08_ZCD_DENIGM_LBORRES_1" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_ZCD_DENIGM_LBORRES_1, NA)
+
+M08_ZCD_DENIGM_LBORRES_2 <- ifelse("M08_ZCD_DENIGM_LBORRES_2" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_ZCD_DENIGM_LBORRES_2, NA)
+
+M08_ZCD_DENIGM_LBORRES_3 <- ifelse("M08_ZCD_DENIGM_LBORRES_3" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_ZCD_DENIGM_LBORRES_3, NA)
+
+M08_ZCD_DENIGM_LBORRES_4 <- ifelse("M08_ZCD_DENIGM_LBORRES_4" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_ZCD_DENIGM_LBORRES_4, NA)
+
+M08_ZCD_DENIGM_LBORRES_5 <- ifelse("M08_ZCD_DENIGM_LBORRES_5" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_ZCD_DENIGM_LBORRES_5, NA)
+
+M08_LEPT_IGM_LBORRES_1 <- ifelse("M08_LEPT_IGM_LBORRES_1" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_LEPT_IGM_LBORRES_1, NA)
+
+M08_LEPT_IGM_LBORRES_2 <- ifelse("M08_LEPT_IGM_LBORRES_2" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_LEPT_IGM_LBORRES_2, NA)
+
+M08_LEPT_IGM_LBORRES_3 <- ifelse("M08_LEPT_IGM_LBORRES_3" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_LEPT_IGM_LBORRES_3, NA)
+
+M08_LEPT_IGM_LBORRES_4 <- ifelse("M08_LEPT_IGM_LBORRES_4" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_LEPT_IGM_LBORRES_4, NA)
+
+M08_LEPT_IGM_LBORRES_5 <- ifelse("M08_LEPT_IGM_LBORRES_5" %in% names(mnh_merged_df),
+                                            mnh_merged_df$M08_LEPT_IGM_LBORRES_5, NA)
+
 
 
 
@@ -1356,6 +1480,11 @@ mnh_merged_df <- mnh_merged_df %>%
 table(ANY_PTB = mnh_merged_df$PRETERM_ANY, useNA = "always")
 ```
 
+***PLACENTA PREVIA
+```{r}
+
+```
+
 ***UTERINE RUPTURE = MAT_UTER_RUP***
 Tear in the muscular wall of the uterus during pregnancy or childbirth.
 L&D: 
@@ -1514,6 +1643,7 @@ In pregnancy defined as systolic blood pressure ≥160 mmHg or a diastolic blood
 # - Emily said to look at the subsequent visit also b/c we are not collecting 1 hr later if BP high.
 #       But need to figure out if Hospitalization happened at any of these visit in between to see which visit will be considered subsequent.
 # - Have these NAs: M06_BP_SYS_VSORRES_3_NA - what to do???
+#TODO EMILY WILL LET ME KNOW IF BP NON CONSEQUATIVE OK?  - MAY HAVE TO TAKE INTO ACCOUNT UNSCHEDULED VISITS. 
 ###################################################################################################
 temp.df <- mnh_merged_df %>% 
   select(MOMID, PREGID, SITE,
@@ -1561,6 +1691,7 @@ mnh_merged_df <- mnh_merged_df %>%
          meanSBP_Hosp_PNC = M19_BP_SYS_VSORRES_14, # ANC HOSPITALIZATION
          meanDBP_Hosp_PNC = M19_BP_DIA_VSORRES_14) # ANC HOSPITALIZATION
 
+#TODO EMILY WILL LET ME KNOW IF BP NON CONSEQUATIVE OK?  - MAY HAVE TO TAKE INTO ACCOUNT UNSCHEDULED VISITS. 
 mnh_merged_df <- mnh_merged_df %>% 
   mutate(GEST_HYPER_MEAS = case_when(CHRON_HYPER==0 & ((((meanSBP_ANC20 >=140 | meanDBP_ANC20 >=90) &
                                          (meanSBP_ANC28 >=140 | meanDBP_ANC28 >=90 )) | 
@@ -1609,6 +1740,48 @@ mnh_merged_df <- mnh_merged_df %>%
 table(HYPER_PNC = mnh_merged_df$HYPER_PNC)
 ```
 
+***SECONDARY: GESTATIONAL HYPERTENSION - GEST_HYPER_DIAG***
+Gestational hypertension (diagnosed)
+
+```{r}
+#####################################################################################################################################
+#TODO 
+# NOTES: 
+# = I INCLUDED MEDICATION USE IN DIAGNOSIS - IS THIS CORRECT? 
+# - SHOULD THIS INCLUDE SEVERE GESTATIONAH HYPERTENSION DIAGNOSED? - GOOGLE SHEETS VARS DON'T INCLUDE THIS IN PLAIN gHTN DIAGNOSED #
+# - DURING THE ANC PERIOD FOR DIAGNOSED gHTN THERE IS NO QUESTION ON SEVERE gHTN.
+####################################################################################################################################
+
+mnh_merged_df <- mnh_merged_df %>% 
+  mutate(GEST_HYPER_DIAG = case_when(M04_HPD_MHOCCUR_1=1 & M04_HPD_MHTERM_1==3 ~ 0, # WHEN HDP ==1 (INCL. CHRONIC HTN) AND HPD_MHTERM==3 WHICH IS CHRONIC HTN
+                                     (M04_HPD_MHOCCUR_2==1 & M04_HPD_MHTERM_2==1) | 
+                                       (M04_HPD_MHOCCUR_3==1 & M04_HPD_MHTERM_3==1) | 
+                                       (M04_HPD_MHOCCUR_4==1 & M04_HPD_MHTERM_4==1) | 
+                                       (M04_HPD_MHOCCUR_5==1 & M04_HPD_MHTERM_5==1) ~ 1,
+                                     M09_HDP_HTN_MHOCCUR_1_6==1 ~ 0, # WHEN MOTHER IS DIAGNOSED WITH cHTN 0.
+                                     M09_HDP_HTN_MHOCCUR_3_6==1 & M09_PREECLAMPSIA_CEOCCUR_3_6==1 ~ 1, # WHEN MOTHER IS DIAGNOSED WITH PE AND HAS SEVERE gHTN.
+                                     M09_HDP_HTN_MHOCCUR_2_6==1 ~ 1, # IF MOTHER DIAGNOSED WITH HDP THAT IS gHTN THEN 1. 
+                                     (M09_HDP_HTN_PROCCUR_3_6==1 | M09_HDP_HTN_PROCCUR_4_6==1 | M09_HDP_HTN_PROCCUR_5_6==1 |
+                                       M09_HDP_HTN_PROCCUR_6_6==1 | M09_HDP_HTN_PROCCUR_7_6==1 | M09_HDP_HTN_PROCCUR_8_6==1 | 
+                                       M09_HDP_HTN_PROCCUR_9_6==1) ~ 1,
+                                     M19_HDP_HTN_MHOCCUR_1_13==1 ~ 0, # cHTN DURING HOSPITALIZATION THEN 0.
+                                     M19_HDP_HTN_MHOCCUR_2_13==1 ~ 1, # gHTN DURING HOSPITALIZATION THEN 1.  
+                                     (M19_HDP_HTN_MHOCCUR_3_13==1 & M19_PREECLAMPSIA_CEOCCUR_3_13==1) ~ 1, 
+                                     TRUE ~ as.numeric(0))) 
+
+table(GEST_HYPER_DIAG = mnh_merged_df$GEST_HYPER_DIAG, useNA = "always")
+
+```
+
+***SEVERE GESTATIONAL HYPERTENSION - DIAGNOSED***
+```{r}
+mnh_merged_df <- mnh_merged_df %>% 
+  mutate(SEVERE_GEST_HYPER_REP = case_when(M09_HDP_HTN_MHOCCUR_3_6==1 & M09_PREECLAMPSIA_CEOCCUR_3_6==1 ~ 1,
+                                           M19_HDP_HTN_MHOCCUR_3_13==1 & M19_PREECLAMPSIA_CEOCCUR_3_13==1 ~ 1,
+                                           TRUE ~ as.numeric(0)))
+table(SEVERE_GEST_HYPER_REP = mnh_merged_df$SEVERE_GEST_HYPER_REP, useNA = "always")
+```
+
 ***GESTATIONAL PROTEINURIA - PROTEINURIA***
 24 hour urine collection >300 mg protein OR single voided urine protein/creatinine ratio ≥0.3 OR Dipstick of 1+ or 2+.
 Measured ANC20,28,32,36
@@ -1639,8 +1812,15 @@ table(PROTEINURIA = mnh_merged_df$PROTEINURIA)
 ***ORGAN DYSFUNCTION - MAT_DYS***
 Cardiovascular, respiratory, renal, coagulation/hematological, hepatic, neurological, and/or uterine dysfunction that occurred during pregnancy, childbirth or within 42 days of termination of pregnancy.
 ```{r echo=FALSE}
+##################################################################################
+#TODO 
+# NOTES: 
+# - THIS IS LOOKING AT L&D AND HOSPITALIZATION. 
+# - THIS VAR WILL FEED INTO SEPSIS. #
+
+##################################################################################
 mnh_merged_df <- mnh_merged_df %>% 
-  mutate(MAT_DYS = case_when((M09_ORG_FAIL_MHOCCUR_1_6 ==1 | 
+  mutate(MAT_DYS = case_when(((M09_ORG_FAIL_MHOCCUR_1_6 ==1 | 
                                 M09_ORG_FAIL_MHOCCUR_2_6==1 |
                                 M09_ORG_FAIL_MHOCCUR_3_6==1 | 
                                 M09_ORG_FAIL_MHOCCUR_4_6==1 |
@@ -1653,7 +1833,7 @@ mnh_merged_df <- mnh_merged_df %>%
                                 M19_ORGAN_FAIL_MHTERM_4_13==1 |
                                 M19_ORGAN_FAIL_MHTERM_5_13==1 | 
                                 M19_ORGAN_FAIL_MHTERM_6_13==1 | 
-                                M19_ORGAN_FAIL_MHTERM_7_13==1) ~1,
+                                M19_ORGAN_FAIL_MHTERM_7_13==1) & (M09_ORG_FAIL_SRCE_1_6==2 | M09_ORG_FAIL_SRCE_1_6==3)) ~1,
                              TRUE ~ as.numeric(0)))
 table(MAT_DYS = mnh_merged_df$MAT_DYS)
 ```
@@ -1753,10 +1933,10 @@ MNH19	HDP_HTN_MHOCCUR_3	(If antenatal period) Was mother diagnosed with any of t
 temp.df <- mnh_merged_df %>% select(MOMID, PREGID, #,SITE
                                     M09_HDP_HTN_MHOCCUR_3_6, M19_HDP_HTN_MHOCCUR_3_13)
 
-temp.df <- temp.df %>%
+mnh_merged_df <- mnh_merged_df %>%
   mutate(PRE_DIAG = if_else(!is.na(M09_HDP_HTN_MHOCCUR_3_6) & M09_HDP_HTN_MHOCCUR_3_6==1, 1, 0))
 
-table(temp.df$PRE_DIAG, useNA = "always")
+table(PRE_DIAG = mnh_merged_df$PRE_DIAG, useNA = "always")
 ```
 
 
@@ -1773,8 +1953,8 @@ Look at:
 ##################################################################################
 #TODO 
 # NOTES: 
-# 1. Need to additional conditions for the DIAGNOSED # 
-# 2. All of MEASURED variables are NA - FASTING OGTT, HbA1c# 
+# 1. NEED TO ADD ADDITIONAL CONDITIONS FOR DIAGNOSED # 
+# 2. ALL OF MEASURED variables are NA - FASTING OGTT, HbA1c# 
 
 ##################################################################################
 
@@ -1789,19 +1969,19 @@ temp.df <- mnh_merged_df %>% select(M06_BGLUC_POC_MMOLL_LBORRES_2,
                                     M08_HBA1C_LBORRES_1, )
 
 mnh_merged_df <- mnh_merged_df %>% 
-  
   mutate(GEST_DIAB_DIAG = ifelse( !is.na(M04_DIABETES_EVER_MHOCCUR_2==1) & M04_DIABETES_EVER_MHOCCUR_2==1 |
                                   !is.na(M04_DIABETES_EVER_MHOCCUR_3==1) & M04_DIABETES_EVER_MHOCCUR_3==1 | 
                                   !is.na(M04_DIABETES_EVER_MHOCCUR_4) & M04_DIABETES_EVER_MHOCCUR_4==1, 1, 0)) %>%
   
-  mutate(GEST_DIAB_MEAS = ifelse(!is.na(M08_HBA1C_LBORRES_1) & M08_HBA1C_LBORRES_1>=6.5 | # confirm HbA1C at enrollment is high
-                                   (!is.na(M06_BGLUC_POC_MMOLL_LBORRES_2) & M06_BGLUC_POC_MMOLL_LBORRES_2>5.1 & # At ANC28, POC diagnostics in fasting is >5.1
-                                      (!is.na(M08_BGLUC_PRETEST_MMOLL_LBORRES_1) & M08_BGLUC_PRETEST_MMOLL_LBORRES_1>5.1 & # confirm pre test (fasting) OGTT is high
-                                       (!is.na(M08_BGLUC_PRETEST_MMOLL_LBORRES_2) & M08_BGLUC_PRETEST_MMOLL_LBORRES_2>=10.0 | # when fasting OGTT is high, then 1-hr or 2-hr should be also high 
-                                         !is.na(M08_BGLUC_PRETEST_MMOLL_LBORRES_3) & M08_BGLUC_PRETEST_MMOLL_LBORRES_3 >=8.5))),
+  mutate(GEST_DIAB_MEAS = ifelse((!is.na(M08_HBA1C_LBORRES_1) & M08_HBA1C_LBORRES_1>=6.5) | # confirm HbA1C at enrollment is high
+                                   (!is.na(M06_BGLUC_POC_MMOLL_LBORRES_2) & M06_BGLUC_POC_MMOLL_LBORRES_2>5.1) & # At ANC28, POC diagnostics in fasting is >5.1
+                                      (!is.na(M08_BGLUC_PRETEST_MMOLL_LBORRES_1) & M08_BGLUC_PRETEST_MMOLL_LBORRES_1>5.1) & # confirm pre test (fasting) OGTT is high
+                                       ((!is.na(M08_BGLUC_PRETEST_MMOLL_LBORRES_2) & M08_BGLUC_PRETEST_MMOLL_LBORRES_2>=10.0) | # when fasting OGTT is high, then 1-hr or 2-hr should be also high 
+                                         (!is.na(M08_BGLUC_PRETEST_MMOLL_LBORRES_3) & M08_BGLUC_PRETEST_MMOLL_LBORRES_3 >=8.5)),
                                  1, 0))
 
-table(mnh_merged_df$GEST_DIAB_MEAS, useNA = "always")
+table(GEST_DIAB_DIAG = mnh_merged_df$GEST_DIAB_DIAG, useNA = "always")
+table(GEST_DIAB_MEAS = mnh_merged_df$GEST_DIAB_MEAS, useNA = "always")
 
 ```
 
@@ -1819,9 +1999,9 @@ ANC Hospitalization
 ##################################################################################
 
 temp.df <- mnh_merged_df %>% 
-  select(M04_APH_CEOCCUR_3, M04_APH_CEOCCUR_4, M04_APH_CEOCCUR_5, M09_APH_CEOCCUR_6, M19_VAG_BLEED_CEOCCUR_13, M19_LD_COMPL_MHTERM_4_13) 
+  select(MOMID, PREGID, M04_APH_CEOCCUR_3, M04_APH_CEOCCUR_4, M04_APH_CEOCCUR_5, M09_APH_CEOCCUR_6, M19_VAG_BLEED_CEOCCUR_13, M19_LD_COMPL_MHTERM_4_13) 
 
-mnh_merged_df <- mnh_merged_df %>% 
+temp.df <- temp.df %>% 
   mutate(MAT_APH = ifelse(!is.na(M04_APH_CEOCCUR_3) & M04_APH_CEOCCUR_3==1 |
                             !is.na(M04_APH_CEOCCUR_4) & M04_APH_CEOCCUR_4==1 |
                             !is.na(M04_APH_CEOCCUR_5) & M04_APH_CEOCCUR_5==1 |
@@ -1829,7 +2009,7 @@ mnh_merged_df <- mnh_merged_df %>%
                             !is.na(M19_VAG_BLEED_CEOCCUR_13) & M19_VAG_BLEED_CEOCCUR_13==1 |
                             !is.na(M19_LD_COMPL_MHTERM_4_13) & M19_LD_COMPL_MHTERM_4_13==1, 1, 0))
 
-table(MAT_APH = mnh_merged_df$MAT_APH, useNA = "always")
+table(MAT_APH = temp.df$MAT_APH, useNA = "always")
 ```
 
 ***POSTPARTUM HEMORRHAGE = MAT_PPH***
@@ -1871,13 +2051,13 @@ temp.df <- mnh_merged_df %>%
          M09_PPH_TRNSFSN_PROCCUR_6, M19_TX_PROCCUR_1_13, M19_BP_LT90_SYS_VSORRES_13, M19_BP_LT90_DIA_VSORRES_13)
 
 mnh_merged_df <- mnh_merged_df %>%
-  mutate(MAT_PPH = ifelse((!is.na(M09_PPH_CEOCCUR_6) & M09_PPH_CEOCCUR_6==1 | # looking for PPH at L&D
-                             !is.na(M09_PPH_ESTIMATE_FAORRES_6) & M09_PPH_ESTIMATE_FAORRES_6>=500 |
+  mutate(MAT_PPH = ifelse(((!is.na(M09_PPH_CEOCCUR_6) & M09_PPH_CEOCCUR_6==1) | # looking for PPH at L&D
+                             (!is.na(M09_PPH_ESTIMATE_FAORRES_6) & M09_PPH_ESTIMATE_FAORRES_6>=500) |
                              
-                             !is.na(M12_BIRTH_COMPL_MHTERM_1_7) & M12_BIRTH_COMPL_MHTERM_1_7==1 & # looking for PPH at week 0 
-                             !is.na(M12_VAG_BLEED_LOSS_ML_7) & M12_VAG_BLEED_LOSS_ML_7 >=500 |
+                           #  !is.na(M12_BIRTH_COMPL_MHTERM_1_7) & M12_BIRTH_COMPL_MHTERM_1_7==1 & # looking for PPH at PNC week 0 
+                            # !is.na(M12_VAG_BLEED_LOSS_ML_7) & M12_VAG_BLEED_LOSS_ML_7 >=500 |
                              
-                             !is.na(M19_LD_COMPL_MHTERM_5_13) & M19_LD_COMPL_MHTERM_5_13==1 & # looking for PPH at L&D at hospitalization 
+                             (!is.na(M19_LD_COMPL_MHTERM_5_13) & M19_LD_COMPL_MHTERM_5_13==1) & # looking for PPH at L&D at hospitalization 
                              !is.na(M19_LD_COMPL_ML_13) & M19_LD_COMPL_ML_13>=500), 1,0)) %>% 
   #***********# 
   #**LATE-PPH**
@@ -1902,24 +2082,22 @@ mnh_merged_df <- mnh_merged_df %>%
          meanSBP_PNC0 = mean(c(M06_BP_SYS_VSORRES_1_7, M06_BP_SYS_VSORRES_2_7, M06_BP_SYS_VSORRES_3_7), na.rm = TRUE), # at PNC0 TP (within 24hr of birth?)
          meanDBP_PNC0 = mean(c(M06_BP_DIA_VSORRES_1_7, M06_BP_DIA_VSORRES_2_7, M06_BP_DIA_VSORRES_3_7), na.rm = TRUE)) %>%
   
-  mutate(MAT_PPH_SEV = ifelse((((#!is.na(M09_PPH_CEOCCUR_6) & M09_PPH_CEOCCUR_6==1 | # looking for PPH at L&D
+  mutate(MAT_PPH_SEV = ifelse(((#!is.na(M09_PPH_CEOCCUR_6) & M09_PPH_CEOCCUR_6==1 | # looking for PPH at L&D
     !is.na(M09_PPH_ESTIMATE_FAORRES_6) & M09_PPH_ESTIMATE_FAORRES_6>=1000)  | # bleeding >=1000mL
       (!is.na(M09_PPH_ESTIMATE_FAORRES_6) & M09_PPH_ESTIMATE_FAORRES_6>0 & # any bleeding and hypotension
          (!is.na(meanSBP_IPC) & meanSBP_IPC <90 |
-            !is.na(meanDBP_IPC) & meanDBP_IPC <60)) | 
-      
-      (# !is.na(M12_BIRTH_COMPL_MHTERM_1_7) & M12_BIRTH_COMPL_MHTERM_1_7==1 & # looking for PPH at week 0 
-        !is.na(M12_VAG_BLEED_LOSS_ML_7) & M12_VAG_BLEED_LOSS_ML_7 >=1000) |
-      (!is.na(M12_BIRTH_COMPL_MHTERM_1_7) & M12_BIRTH_COMPL_MHTERM_1_7>0) &
-         (!is.na(meanSBP_IPC) & meanSBP_PNC0 <90 |
-            !is.na(meanDBP_IPC) & meanDBP_PNC0 <60)) | 
+            !is.na(meanDBP_IPC) & meanDBP_IPC <60)) |
+
       
       (#!is.na(M19_LD_COMPL_MHTERM_5_13) & M19_LD_COMPL_MHTERM_5_13==1 & # looking for PPH at L&D at hospitalization 
         !is.na(M19_LD_COMPL_ML_13) & M19_LD_COMPL_ML_13>=1000)) | 
-      !is.na(M09_PPH_TRNSFSN_PROCCUR_6) & M09_PPH_TRNSFSN_PROCCUR_6==1 | # did mother need a transfusion
-      !is.na(M19_TX_PROCCUR_1_13) & M19_TX_PROCCUR_1_13==1 | # did the mother receive transfusion while hosp.
-      !is.na(M19_BP_LT90_SYS_VSORRES_13) & M19_BP_LT90_SYS_VSORRES_13<90 | 
-      (!is.na(M19_BP_LT90_DIA_VSORRES_13) & M19_BP_LT90_DIA_VSORRES_13<60), 1,0)) #%>%
+      (!is.na(M09_PPH_TRNSFSN_PROCCUR_6) & M09_PPH_TRNSFSN_PROCCUR_6==1), 1,0)) # did mother need a transfusion
+      
+      
+# REMOVING HOSPITALIZATION TP ALSO HERE. 
+      # !is.na(M19_TX_PROCCUR_1_13) & M19_TX_PROCCUR_1_13==1 | # did the mother receive transfusion while hosp.
+      # !is.na(M19_BP_LT90_SYS_VSORRES_13) & M19_BP_LT90_SYS_VSORRES_13<90 | 
+      # (!is.na(M19_BP_LT90_DIA_VSORRES_13) & M19_BP_LT90_DIA_VSORRES_13<60), 1,0)) #%>%
   
   # select(MAT_PPH_SEV, M09_PPH_ESTIMATE_FAORRES_6, meanSBP_IPC, meanDBP_IPC, 
   #        M12_VAG_BLEED_LOSS_ML_7, meanSBP_PNC0, meanDBP_PNC0,
@@ -1927,6 +2105,7 @@ mnh_merged_df <- mnh_merged_df %>%
   #        M19_TX_PROCCUR_1_13, M19_BP_LT90_SYS_VSORRES_13, M19_BP_LT90_DIA_VSORRES_13)
 
 table(MAT_PPH = mnh_merged_df$MAT_PPH, useNA = "always")
+table(MAT_PPH_LATE = mnh_merged_df$MAT_PPH_LATE, useNA = "always")
 
 table(MAT_PPH_SEV = mnh_merged_df$MAT_PPH_SEV, useNA = "always") #TODO LYNDA HAS N=5
                             
@@ -1947,8 +2126,9 @@ mnh_merged_df <- mnh_merged_df %>%
   mutate(LABOR_DATE_TIME = paste(M09_LABOR_MHSTDAT_6, "", M09_LABOR_MHSTTIM_6),
          DELIV_DATE_TIME = paste(M09_DELIV_DSSTDAT_INF1_6, "", M09_DELIV_DSSTTIM_INF1_6))
 
-mnh_merged_df$LABOR_DATE_TIME <- format(as.POSIXct(temp.df$LABOR_DATE_TIME, format="%Y-%m-%d %H:%M"))
-mnh_merged_df$DELIV_DATE_TIME <- format(as.POSIXct(temp.df$DELIV_DATE_TIME, format="%Y-%m-%d %H:%M"))
+mnh_merged_df$LABOR_DATE_TIME <- format(as.POSIXct(mnh_merged_df$LABOR_DATE_TIME, format="%Y-%m-%d %H:%M"))
+
+mnh_merged_df$DELIV_DATE_TIME <- format(as.POSIXct(mnh_merged_df$DELIV_DATE_TIME, format="%Y-%m-%d %H:%M"))
 
 mnh_merged_df <- mnh_merged_df %>% 
   mutate(LABOR_DELIVERY_INTERVAL = difftime(DELIV_DATE_TIME, LABOR_DATE_TIME, units = "hours"))
@@ -1958,7 +2138,7 @@ mnh_merged_df <- mnh_merged_df %>%
                                  (M04_PH_PREV_RPORRES_1==0 & LABOR_DELIVERY_INTERVAL>=14) ~ 1,# WHEN MULTIPAROUS
                                TRUE ~ as.numeric(0)))
 
-table(mnh_merged_df$PRO_LABOR, useNA = "always")
+table(PRO_LABOR = mnh_merged_df$PRO_LABOR, useNA = "always")
 ```
 
 
@@ -1985,126 +2165,419 @@ temp.df <- mnh_merged_df %>%
                                   M09_CES_PROCCUR_INF1_6==1) |
                                M19_TX_PROCCUR_2_13==1 | M19_TX_PROCCUR_5_13==1 ~ 1, 
                                TRUE ~ as.numeric(0)))
-table(temp.df$UN_SURGERY)
+table(UN_SURGERY = temp.df$UN_SURGERY)
 
 ```
 
-***SECONDARY: MATERNAL INFECTION AND SEPSIS (PREGNANCY) - MAT_INFECT_ANC***
+***SECONDARY: MATERNAL INFECTION AND SEPSIS (PREGNANCY) - ANC VISITS***
 Any infection and/or organ dysfunction resulting from infection during pregnancy.
-
-Constructed	MAT_DYS
-MNH04	HIV_MHOCCUR
-MNH04	SYPH_MHOCCUR
-MNH04	OTHR_STI_MHOCCUR
-MNH04	GONORRHEA_MHOCCUR
-MNH04	CHLAMYDIA_MHOCCUR
-MNH04	CHANC_MHOCCUR
-MNH04	GENULCER_MHOCCUR
-MNH04	STI_OTHR_MHOCCUR
-MNH04	MALARIA_EVER_MHOCCUR
-MNH04	TB_MHOCCUR
-MNH04	SYPH_CMTRT_1
-MNH04	SYPH_CMTRT_2
-MNH04	SYPH_CMTRT_88
-MNH04	GONORRHEA_CMTRT_1
-MNH04	GONORRHEA_CMTRT_2
-MNH04	GONORRHEA_CMTRT_3
-MNH04	GONORRHEA_CMTRT_88
-MNH04	CHLAMYDIA_CMTRT_1
-MNH04	CHLAMYDIA_CMTRT_2
-MNH04	CHLAMYDIA_CMTRT_3
-MNH04	CHLAMYDIA_CMTRT_4
-MNH04	CHLAMYDIA_CMTRT_88
-MNH04	CHANC_CMTRT_1
-MNH04	CHANC_CMTRT_2
-MNH04	CHANC_CMTRT_3
-MNH04	CHANC_CMTRT_4
-MNH04	CHANC_CMTRT_88
-MNH04	STI_OTHR_CMOCCUR
-MNH04	MALARIA_EVER_CMTRT_1
-MNH04	MALARIA_EVER_CMTRT_2
-MNH04	MALARIA_EVER_CMTRT_3
-MNH04	MALARIA_EVER_CMTRT_88
-MNH04	TB_CMTRT_1
-MNH04	TB_CMTRT_2
-MNH04	TB_CMTRT_3
-MNH04	TB_CMTRT_4
-MNH04	TB_CMTRT_5
-MNH04	TB_CMTRT_88
-MNH04	ANTIBX_CMOCCUR
-MNH04	ANTIBX_CMTRT_1
-MNH04	ANTIBX_CMTRT_2
-MNH04	ANTIBX_CMTRT_3
-MNH04	ANTIBX_CMTRT_4
-MNH04	ANTIBX_CMTRT_5
-MNH04	ANTIBX_CMTRT_6
-MNH04	ANTIBX_CMTRT_7
-MNH04	ANTIBX_CMTRT_8
-MNH04	ANTIBX_CMTRT_9
-MNH04	ANTIBX_CMTRT_88
-MNH04	ANTIBX_CMINDC
+Maternal infection: Any infection during pregnancy, delivery, and up to 42 days postpartum.
+Maternal sepsis: Organ dysfunction resulting from infection during pregnancy, delivery, and up to 42 days postpartum.
+***MAT_INFECT_DIAG_ANC*** = just infection
+***MAT_SEPSIS_DIAG_ANC*** = infection and organ dysfuction. 
 ```{r}
-temp.df <- mnh_merged_df %>% 
-  mutate(MAT_INFECT_ANC = case_when(MAT_DYS==1 | 
-                                      M04_HIV_CMOCCUR_1==1 | M04_HIV_CMOCCUR_2==1 | M04_HIV_CMOCCUR_3==1 | 
-                                      M04_HIV_CMOCCUR_4==1 | M04_HIV_CMOCCUR_5==1 |
-                                      M04_SYPH_MHOCCUR_1==1 | M04_SYPH_MHOCCUR_2==1 | M04_SYPH_MHOCCUR_3==1 | 
-                                      M04_SYPH_MHOCCUR_4==1 | M04_SYPH_MHOCCUR_4==1 | 
-                                      M04_OTHR_STI_MHOCCUR_1==1 | M04_OTHR_STI_MHOCCUR_2==1 | M04_OTHR_STI_MHOCCUR_3==1 | 
-                                      M04_OTHR_STI_MHOCCUR_4==1 | M04_OTHR_STI_MHOCCUR_5==1 | 
-                                      M04_GONORRHEA_MHOCCUR_1==1 | M04_GONORRHEA_MHOCCUR_2==1 | M04_GONORRHEA_MHOCCUR_3==1 |
-                                      M04_GONORRHEA_MHOCCUR_4==1 | M04_GONORRHEA_MHOCCUR_5==1 | 
-                                      M04_CHLAMYDIA_MHOCCUR_1==1 | M04_CHLAMYDIA_MHOCCUR_2==1 | M04_CHLAMYDIA_MHOCCUR_3==1 |
-                                      M04_CHLAMYDIA_MHOCCUR_4==1 | M04_CHLAMYDIA_MHOCCUR_5==1 | 
-                                      M04_CHANC_MHOCCUR_1==1 | M04_CHANC_MHOCCUR_2==1 | M04_CHANC_MHOCCUR_3==1 | 
-                                      M04_CHANC_MHOCCUR_4==1 | M04_CHANC_MHOCCUR_5==1 | 
-                                      M04_GENULCER_MHOCCUR_1==1 | M04_GENULCER_MHOCCUR_2==1 | M04_GENULCER_MHOCCUR_3==1 | 
-                                      M04_GENULCER_MHOCCUR_4==1 | M04_GENULCER_MHOCCUR_5==1 |
-                                      M04_STI_OTHR_MHOCCUR_1==1 | M04_STI_OTHR_MHOCCUR_2==1 | M04_STI_OTHR_MHOCCUR_3==1 |
-                                      M04_STI_OTHR_MHOCCUR_4==1 | M04_STI_OTHR_MHOCCUR_5==1 |
-                                      M04_MALARIA_EVER_MHOCCUR_1==1 | M04_MALARIA_EVER_MHOCCUR_2==1 | M04_MALARIA_EVER_MHOCCUR_3==1 |
-                                      M04_MALARIA_EVER_MHOCCUR_4==1 | M04_MALARIA_EVER_MHOCCUR_5==1 |
-                                      M04_TB_MHOCCUR_1==1 | M04_TB_MHOCCUR_2==1 | M04_TB_MHOCCUR_3==1 | 
-                                      M04_TB_MHOCCUR_4==1 | M04_TB_MHOCCUR_5==1 |
-                                      M04_SYPH_CMTRT_1_1==1 | M04_SYPH_CMTRT_1_2==1 | M04_SYPH_CMTRT_1_3==1 |
-                                      M04_SYPH_CMTRT_1_4==1 | M04_SYPH_CMTRT_1_5==1 | 
-                                      M04_SYPH_CMTRT_2_1==1 | M04_SYPH_CMTRT_2_2==1 | M04_SYPH_CMTRT_2_3==1 |
-                                      M04_SYPH_CMTRT_2_4==1 | M04_SYPH_CMTRT_2_5==1 | 
-                                      M04_SYPH_CMTRT_88_1==1 | M04_SYPH_CMTRT_88_2==1 | M04_SYPH_CMTRT_88_3==1 | 
-                                      M04_SYPH_CMTRT_88_4==1 | M04_SYPH_CMTRT_88_5==1 | 
-                                      M04_GONORRHEA_CMTRT_1_1==1 | M04_GONORRHEA_CMTRT_1_2==1 | M04_GONORRHEA_CMTRT_1_3==1 | 
-                                      M04_GONORRHEA_CMTRT_1_4==1 | M04_GONORRHEA_CMTRT_1_5==1 | 
-                                      M04_GONORRHEA_CMTRT_2_1==1 | M04_GONORRHEA_CMTRT_2_2==1 | M04_GONORRHEA_CMTRT_2_3==1 | 
-                                      M04_GONORRHEA_CMTRT_2_4==1 | M04_GONORRHEA_CMTRT_2_5==1 | 
-                                      M04_GONORRHEA_CMTRT_3_1==1 | M04_GONORRHEA_CMTRT_3_2==1 | M04_GONORRHEA_CMTRT_3_3==1 | 
-                                      M04_GONORRHEA_CMTRT_3_4==1 | M04_GONORRHEA_CMTRT_3_5==1 | 
-                                      M04_GONORRHEA_CMTRT_88_1==1 | M04_GONORRHEA_CMTRT_88_2==1 | M04_GONORRHEA_CMTRT_88_3==1 | 
-                                      M04_GONORRHEA_CMTRT_88_4==1 | M04_GONORRHEA_CMTRT_88_5==1 | 
-                                      M04_CHLAMYDIA_CMTRT_1_1==1 | M04_CHLAMYDIA_CMTRT_1_2==1 | M04_CHLAMYDIA_CMTRT_1_3==1 | 
-                                      M04_CHLAMYDIA_CMTRT_1_4==1 | M04_CHLAMYDIA_CMTRT_1_5==1 |
-                                      M04_CHLAMYDIA_CMTRT_2_1==1 | M04_CHLAMYDIA_CMTRT_2_2==1 | M04_CHLAMYDIA_CMTRT_2_3==1 |
-                                      M04_CHLAMYDIA_CMTRT_2_4==1 | M04_CHLAMYDIA_CMTRT_2_5==1 | 
-                                      M04_CHLAMYDIA_CMTRT_3_1==1 | M04_CHLAMYDIA_CMTRT_3_2==1 | M04_CHLAMYDIA_CMTRT_3_3==1 |
-                                      M04_CHLAMYDIA_CMTRT_3_4==1 | M04_CHLAMYDIA_CMTRT_3_5==1 |
-                                      M04_CHLAMYDIA_CMTRT_4_1==1 | M04_CHLAMYDIA_CMTRT_4_2==1 | M04_CHLAMYDIA_CMTRT_4_3==1 | 
-                                      M04_CHLAMYDIA_CMTRT_4_4==1 | M04_CHLAMYDIA_CMTRT_4_5==1 | 
-                                      M04_CHLAMYDIA_CMTRT_88_1==1 | M04_CHLAMYDIA_CMTRT_88_2==1 | M04_CHLAMYDIA_CMTRT_88_3==1 |
-                                      M04_CHLAMYDIA_CMTRT_88_4==1 | M04_CHLAMYDIA_CMTRT_88_5==1 | 
-                                      M04_CHANC_CMTRT_1_1==1 | M04_CHANC_CMTRT_1_2==1 | M04_CHANC_CMTRT_1_3==1 |
-                                      M04_CHANC_CMTRT_1_4==1 | M04_CHANC_CMTRT_1_5==1 | 
-                                      M04_CHANC_CMTRT_2_1==1 | M04_CHANC_CMTRT_2_2==1 | M04_CHANC_CMTRT_2_3==1 |
-                                      M04_CHANC_CMTRT_2_4==1 | M04_CHANC_CMTRT_2_5==1 |
-                                      M04_CHANC_CMTRT_3_1==1 | M04_CHANC_CMTRT_3_2==1 | M04_CHANC_CMTRT_3_3==1 |
-                                      M04_CHANC_CMTRT_3_4==1 | M04_CHANC_CMTRT_3_5==1 | 
-                                      M04_CHANC_CMTRT_4_1==1 | M04_CHANC_CMTRT_4_2==1 | M04_CHANC_CMTRT_4_5==1 |
-                                      M04_CHANC_CMTRT_88_1==1 | M04_CHANC_CMTRT_88_2==1 | M04_CHANC_CMTRT_88_3==1 | 
-                                      M04_CHANC_CMTRT_88_4==1 | M04_CHANC_CMTRT_88_5==1 | 
-                                      M04_STI_OTHR_CMOCCUR_1==1 | M04_STI_OTHR_CMOCCUR_2==1 | M04_STI_OTHR_CMOCCUR_3==1 |
-                                      M04_STI_OTHR_CMOCCUR_4==1 | M04_STI_OTHR_CMOCCUR_5==1 |
-                                      M04_MALARIA_EVER_CMTRT_1_1==1 | M04_MALARIA_EVER_CMTRT_1_2==1 | M04_MALARIA_EVER_CMTRT_1_3==1 | 
-                                      M04_MALARIA_EVER_CMTRT_1_4==1 | M04_MALARIA_EVER_CMTRT_1_5==1 | 
-                                      M04_MALARIA_EVER_CMTRT_2_1==1 | ))
+#################################################################################
+#TODO 
+# NOTES: 
+# - DO WE NEED TO ADD MEDICATIONS SPECIFIC TO INFECTIONS UNDER DIAGNOSED MAT_INFECT? 
+# - DO WE KEEP THE SAME MAT_DYS (ORGAN DYSFUCTION) FOR DIAGNOSED AND FOR MEASURED? 
+# = DIAGNOSED DURING ANC USING M04 - I ADDED COVID-19.
+# LOOK OVER SEPSIS AGAIN. 
+# - NEED TO INCLUDE HOSPITALIZATION DURING ANC (MNH19) -AS IT'S OWN SECTION? SEE SLIDE 92
+##################################################################################
+mnh_merged_df <- mnh_merged_df %>% 
+  mutate(MAT_INFECT_DIAG_ANC = case_when(M04_HIV_CMOCCUR_1==1 | M04_HIV_CMOCCUR_2==1 | M04_HIV_CMOCCUR_3==1 | 
+                                           M04_HIV_CMOCCUR_4==1 | M04_HIV_CMOCCUR_5==1 |
+                                           M04_SYPH_MHOCCUR_1==1 | M04_SYPH_MHOCCUR_2==1 | M04_SYPH_MHOCCUR_3==1 | 
+                                           M04_SYPH_MHOCCUR_4==1 | M04_SYPH_MHOCCUR_4==1 | 
+                                           M04_OTHR_STI_MHOCCUR_1==1 | M04_OTHR_STI_MHOCCUR_2==1 | M04_OTHR_STI_MHOCCUR_3==1 | 
+                                           M04_OTHR_STI_MHOCCUR_4==1 | M04_OTHR_STI_MHOCCUR_5==1 | 
+                                           M04_GONORRHEA_MHOCCUR_1==1 | M04_GONORRHEA_MHOCCUR_2==1 | M04_GONORRHEA_MHOCCUR_3==1 |
+                                           M04_GONORRHEA_MHOCCUR_4==1 | M04_GONORRHEA_MHOCCUR_5==1 | 
+                                           M04_CHLAMYDIA_MHOCCUR_1==1 | M04_CHLAMYDIA_MHOCCUR_2==1 | M04_CHLAMYDIA_MHOCCUR_3==1 |
+                                           M04_CHLAMYDIA_MHOCCUR_4==1 | M04_CHLAMYDIA_MHOCCUR_5==1 | 
+                                           M04_CHANC_MHOCCUR_1==1 | M04_CHANC_MHOCCUR_2==1 | M04_CHANC_MHOCCUR_3==1 | 
+                                           M04_CHANC_MHOCCUR_4==1 | M04_CHANC_MHOCCUR_5==1 | 
+                                           M04_GENULCER_MHOCCUR_1==1 | M04_GENULCER_MHOCCUR_2==1 | M04_GENULCER_MHOCCUR_3==1 | 
+                                           M04_GENULCER_MHOCCUR_4==1 | M04_GENULCER_MHOCCUR_5==1 |
+                                           M04_STI_OTHR_MHOCCUR_1==1 | M04_STI_OTHR_MHOCCUR_2==1 | M04_STI_OTHR_MHOCCUR_3==1 |
+                                           M04_STI_OTHR_MHOCCUR_4==1 | M04_STI_OTHR_MHOCCUR_5==1 |
+                                           M04_MALARIA_EVER_MHOCCUR_1==1 | M04_MALARIA_EVER_MHOCCUR_2==1 | M04_MALARIA_EVER_MHOCCUR_3==1 |
+                                           M04_MALARIA_EVER_MHOCCUR_4==1 | M04_MALARIA_EVER_MHOCCUR_5==1 |
+                                           M04_TB_MHOCCUR_1==1 | M04_TB_MHOCCUR_2==1 | M04_TB_MHOCCUR_3==1 | 
+                                           M04_TB_MHOCCUR_4==1 | M04_TB_MHOCCUR_5==1 | 
+                                           M04_COVID_LBORRES_1==1 | M04_COVID_LBORRES_2==1 | M04_COVID_LBORRES_3==1 | 
+                                           M04_COVID_LBORRES_4==1 | M04_COVID_LBORRES_5==1 ~ 1, 
+                                         TRUE ~ as.numeric(0)))
+table(MAT_INFECT_DIAG_ANC = mnh_merged_df$MAT_INFECT_DIAG_ANC, useNA = "always")
+
+############
+# SEPSIS #
+###########
+mnh_merged_df <- mnh_merged_df %>% 
+  mutate(MAT_INFECT_SEPSIS_DIAG_ANC = case_when(MAT_DYS==1 & MAT_INFECT_DIAG_ANC==1 ~ 1, 
+                                         TRUE ~ as.numeric(0)))
+table(mnh_merged_df$MAT_INFECT_SEPSIS_DIAG_ANC, useNA = "always")
+        
+
+#############################################
+# MATERNAL INFECTION THROUGH MEDICATION USE #
+# NOT COMPLETE YET #
+# TREATMENT TROUGH ANC VISITS 1-5.
+#############################################
+mnh_merged_df <- mnh_merged_df %>%
+  mutate(MAT_SYPH_INFECT_TREAT_ANC = case_when(M04_SYPH_CMTRT_1_1==1 | M04_SYPH_CMTRT_1_2==1 | M04_SYPH_CMTRT_1_3==1 |
+                                            M04_SYPH_CMTRT_1_4==1 | M04_SYPH_CMTRT_1_5==1 | M04_SYPH_CMTRT_1_13==1 | # _13 ARE UNSCHEDULED ANC VISITS.
+                                            M04_SYPH_CMTRT_2_1==1 | M04_SYPH_CMTRT_2_2==1 | M04_SYPH_CMTRT_2_3==1 |
+                                            M04_SYPH_CMTRT_2_4==1 | M04_SYPH_CMTRT_2_5==1 | M04_SYPH_CMTRT_2_13==1 | 
+                                            M04_SYPH_CMTRT_88_1==1 | M04_SYPH_CMTRT_88_2==1 | M04_SYPH_CMTRT_88_3==1 |
+                                            M04_SYPH_CMTRT_88_4==1 | M04_SYPH_CMTRT_88_5==1 | M04_SYPH_CMTRT_88_13==1 ~1, 
+                                            TRUE ~ as.numeric(0)))
+table(MAT_SYPH_INFECT_TREAT_ANC = mnh_merged_df$MAT_SYPH_INFECT_TREAT_ANC, useNA = "always")
+
+mnh_merged_df <- mnh_merged_df %>%
+  mutate(MAT_GONORRHEA_INFECT_TREAT_ANC = case_when(M04_GONORRHEA_CMTRT_1_1==1 | M04_GONORRHEA_CMTRT_1_2==1 | M04_GONORRHEA_CMTRT_1_3==1 |
+                                            M04_GONORRHEA_CMTRT_1_4==1 | M04_GONORRHEA_CMTRT_1_5==1 | M04_GONORRHEA_CMTRT_1_13==1 | 
+                                            M04_GONORRHEA_CMTRT_2_1==1 | M04_GONORRHEA_CMTRT_2_2==1 | M04_GONORRHEA_CMTRT_2_3==1 |
+                                            M04_GONORRHEA_CMTRT_2_4==1 | M04_GONORRHEA_CMTRT_2_5==1 | M04_GONORRHEA_CMTRT_2_13==1 |
+                                            M04_GONORRHEA_CMTRT_3_1==1 | M04_GONORRHEA_CMTRT_3_2==1 | M04_GONORRHEA_CMTRT_3_3==1 |
+                                            M04_GONORRHEA_CMTRT_3_4==1 | M04_GONORRHEA_CMTRT_3_5==1 | M04_GONORRHEA_CMTRT_3_13==1 |
+                                            M04_GONORRHEA_CMTRT_88_1==1 | M04_GONORRHEA_CMTRT_88_2==1 | M04_GONORRHEA_CMTRT_88_3==1 |
+                                            M04_GONORRHEA_CMTRT_88_4==1 | M04_GONORRHEA_CMTRT_88_5==1 | M04_GONORRHEA_CMTRT_88_13==1 ~ 1, 
+                                            TRUE ~ as.numeric(0)))
+table(MAT_GONORRHEA_INFECT_TREAT_ANC = mnh_merged_df$MAT_GONORRHEA_INFECT_TREAT_ANC, useNA = "always")
+
+mnh_merged_df <- mnh_merged_df %>%
+  mutate(MAT_CHLAMYDIA_INFECT_TREAT_ANC = case_when(M04_CHLAMYDIA_CMTRT_1_1==1 | M04_CHLAMYDIA_CMTRT_1_2==1 | M04_CHLAMYDIA_CMTRT_1_3==1 |
+                                            M04_CHLAMYDIA_CMTRT_1_4==1 | M04_CHLAMYDIA_CMTRT_1_5==1 | M04_CHLAMYDIA_CMTRT_1_13==1 |
+                                            M04_CHLAMYDIA_CMTRT_2_1==1 | M04_CHLAMYDIA_CMTRT_2_2==1 | M04_CHLAMYDIA_CMTRT_2_3==1 |
+                                            M04_CHLAMYDIA_CMTRT_2_4==1 | M04_CHLAMYDIA_CMTRT_2_5==1 | M04_CHLAMYDIA_CMTRT_2_13==1 |
+                                            M04_CHLAMYDIA_CMTRT_3_1==1 | M04_CHLAMYDIA_CMTRT_3_2==1 | M04_CHLAMYDIA_CMTRT_3_3==1 |
+                                            M04_CHLAMYDIA_CMTRT_3_4==1 | M04_CHLAMYDIA_CMTRT_3_5==1 | M04_CHLAMYDIA_CMTRT_3_13==1 |
+                                            M04_CHLAMYDIA_CMTRT_4_1==1 | M04_CHLAMYDIA_CMTRT_4_2==1 | M04_CHLAMYDIA_CMTRT_4_3==1 |
+                                            M04_CHLAMYDIA_CMTRT_4_4==1 | M04_CHLAMYDIA_CMTRT_4_5==1 | M04_CHLAMYDIA_CMTRT_4_13==1 |
+                                            M04_CHLAMYDIA_CMTRT_88_1==1 | M04_CHLAMYDIA_CMTRT_88_2==1 | M04_CHLAMYDIA_CMTRT_88_3==1 |
+                                            M04_CHLAMYDIA_CMTRT_88_4==1 | M04_CHLAMYDIA_CMTRT_88_5==1 | M04_CHLAMYDIA_CMTRT_88_13==1 ~ 1,
+                                            TRUE ~ as.numeric(0)))
+table(MAT_CHLAMYDIA_INFECT_TREAT_ANC = mnh_merged_df$MAT_CHLAMYDIA_INFECT_TREAT_ANC, useNA = "always")
+
+mnh_merged_df <- mnh_merged_df %>%
+  mutate(MAT_CHANC_INFECT_TREAT_ANC = case_when(M04_CHANC_CMTRT_1_1==1 | M04_CHANC_CMTRT_1_2==1 | M04_CHANC_CMTRT_1_3==1 |
+                                            M04_CHANC_CMTRT_1_4==1 | M04_CHANC_CMTRT_1_5==1 | M04_CHANC_CMTRT_1_13==1 |
+                                            M04_CHANC_CMTRT_2_1==1 | M04_CHANC_CMTRT_2_2==1 | M04_CHANC_CMTRT_2_3==1 |
+                                            M04_CHANC_CMTRT_2_4==1 | M04_CHANC_CMTRT_2_5==1 | M04_CHANC_CMTRT_2_13==1 |
+                                            M04_CHANC_CMTRT_3_1==1 | M04_CHANC_CMTRT_3_2==1 | M04_CHANC_CMTRT_3_3==1 |
+                                            M04_CHANC_CMTRT_3_4==1 | M04_CHANC_CMTRT_3_5==1 | M04_CHANC_CMTRT_3_13==1 |
+                                            M04_CHANC_CMTRT_4_1==1 | M04_CHANC_CMTRT_4_2==1 | M04_CHANC_CMTRT_4_5==1 |
+                                            M04_CHANC_CMTRT_88_1==1 | M04_CHANC_CMTRT_88_2==1 | M04_CHANC_CMTRT_88_3==1 |
+                                            M04_CHANC_CMTRT_88_4==1 | M04_CHANC_CMTRT_88_5==1 | M04_CHANC_CMTRT_88_13==1 ~1, 
+                                            TRUE ~ as.numeric(0)))
+table(MAT_CHANC_INFECT_TREAT_ANC = mnh_merged_df$MAT_CHANC_INFECT_TREAT_ANC, useNA = "always")
+
+mnh_merged_df <- mnh_merged_df %>%
+  mutate(MAT_STI_OTHR_INFECT_TREAT_ANC = case_when(M04_STI_OTHR_CMOCCUR_1==1 | M04_STI_OTHR_CMOCCUR_2==1 | M04_STI_OTHR_CMOCCUR_3==1 |
+                                            M04_STI_OTHR_CMOCCUR_4==1 | M04_STI_OTHR_CMOCCUR_5==1 | M04_STI_OTHR_CMOCCUR_13==1 ~ 1, 
+                                            TRUE ~ as.numeric(0)))
+table(MAT_STI_OTHR_INFECT_TREAT_ANC = mnh_merged_df$MAT_STI_OTHR_INFECT_TREAT_ANC, useNA = "always")
+
+mnh_merged_df <- mnh_merged_df %>%
+  mutate(MAT_MALARIA_INFECT_TREAT_ANC = case_when(M04_MALARIA_EVER_CMTRT_1_1==1 | M04_MALARIA_EVER_CMTRT_1_2==1 | M04_MALARIA_EVER_CMTRT_1_3==1 |
+                                            M04_MALARIA_EVER_CMTRT_1_4==1 | M04_MALARIA_EVER_CMTRT_1_5==1 | M04_MALARIA_EVER_CMTRT_1_13==1 |
+                                            M04_MALARIA_EVER_CMTRT_2_1==1 | M04_MALARIA_EVER_CMTRT_2_2==1 | M04_MALARIA_EVER_CMTRT_2_3==1 |
+                                            M04_MALARIA_EVER_CMTRT_2_4==1 | M04_MALARIA_EVER_CMTRT_2_5==1 | M04_MALARIA_EVER_CMTRT_2_13==1 | 
+                                            M04_MALARIA_EVER_CMTRT_88_1==1 | M04_MALARIA_EVER_CMTRT_88_2==1 | M04_MALARIA_EVER_CMTRT_88_3==1 | 
+                                            M04_MALARIA_EVER_CMTRT_88_4==1 | M04_MALARIA_EVER_CMTRT_88_5==1 | M04_MALARIA_EVER_CMTRT_88_13==1 ~ 1,
+                                            TRUE ~ as.numeric(0)))
+table(MAT_MALARIA_INFECT_TREAT_ANC = mnh_merged_df$MAT_MALARIA_INFECT_TREAT_ANC, useNA = "always")
+
+mnh_merged_df <- mnh_merged_df %>%
+  mutate(MAT_TB_INFECT_TREAT_ANC = case_when(M04_TB_CMTRT_1_1==1 | M04_TB_CMTRT_1_2==1 | M04_TB_CMTRT_1_3==1 | 
+                                            M04_TB_CMTRT_1_4==1 | M04_TB_CMTRT_1_5==1 | M04_TB_CMTRT_1_13==1 | 
+                                            M04_TB_CMTRT_2_1==1 | M04_TB_CMTRT_2_2==1 | M04_TB_CMTRT_2_3==1 | 
+                                            M04_TB_CMTRT_2_4==1 | M04_TB_CMTRT_2_5==1 | M04_TB_CMTRT_2_13==1 | 
+                                            M04_TB_CMTRT_3_1==1 | M04_TB_CMTRT_3_2==1 | M04_TB_CMTRT_3_3==1 | 
+                                            M04_TB_CMTRT_3_4==1 | M04_TB_CMTRT_3_5==1 | M04_TB_CMTRT_3_13==1 | 
+                                            M04_TB_CMTRT_4_1==1 | M04_TB_CMTRT_4_2==1 | M04_TB_CMTRT_4_3==1 | 
+                                            M04_TB_CMTRT_4_4==1 | M04_TB_CMTRT_4_5==1 | M04_TB_CMTRT_4_13==1 |
+                                            M04_TB_CMTRT_5_1==1 | M04_TB_CMTRT_5_2==1 | M04_TB_CMTRT_5_3==1 | 
+                                            M04_TB_CMTRT_5_4==1 | M04_TB_CMTRT_5_5==1 | M04_TB_CMTRT_5_13==1 | 
+                                            M04_TB_CMTRT_88_1==1 | M04_TB_CMTRT_88_2==1 | M04_TB_CMTRT_88_3==1 |
+                                            M04_TB_CMTRT_88_4==1 | M04_TB_CMTRT_88_5==1 | M04_TB_CMTRT_88_13==1 ~ 1,
+                                            TRUE ~ as.numeric(0)))
+table(MAT_TB_INFECT_TREAT_ANC = mnh_merged_df$MAT_TB_INFECT_TREAT_ANC, useNA = "always")
+
+mnh_merged_df <- mnh_merged_df %>%
+  mutate(MAT_ANTIBX_TREAT_ANC = case_when(M04_ANTIBX_CMOCCUR_1==1 | M04_ANTIBX_CMOCCUR_2==1 | M04_ANTIBX_CMOCCUR_3==1 |
+                                            M04_ANTIBX_CMOCCUR_4==1 | M04_ANTIBX_CMOCCUR_5==1 | M04_ANTIBX_CMOCCUR_13==1 |
+                                            M04_ANTIBX_CMTRT_1_1==1 | M04_ANTIBX_CMTRT_1_2==1 | M04_ANTIBX_CMTRT_1_3==1 | 
+                                            M04_ANTIBX_CMTRT_1_4==1 | M04_ANTIBX_CMTRT_1_5==1 | M04_ANTIBX_CMTRT_1_13==1 |  
+                                            M04_ANTIBX_CMTRT_2_1==1 | M04_ANTIBX_CMTRT_2_2==1 | M04_ANTIBX_CMTRT_2_3==1 | 
+                                            M04_ANTIBX_CMTRT_2_4==1 | M04_ANTIBX_CMTRT_2_5==1 | M04_ANTIBX_CMTRT_2_13==1 |
+                                            M04_ANTIBX_CMTRT_3_1==1 | M04_ANTIBX_CMTRT_3_2==1 | M04_ANTIBX_CMTRT_3_3==1 | 
+                                            M04_ANTIBX_CMTRT_3_4==1 | M04_ANTIBX_CMTRT_3_5==1 | M04_ANTIBX_CMTRT_3_13==1 | 
+                                            M04_ANTIBX_CMTRT_4_1==1 | M04_ANTIBX_CMTRT_4_2==1 | M04_ANTIBX_CMTRT_4_3==1 | 
+                                            M04_ANTIBX_CMTRT_4_4==1 | M04_ANTIBX_CMTRT_4_5==1 | M04_ANTIBX_CMTRT_4_13==1 | 
+                                            M04_ANTIBX_CMTRT_5_1==1 | M04_ANTIBX_CMTRT_5_2==1 | M04_ANTIBX_CMTRT_5_3==1 | 
+                                            M04_ANTIBX_CMTRT_5_4==1 | M04_ANTIBX_CMTRT_5_5==1 | M04_ANTIBX_CMTRT_5_13==1 | 
+                                            M04_ANTIBX_CMTRT_6_1==1 | M04_ANTIBX_CMTRT_6_2==1 | M04_ANTIBX_CMTRT_6_3==1 | 
+                                            M04_ANTIBX_CMTRT_6_4==1 | M04_ANTIBX_CMTRT_6_5==1 | M04_ANTIBX_CMTRT_6_13==1 |
+                                            M04_ANTIBX_CMTRT_7_1==1 | M04_ANTIBX_CMTRT_7_2==1 | M04_ANTIBX_CMTRT_7_3==1 |
+                                            M04_ANTIBX_CMTRT_7_4==1 | M04_ANTIBX_CMTRT_7_5==1 | M04_ANTIBX_CMTRT_7_13==1 |
+                                            M04_ANTIBX_CMTRT_8_1==1 | M04_ANTIBX_CMTRT_8_2==1 | M04_ANTIBX_CMTRT_8_3==1 | 
+                                            M04_ANTIBX_CMTRT_8_4==1 | M04_ANTIBX_CMTRT_8_5==1 | M04_ANTIBX_CMTRT_8_13==1 | 
+                                            M04_ANTIBX_CMTRT_9_1==1 | M04_ANTIBX_CMTRT_9_2==1 | M04_ANTIBX_CMTRT_9_3==1 | 
+                                            M04_ANTIBX_CMTRT_9_4==1 | M04_ANTIBX_CMTRT_9_5==1 | M04_ANTIBX_CMTRT_9_13==1 | 
+                                            M04_ANTIBX_CMTRT_88_1==1 | M04_ANTIBX_CMTRT_88_2==1 | M04_ANTIBX_CMTRT_88_3==1 | 
+                                            M04_ANTIBX_CMTRT_88_4==1 | M04_ANTIBX_CMTRT_88_5==1 | M04_ANTIBX_CMTRT_88_13==1 | 
+                                            # ANY OF THESE MEDS DURING ANCE 1-5:
+                                            # VISIT 1
+                                            M04_ANTIBX_CMINDC_1==1 | M04_ANTIBX_CMINDC_1==2 | M04_ANTIBX_CMINDC_1==3 | 
+                                            M04_ANTIBX_CMINDC_1==4 | M04_ANTIBX_CMINDC_1==5| M04_ANTIBX_CMINDC_1==6 | 
+                                            M04_ANTIBX_CMINDC_1==7 | M04_ANTIBX_CMINDC_1==8 | M04_ANTIBX_CMINDC_1==9 | 
+                                            M04_ANTIBX_CMINDC_1==88 | # DISCUSSED WITH ERS - INCLUDE "OTHER = 88" TRT.
+                                            
+                                            # VISIT 2
+                                            M04_ANTIBX_CMINDC_2==1 | M04_ANTIBX_CMINDC_2==2 | M04_ANTIBX_CMINDC_2==3 | 
+                                            M04_ANTIBX_CMINDC_2==4 | M04_ANTIBX_CMINDC_2==5 | M04_ANTIBX_CMINDC_2==6 | 
+                                            M04_ANTIBX_CMINDC_2==7 | M04_ANTIBX_CMINDC_2==8 | # M04_ANTIBX_CMINDC_2==9 | 
+                                            M04_ANTIBX_CMINDC_2==88 | 
+                                            
+                                            # VISIT 3
+                                            M04_ANTIBX_CMINDC_3==1 | M04_ANTIBX_CMINDC_3==2 | M04_ANTIBX_CMINDC_3==3 | 
+                                            M04_ANTIBX_CMINDC_3==4 | M04_ANTIBX_CMINDC_3==5 | M04_ANTIBX_CMINDC_3==6 | 
+                                            M04_ANTIBX_CMINDC_3==7 | M04_ANTIBX_CMINDC_3==8 | # M04_ANTIBX_CMINDC_3==9 | 
+                                            M04_ANTIBX_CMINDC_3==88 | 
+                                            
+                                            # VISIT 4
+                                            M04_ANTIBX_CMINDC_4==1 | M04_ANTIBX_CMINDC_4==2 | M04_ANTIBX_CMINDC_4==3 | 
+                                            M04_ANTIBX_CMINDC_4==4 | M04_ANTIBX_CMINDC_4==5 | M04_ANTIBX_CMINDC_4==6 | 
+                                            M04_ANTIBX_CMINDC_4==7 | M04_ANTIBX_CMINDC_4==8 | # M04_ANTIBX_CMINDC_4==9 | # DISCUSSED WITH ERS - DONT' INCLUDE PROPHYLAXIS TRT
+                                            M04_ANTIBX_CMINDC_4==88 | 
+                                            
+                                            # VISIT 5
+                                            M04_ANTIBX_CMINDC_5==1 | M04_ANTIBX_CMINDC_5==2 | M04_ANTIBX_CMINDC_5==3 | 
+                                            M04_ANTIBX_CMINDC_5==4 | M04_ANTIBX_CMINDC_5==5 | M04_ANTIBX_CMINDC_5==6 | 
+                                            M04_ANTIBX_CMINDC_5==7 | M04_ANTIBX_CMINDC_5==8 | M04_ANTIBX_CMINDC_5==9 | 
+                                            M04_ANTIBX_CMINDC_5==88 | 
+                                            
+                                            # VISIT 13 - UNSCHEDULED ANC
+                                            M04_ANTIBX_CMINDC_13==1 | M04_ANTIBX_CMINDC_13==2 | M04_ANTIBX_CMINDC_13==3 | 
+                                            M04_ANTIBX_CMINDC_13==4 | M04_ANTIBX_CMINDC_13==5 | M04_ANTIBX_CMINDC_13==6 | 
+                                            M04_ANTIBX_CMINDC_13==7 | M04_ANTIBX_CMINDC_13==8 | M04_ANTIBX_CMINDC_13==9 | 
+                                            M04_ANTIBX_CMINDC_13==88  ~ 1, 
+                                          TRUE ~ as.numeric(0)))
+table(MAT_ANTIBX_TREAT_ANC = mnh_merged_df$MAT_ANTIBX_TREAT_ANC, useNA = "always")
+
+###########################################################################
+# MATERNAL INFECTION MEASURED THROUGH POC MNH06 and LAB MNH06 - ANC ONLY #
+##########################################################################
+
+mnh_merged_df <- mnh_merged_df %>%  # POC FIRST (MNH06)
+  mutate(MAT_INFECT_MEAS_POC_LAB_ANC = case_when((M06_HIV_POC_LBORRES_1==1 | M06_HIV_POC_LBORRES_2==1 | M06_HIV_POC_LBORRES_3==1 | 
+                                                   M06_HIV_POC_LBORRES_4==1 | M06_HIV_POC_LBORRES_5==1 | M06_HIV_POC_LBORRES_13==1 | # UNSCHEDULED ANC VISITS _13
+                                                   M06_MALARIA_POC_LBORRES_1==1 | M06_MALARIA_POC_LBORRES_2==1 | M06_MALARIA_POC_LBORRES_3==1 |
+                                                   M06_MALARIA_POC_LBORRES_4==1 | M06_MALARIA_POC_LBORRES_5==1 | M06_MALARIA_POC_LBORRES_13==1 | 
+                                                   M06_SYPH_POC_LBORRES_1==1 | M06_SYPH_POC_LBORRES_2==1 | M06_SYPH_POC_LBORRES_3==1 |
+                                                   M06_SYPH_POC_LBORRES_4==1 | M06_SYPH_POC_LBORRES_5==1 | M06_SYPH_POC_LBORRES_13==1 |
+                                                   M06_HBV_POC_LBORRES_1==1 | M06_HBV_POC_LBORRES_2==1 | M06_HBV_POC_LBORRES_3==1 | 
+                                                   M06_HBV_POC_LBORRES_4==1 | M06_HBV_POC_LBORRES_5==1 | M06_HBV_POC_LBORRES_13==1 | 
+                                                   M06_HCV_POC_LBORRES_1==1 | M06_HCV_POC_LBORRES_2==1 | M06_HCV_POC_LBORRES_3==1 | 
+                                                   M06_HCV_POC_LBORRES_4==1 | M06_HCV_POC_LBORRES_5==1 | M06_HCV_POC_LBORRES_13==1 | 
+                                                   M06_COVID_POC_LBORRES_1==1 | M06_COVID_POC_LBORRES_2==1 | M06_COVID_POC_LBORRES_3==1 | 
+                                                   M06_COVID_POC_LBORRES_4==1 | M06_COVID_POC_LBORRES_5==1 | M06_COVID_POC_LBORRES_13==1) ~ 1, 
+                                                   
+                                                   # LAB DIAGNOSED (MNH08) 
+                                                   (M08_MALBL_LBORRES_1==1 | M08_MALBL_LBORRES_2==1 | M08_MALBL_LBORRES_3==1 | #THESE LABS ARE NOT DONE DURING _13 VISITS.
+                                                   M08_MALBL_LBORRES_4==1 | M08_MALBL_LBORRES_5==1 |
+                                                   M08_PLACMAL_LBPERF_1_1==1 | M08_PLACMAL_LBPERF_1_2==1 | M08_PLACMAL_LBPERF_1_3==1 |
+                                                   M08_PLACMAL_LBPERF_1_4==1 | M08_PLACMAL_LBPERF_1_5==1 | 
+                                                   M08_TB_CNFRM_LBORRES_1==1 | M08_TB_CNFRM_LBORRES_2==1 | M08_TB_CNFRM_LBORRES_3==1 | 
+                                                   M08_TB_CNFRM_LBORRES_4==1 | M08_TB_CNFRM_LBORRES_5==1 | 
+                                                   M08_SYPH_TITER_LBPERF_1_1==1 | M08_SYPH_TITER_LBPERF_1_2==1 | M08_SYPH_TITER_LBPERF_1_3==1 | 
+                                                   M08_SYPH_TITER_LBPERF_1_4==1 | M08_SYPH_TITER_LBPERF_1_5==1 |
+                                                   M08_HEV_IGM_LBORRES_1==1 | M08_HEV_IGM_LBORRES_2==1 | M08_HEV_IGM_LBORRES_3==1 |
+                                                   M08_HEV_IGM_LBORRES_4==1 | M08_HEV_IGM_LBORRES_5==1 | 
+                                                   M08_CTNG_CT_LBORRES_1==1 | M08_CTNG_CT_LBORRES_2==1 | M08_CTNG_CT_LBORRES_3==1 | 
+                                                   M08_CTNG_CT_LBORRES_4==1 | M08_CTNG_CT_LBORRES_5==1 |
+                                                   M08_CTNG_NG_LBORRES_1==1 | M08_CTNG_NG_LBORRES_2==1 | M08_CTNG_NG_LBORRES_3==1 | 
+                                                   M08_CTNG_NG_LBORRES_4==1 | M08_CTNG_NG_LBORRES_5==1 | 
+                                                   M08_ZCD_ZIKIGM_LBORRES_1==1 | M08_ZCD_ZIKIGM_LBORRES_2==1 | M08_ZCD_ZIKIGM_LBORRES_3==1 |
+                                                   M08_ZCD_ZIKIGM_LBORRES_4==1 | M08_ZCD_ZIKIGM_LBORRES_5==1 |
+                                                   M08_ZCD_CHKIGM_LBORRES_1==1 | M08_ZCD_CHKIGM_LBORRES_2==1 | M08_ZCD_CHKIGM_LBORRES_3==1 | 
+                                                   M08_ZCD_CHKIGM_LBORRES_4==1 | M08_ZCD_CHKIGM_LBORRES_5==1 | 
+                                                   M08_ZCD_DENIGM_LBORRES_1==1 | M08_ZCD_DENIGM_LBORRES_2==1 | M08_ZCD_DENIGM_LBORRES_3==1 |
+                                                   M08_ZCD_DENIGM_LBORRES_4==1 | M08_ZCD_DENIGM_LBORRES_5==1 |
+                                                   M08_LEPT_IGM_LBORRES_1==1 | M08_LEPT_IGM_LBORRES_2==1 | M08_LEPT_IGM_LBORRES_3==1 | 
+                                                   M08_LEPT_IGM_LBORRES_4==1 | M08_LEPT_IGM_LBORRES_5==1) ~ 1, 
+                                                 
+                                                 # Inconclusive:
+                                                 (M08_MALBL_LBORRES_1==2 | M08_MALBL_LBORRES_2==2 | M08_MALBL_LBORRES_3==2 | 
+                                                   M08_MALBL_LBORRES_4==1 | M08_MALBL_LBORRES_5==2 | 
+                                                   M08_PLACMAL_LBPERF_1_1==2 | M08_PLACMAL_LBPERF_1_2==2 | M08_PLACMAL_LBPERF_1_3==2 |
+                                                   M08_PLACMAL_LBPERF_1_4==2 | M08_PLACMAL_LBPERF_1_5==2 | 
+                                                   M08_TB_CNFRM_LBORRES_1==2 | M08_TB_CNFRM_LBORRES_2==2 | M08_TB_CNFRM_LBORRES_3==2 | 
+                                                   M08_TB_CNFRM_LBORRES_4==2 | M08_TB_CNFRM_LBORRES_5==2 | 
+                                                   M08_SYPH_TITER_LBPERF_1_1==2 | M08_SYPH_TITER_LBPERF_1_2==2 | M08_SYPH_TITER_LBPERF_1_3==2 | 
+                                                   M08_SYPH_TITER_LBPERF_1_4==2 | M08_SYPH_TITER_LBPERF_1_5==2 |
+                                                   M08_HEV_IGM_LBORRES_1==2 | M08_HEV_IGM_LBORRES_2==2 | M08_HEV_IGM_LBORRES_3==2 |
+                                                   M08_HEV_IGM_LBORRES_4==2 | M08_HEV_IGM_LBORRES_5==2 | 
+                                                   M08_CTNG_CT_LBORRES_1==2 | M08_CTNG_CT_LBORRES_2==2 | M08_CTNG_CT_LBORRES_3==2 | 
+                                                   M08_CTNG_CT_LBORRES_4==2 | M08_CTNG_CT_LBORRES_5==2 |
+                                                   M08_CTNG_NG_LBORRES_1==2 | M08_CTNG_NG_LBORRES_2==2 | M08_CTNG_NG_LBORRES_3==2 | 
+                                                   M08_CTNG_NG_LBORRES_4==2 | M08_CTNG_NG_LBORRES_5==2 | 
+                                                   M08_ZCD_ZIKIGM_LBORRES_1==2 | M08_ZCD_ZIKIGM_LBORRES_2==2 | M08_ZCD_ZIKIGM_LBORRES_3==2 |
+                                                   M08_ZCD_ZIKIGM_LBORRES_4==2 | M08_ZCD_ZIKIGM_LBORRES_5==2 |
+                                                   M08_ZCD_CHKIGM_LBORRES_1==2 | M08_ZCD_CHKIGM_LBORRES_2==2 | M08_ZCD_CHKIGM_LBORRES_3==2 | 
+                                                   M08_ZCD_CHKIGM_LBORRES_4==2 | M08_ZCD_CHKIGM_LBORRES_5==2 | 
+                                                   M08_ZCD_DENIGM_LBORRES_1==2 | M08_ZCD_DENIGM_LBORRES_2==2 | M08_ZCD_DENIGM_LBORRES_3==2 |
+                                                   M08_ZCD_DENIGM_LBORRES_4==2 | M08_ZCD_DENIGM_LBORRES_5==2 |
+                                                   M08_LEPT_IGM_LBORRES_1==2 | M08_LEPT_IGM_LBORRES_2==2 | M08_LEPT_IGM_LBORRES_3==2 | 
+                                                   M08_LEPT_IGM_LBORRES_4==2 | M08_LEPT_IGM_LBORRES_5==2) ~ 0, 
+                                                 TRUE ~ as.numeric(0)))
+table(MAT_INFECT_MEAS_POC_LAB_ANC = mnh_merged_df$MAT_INFECT_MEAS_POC_LAB_ANC, useNA = "always")
+
+
 ```
+
+***SECONDARY: MATERNAL INFECTION AND SEPSIS (PREGNANCY) - L&D VISIT***
+```{r}
+##########################################################################
+# MATERNAL INFECTION DURING L&D AND POST-DELIVERY - VISIT 6 - DIAGNOSED # 
+#TODO
+# - SHOULD "OTHER" BE INCLUDED HERE? 
+#########################################################################
+mnh_merged_df <- mnh_merged_df %>% 
+  mutate(MAT_INFECT_DIAG_IPC_POST_DELIV = case_when((M09_COMMUNIC_MHOCCUR_1_6==1 | M09_COMMUNIC_MHOCCUR_2_6==1 | M09_COMMUNIC_MHOCCUR_3_6==1 | 
+                                           M09_COMMUNIC_MHOCCUR_4_6==1 | M09_COMMUNIC_MHOCCUR_5_6==1 | M09_COMMUNIC_MHOCCUR_9_6==1 |
+                                           M09_COMMUNIC_MHOCCUR_10_6==1 |
+                                           M09_INFECT_MHOCCUR_1_6==1 | M09_INFECT_MHOCCUR_2_6==1 | M09_INFECT_MHOCCUR_3_6==1 | 
+                                           M09_INFECT_MHOCCUR_4_6==1 | M09_INFECT_MHOCCUR_5_6==1 | M09_INFECT_MHOCCUR_6_6==1 |
+                                           M09_INFECT_MHOCCUR_7_6==1 | M09_INFECT_MHOCCUR_8_6==1 | M09_INFECT_MHOCCUR_9_6==1 |
+                                           M09_INFECT_MHOCCUR_10_6==1) & (M09_INFECT_SRCE_2_6==1 | M09_INFECT_SRCE_3_6==1) ~ 1,
+                                           (M10_POST_DEL_INF_CEOCCUR_1_6==1 | M10_POST_DEL_INF_CEOCCUR_2_6==1 | M10_POST_DEL_INF_CEOCCUR_3_6==1 |
+                                             M10_POST_DEL_INF_CEOCCUR_4_6==1 | M10_POST_DEL_INF_CEOCCUR_5_6==1 | M10_POST_DEL_INF_CEOCCUR_6_6==1 | 
+                                             M10_POST_DEL_INF_CEOCCUR_7_6==1 | M10_POST_DEL_INF_CEOCCUR_8_6==1 | M10_POST_DEL_INF_CEOCCUR_9_6==1 |
+                                             M10_POST_DEL_INF_CEOCCUR_10_6==1 | M10_POST_DEL_INF_CEOCCUR_11_6==1 | M10_POST_DEL_INF_CEOCCUR_12_6==1 |
+                                             M10_POST_DEL_INF_CEOCCUR_13_6==1 | M10_POST_DEL_INF_CEOCCUR_14_6==1) ~1, # | M10_POST_DEL_INF_CEOCCUR_88_6==1 |
+                                         TRUE ~ as.numeric(0)))
+table(MAT_INFECT_DIAG_IPC_POST_DELIV = mnh_merged_df$MAT_INFECT_DIAG_IPC_POST_DELIV, useNA = "always")
+
+#######################################################
+# MATERNAL INFECTION DURING L&D - VISIT 6 - MEASURED # 
+# NOTE: THERE IS NO 'MEASURED' AT IPC.
+#######################################################
+
+#############################################################
+# MATERNAL INFECTION ***TREATMENT*** DURING L&D - VISIT 6  # 
+# - SHOULD "OTHER" BE ADDED HERE? 
+#############################################################
+
+mnh_merged_df <- mnh_merged_df %>%
+  mutate(MAT_SYPH_INFECT_TREAT_IPC_POST_DELIV = case_when(M09_ADMIT_ABX_CMOCCUR_6==1 | # MADE THIS INTO AN "OR" INSTEAD OF "AND" EVENTOUGH IT SHOULD BE "AND".
+                                                            M09_ADMIT_ABX_CMTRT_1_6==1 | M09_ADMIT_ABX_CMTRT_2_6==1 | M09_ADMIT_ABX_CMTRT_3_6==1 |
+                                                            M09_ADMIT_ABX_CMTRT_4_6==1 | M09_ADMIT_ABX_CMTRT_5_6==1 | M09_ADMIT_ABX_CMTRT_6_6==1 |
+                                                            M09_ADMIT_ABX_CMTRT_7_6==1 | M09_ADMIT_ABX_CMTRT_8_6==1 | M09_ADMIT_ABX_CMTRT_9_6==1 ~ 1, 
+                                                          # M09_ADMIT_ABX_CMTRT_88==1
+                                                          
+                                                          # POST DELIVERY:
+                                                          (M10_LD_ABX_CMOCCUR_1_6==1 | M10_LD_ABX_CMOCCUR_2_6==1 | M10_LD_ABX_CMOCCUR_3_6==1 | 
+                                                            M10_LD_ABX_CMOCCUR_4_6==1 | M10_LD_ABX_CMOCCUR_5_6==1 | M10_LD_ABX_CMOCCUR_6_6==1 | 
+                                                            M10_LD_ABX_CMOCCUR_7_6==1) ~ 1, # | M10_LD_ABX_CMOCCUR_88_6==1
+                                                          TRUE ~ as.numeric(0)))
+
+table(MAT_SYPH_INFECT_TREAT_IPC_POST_DELIV = mnh_merged_df$MAT_SYPH_INFECT_TREAT_IPC_POST_DELIV, useNA = "always")
+```
+
+***SECONDARY: MATERNAL INFECTION AND SEPSIS (PREGNANCY) - PNC VISIT***
+USE MNH06 PNC6, PNC1, PNC4, PNC6 (VISITS 7-10)
+```{r}
+##########################################################################
+# MATERNAL INFECTION DURING L&D AND POST-DELIVERY - VISIT 6 - DIAGNOSED # 
+#TODO
+# - SHOULD "OTHER" BE INCLUDED HERE? 
+# - SHOULD COVID_FAMETHOD = 1 OR 2 BE INCLUDED? 
+#########################################################################
+
+# START HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+mnh_merged_df <- mnh_merged_df %>% # VISIT 7
+  mutate(MAT_INFECT_N_SEPSIS_DIAG_PNC = case_when(M12_POST_DEL_INF_MHOCCUR_1_7==1 | M12_POST_DEL_INF_MHOCCUR_2_7==1 | M12_POST_DEL_INF_MHOCCUR_3_7==1 | 
+                                                    M12_POST_DEL_INF_MHOCCUR_4_7==1 | M12_POST_DEL_INF_MHOCCUR_5_7==1 | M12_POST_DEL_INF_MHOCCUR_6_7==1 | 
+                                                    M12_POST_DEL_INF_MHOCCUR_7_7==1 | M12_POST_DEL_INF_MHOCCUR_8_7==1 | M12_POST_DEL_INF_MHOCCUR_9_7==1 |
+                                                    M12_POST_DEL_INF_MHOCCUR_10_7==1 | M12_POST_DEL_INF_MHOCCUR_11_7==1 | #_11 is SEPSIS.
+                                                    
+                                                    # SARI, COVID-19, MALARIA, HIV:
+                                                    (M12_SARI_CEOCCUR_7==1 | !is.na(M12_SARI_CESTDAT_7)) |
+                                                    (M12_COVID_LBPERF_7==1 | !is.na(M12_COVID_LBDAT_7) | 
+                                                       (M12_COVID_FAMETHOD_7==1 | M12_COVID_FAMETHOD_7==2)) | 
+                                                    (M12_MALARIA_MHOCCUR_7==1 | !is.na(M12_MALARIA_MHSTDAT_7) | 
+                                                       (M12_MALARIA_FAMETHOD_7==1 | M12_MALARIA_FAMETHOD_7==2))| 
+                                                    (M12_HIV_MHOCCUR_7==1 | !is.na(M12_HIV_MHSTDAT_7)) ~ 1,
+                                                  
+                                                  # VISIT 8: 
+                                                  (M12_POST_DEL_INF_MHOCCUR_1_8==1 | M12_POST_DEL_INF_MHOCCUR_2_8==1 | M12_POST_DEL_INF_MHOCCUR_3_8==1 |
+                                                    M12_POST_DEL_INF_MHOCCUR_4_8==1 | M12_POST_DEL_INF_MHOCCUR_5_8==1 | M12_POST_DEL_INF_MHOCCUR_6_8==1 |
+                                                    M12_POST_DEL_INF_MHOCCUR_7_8==1 | M12_POST_DEL_INF_MHOCCUR_8_8==1 |M12_POST_DEL_INF_MHOCCUR_9_8==1 |
+                                                    M12_POST_DEL_INF_MHOCCUR_10_8==1 |M12_POST_DEL_INF_MHOCCUR_11_8==1) ~ 1,
+                                                  
+                                                  # SARI, COVID-19, MALARIA, HIV:
+                                                  ((M12_SARI_CEOCCUR_8==1 | !is.na(M12_SARI_CESTDAT_8)) |
+                                                    (M12_COVID_LBPERF_8==1 | !is.na(M12_COVID_LBDAT_8) | 
+                                                       (M12_COVID_FAMETHOD_8==1 | M12_COVID_FAMETHOD_8==2)) | 
+                                                    (M12_MALARIA_MHOCCUR_8==1 | !is.na(M12_MALARIA_MHSTDAT_8) | 
+                                                       (M12_MALARIA_FAMETHOD_8==1 | M12_MALARIA_FAMETHOD_8==2)) | 
+                                                    (M12_HIV_MHOCCUR_8==1 | !is.na(M12_HIV_MHSTDAT_8))) ~ 1,
+                                                  
+                                                  
+                                                  # VISIT 9:
+                                                  (M12_POST_DEL_INF_MHOCCUR_1_9==1 | M12_POST_DEL_INF_MHOCCUR_2_9==1 | M12_POST_DEL_INF_MHOCCUR_3_9==1 |
+                                                    M12_POST_DEL_INF_MHOCCUR_4_9==1 | M12_POST_DEL_INF_MHOCCUR_5_9==1 | M12_POST_DEL_INF_MHOCCUR_6_9==1 |
+                                                    M12_POST_DEL_INF_MHOCCUR_7_9==1 | M12_POST_DEL_INF_MHOCCUR_8_9==1 | M12_POST_DEL_INF_MHOCCUR_9_9==1 |
+                                                    M12_POST_DEL_INF_MHOCCUR_10_9==1 | M12_POST_DEL_INF_MHOCCUR_11_9==1) ~ 1,
+                                                  
+                                                  
+                                                  # SARI, COVID-19, MALARIA, HIV:
+                                                  ((M12_SARI_CEOCCUR_9==1 | !is.na(M12_SARI_CESTDAT_9)) |
+                                                    (M12_COVID_LBPERF_9==1 | !is.na(M12_COVID_LBDAT_9) | 
+                                                       (M12_COVID_FAMETHOD_9==1 | M12_COVID_FAMETHOD_9==2)) | 
+                                                    (M12_MALARIA_MHOCCUR_9==1 | !is.na(M12_MALARIA_MHSTDAT_9) | 
+                                                       (M12_MALARIA_FAMETHOD_9==1 | M12_MALARIA_FAMETHOD_9==2)) | 
+                                                    (M12_HIV_MHOCCUR_9==1 | !is.na(M12_HIV_MHSTDAT_9))) ~ 1,
+                                                  
+                                                  # VISIT 10: 
+                                                  (M12_POST_DEL_INF_MHOCCUR_1_10==1 | M12_POST_DEL_INF_MHOCCUR_2_10==1 | M12_POST_DEL_INF_MHOCCUR_3_10==1 |
+                                                    M12_POST_DEL_INF_MHOCCUR_4_10==1 | M12_POST_DEL_INF_MHOCCUR_5_10==1 | M12_POST_DEL_INF_MHOCCUR_6_10==1 |
+                                                    M12_POST_DEL_INF_MHOCCUR_7_10==1 | M12_POST_DEL_INF_MHOCCUR_8_10==1 | M12_POST_DEL_INF_MHOCCUR_9_10==1 |
+                                                    M12_POST_DEL_INF_MHOCCUR_10_10==1 | M12_POST_DEL_INF_MHOCCUR_11_10==1) ~ 1
+                                                  
+                                                  # SARI, COVID-19, MALARIA, HIV:
+                                                  ((M12_SARI_CEOCCUR_10==1 | !is.na(M12_SARI_CESTDAT_10)) |
+                                                    (M12_COVID_LBPERF_10==1 | !is.na(M12_COVID_LBDAT_10) | 
+                                                       (M12_COVID_FAMETHOD_10==1 | M12_COVID_FAMETHOD_10==2)) | 
+                                                    (M12_MALARIA_MHOCCUR_10==1 | !is.na(M12_MALARIA_MHSTDAT_10) | 
+                                                       (M12_MALARIA_FAMETHOD_10==1 | M12_MALARIA_FAMETHOD_10==2)) | 
+                                                    (M12_HIV_MHOCCUR_10==1 | !is.na(M12_HIV_MHSTDAT_10))) ~ 1,
+                                                  TRUE ~ as.numeric(0)))
+
+table(MAT_INFECT_DIAG_PNC = mnh_merged_df$MAT_INFECT_DIAG_PNC, useNA = "always")
+
+
+
+```
+
+***SECONDARY: MATERNAL INFECTION AND SEPSIS (PREGNANCY) - HOSPITALIZATION (MNH19) VISIT***
+```{r}
+##########################################################################
+# MATERNAL INFECTION DURING L&D AND POST-DELIVERY - VISIT 6 - DIAGNOSED # 
+#TODO
+# - SHOULD "OTHER" BE INCLUDED HERE? 
+#########################################################################
+
+
+
+```
+
+
 
 ******************************************************************************************************
 ******************************************************************************************************
