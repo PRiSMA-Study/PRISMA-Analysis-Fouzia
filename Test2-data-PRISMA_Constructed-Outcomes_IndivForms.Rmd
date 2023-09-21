@@ -2272,8 +2272,10 @@ Maternal sepsis: Organ dysfunction resulting from infection during pregnancy, de
 # DISCUSSION: 09/21/2023
 # - Include “Other” and don’t include “Don’t know”
 # At LnD often a lot of medication is given so for LnD exclude 'Prophylaxis' indication
-# ----But for all the other timepoints, it doesn't matter what the indcation is, just say INFECTION = YES if they are taking medication.
+# ----But for all the other timepoints, it doesn't matter what the indication is, just say INFECTION = YES if they are taking medication.
+####BUT ERS said: remove prophylaxis from all TPs (ANC, IPC and PNC) but keep "others" and "don't know"
 ##################################################################################
+
 mnh_merged_df <- mnh_merged_df %>% 
   mutate(MAT_INFECT_DIAG_ANC = case_when(M04_HIV_CMOCCUR_1==1 | M04_HIV_CMOCCUR_2==1 | M04_HIV_CMOCCUR_3==1 | 
                                            M04_HIV_CMOCCUR_4==1 | M04_HIV_CMOCCUR_5==1 |
@@ -2398,9 +2400,11 @@ mnh_merged_df <- mnh_merged_df %>%
                                             M04_TB_CMTRT_88_4==1 | M04_TB_CMTRT_88_5==1 | M04_TB_CMTRT_88_13==1 ~ 1,
                                             TRUE ~ as.numeric(0)))
 table(MAT_TB_INFECT_TREAT_ANC = mnh_merged_df$MAT_TB_INFECT_TREAT_ANC, SITE = mnh_merged_df$SITE, useNA = "always")
+```
 
+```{r}
 mnh_merged_df <- mnh_merged_df %>%
-  mutate(MAT_ANTIBX_TREAT_ANC = case_when(M04_ANTIBX_CMOCCUR_1==1 | M04_ANTIBX_CMOCCUR_2==1 | M04_ANTIBX_CMOCCUR_3==1 |
+  mutate(MAT_ANTIBX_TREAT_ANC = case_when((M04_ANTIBX_CMOCCUR_1==1 | M04_ANTIBX_CMOCCUR_2==1 | M04_ANTIBX_CMOCCUR_3==1 |
                                             M04_ANTIBX_CMOCCUR_4==1 | M04_ANTIBX_CMOCCUR_5==1 | M04_ANTIBX_CMOCCUR_13==1 |
                                             M04_ANTIBX_CMTRT_1_1==1 | M04_ANTIBX_CMTRT_1_2==1 | M04_ANTIBX_CMTRT_1_3==1 | 
                                             M04_ANTIBX_CMTRT_1_4==1 | M04_ANTIBX_CMTRT_1_5==1 | M04_ANTIBX_CMTRT_1_13==1 |  
@@ -2421,46 +2425,34 @@ mnh_merged_df <- mnh_merged_df %>%
                                             M04_ANTIBX_CMTRT_9_1==1 | M04_ANTIBX_CMTRT_9_2==1 | M04_ANTIBX_CMTRT_9_3==1 | 
                                             M04_ANTIBX_CMTRT_9_4==1 | M04_ANTIBX_CMTRT_9_5==1 | M04_ANTIBX_CMTRT_9_13==1 | 
                                             M04_ANTIBX_CMTRT_88_1==1 | M04_ANTIBX_CMTRT_88_2==1 | M04_ANTIBX_CMTRT_88_3==1 | 
-                                            M04_ANTIBX_CMTRT_88_4==1 | M04_ANTIBX_CMTRT_88_5==1 | M04_ANTIBX_CMTRT_88_13==1 | 
-                                            # ANY OF THESE MEDS DURING ANCE 1-5:
-                                            # VISIT 1
-                                            M04_ANTIBX_CMINDC_1==1 | M04_ANTIBX_CMINDC_1==2 | M04_ANTIBX_CMINDC_1==3 | 
-                                            M04_ANTIBX_CMINDC_1==4 | M04_ANTIBX_CMINDC_1==5| M04_ANTIBX_CMINDC_1==6 | 
-                                            M04_ANTIBX_CMINDC_1==7 | M04_ANTIBX_CMINDC_1==8 | M04_ANTIBX_CMINDC_1==9 | 
-                                            M04_ANTIBX_CMINDC_1==88 | # DISCUSSED WITH ERS - INCLUDE "OTHER = 88" TRT.
+                                            M04_ANTIBX_CMTRT_88_4==1 | M04_ANTIBX_CMTRT_88_5==1 | M04_ANTIBX_CMTRT_88_13==1) &
+                                            # ANY OF THESE MEDS DURING ANC 1-5:
+                                            # VISIT 1 - Indication can be: 1-99 except 9(Prophylaxis)
+                                            ((M04_ANTIBX_CMINDC_1 %in% c(1,2,3,4,5,6,7,88,99)) |
+                                            # DISCUSSED WITH ERS - INCLUDE "OTHER = 88" TRT.
                                             
-                                            # VISIT 2
-                                            M04_ANTIBX_CMINDC_2==1 | M04_ANTIBX_CMINDC_2==2 | M04_ANTIBX_CMINDC_2==3 | 
-                                            M04_ANTIBX_CMINDC_2==4 | M04_ANTIBX_CMINDC_2==5 | M04_ANTIBX_CMINDC_2==6 | 
-                                            M04_ANTIBX_CMINDC_2==7 | M04_ANTIBX_CMINDC_2==8 | # M04_ANTIBX_CMINDC_2==9 | 
-                                            M04_ANTIBX_CMINDC_2==88 | 
+                                            # VISIT 2 - Indication can be: 1-99 except 9(Prophylaxis)
+                                            (M04_ANTIBX_CMINDC_2 %in% c(1,2,3,4,5,6,7,88,99)) |
                                             
-                                            # VISIT 3
-                                            M04_ANTIBX_CMINDC_3==1 | M04_ANTIBX_CMINDC_3==2 | M04_ANTIBX_CMINDC_3==3 | 
-                                            M04_ANTIBX_CMINDC_3==4 | M04_ANTIBX_CMINDC_3==5 | M04_ANTIBX_CMINDC_3==6 | 
-                                            M04_ANTIBX_CMINDC_3==7 | M04_ANTIBX_CMINDC_3==8 | # M04_ANTIBX_CMINDC_3==9 | 
-                                            M04_ANTIBX_CMINDC_3==88 | 
+                                            # VISIT 3 - Indication can be: 1-99 except 9(Prophylaxis)
+                                            (M04_ANTIBX_CMINDC_3 %in% c(1,2,3,4,5,6,7,88,99)) |
                                             
-                                            # VISIT 4
-                                            M04_ANTIBX_CMINDC_4==1 | M04_ANTIBX_CMINDC_4==2 | M04_ANTIBX_CMINDC_4==3 | 
-                                            M04_ANTIBX_CMINDC_4==4 | M04_ANTIBX_CMINDC_4==5 | M04_ANTIBX_CMINDC_4==6 | 
-                                            M04_ANTIBX_CMINDC_4==7 | M04_ANTIBX_CMINDC_4==8 | # M04_ANTIBX_CMINDC_4==9 | # DISCUSSED WITH ERS - DONT' INCLUDE PROPHYLAXIS TRT
-                                            M04_ANTIBX_CMINDC_4==88 | 
+                                            # VISIT 4 - Indication can be: 1-99 except 9(Prophylaxis)
+                                            (M04_ANTIBX_CMINDC_2 %in% c(1,2,3,4,5,6,7,88,99)) |
                                             
-                                            # VISIT 5
-                                            M04_ANTIBX_CMINDC_5==1 | M04_ANTIBX_CMINDC_5==2 | M04_ANTIBX_CMINDC_5==3 | 
-                                            M04_ANTIBX_CMINDC_5==4 | M04_ANTIBX_CMINDC_5==5 | M04_ANTIBX_CMINDC_5==6 | 
-                                            M04_ANTIBX_CMINDC_5==7 | M04_ANTIBX_CMINDC_5==8 | M04_ANTIBX_CMINDC_5==9 | 
-                                            M04_ANTIBX_CMINDC_5==88 | 
+                                            # VISIT 5 - Indication can be: 1-99 except 9(Prophylaxis)
+                                            (M04_ANTIBX_CMINDC_2 %in% c(1,2,3,4,5,6,7,88,99)) |
                                             
-                                            # VISIT 13 - UNSCHEDULED ANC
-                                            M04_ANTIBX_CMINDC_13==1 | M04_ANTIBX_CMINDC_13==2 | M04_ANTIBX_CMINDC_13==3 | 
-                                            M04_ANTIBX_CMINDC_13==4 | M04_ANTIBX_CMINDC_13==5 | M04_ANTIBX_CMINDC_13==6 | 
-                                            M04_ANTIBX_CMINDC_13==7 | M04_ANTIBX_CMINDC_13==8 | M04_ANTIBX_CMINDC_13==9 | 
-                                            M04_ANTIBX_CMINDC_13==88  ~ 1, 
+                                            # VISIT 13 - UNSCHEDULED ANC - Indication can be: 1-99 except 9(Prophylaxis)
+                                            (M04_ANTIBX_CMINDC_2 %in% c(1,2,3,4,5,6,7,88,99)))  ~ 1, 
                                           TRUE ~ as.numeric(0)))
-table(MAT_ANTIBX_TREAT_ANC = mnh_merged_df$MAT_ANTIBX_TREAT_ANC, SITE = mnh_merged_df$SITE, useNA = "always")
 
+table(MAT_ANTIBX_TREAT_ANC = mnh_merged_df$MAT_ANTIBX_TREAT_ANC, SITE = mnh_merged_df$SITE, useNA = "always")
+round(prop.table(table(MAT_ANTIBX_TREAT_ANC = mnh_merged_df$MAT_ANTIBX_TREAT_ANC, SITE = mnh_merged_df$SITE, useNA = "always"), margin=2)*100,2)
+```
+
+# MATERNAL INFECTION MEASURED THROUGH POC MNH06 and LAB MNH06 - ANC ONLY #
+```{r}
 mnh_merged_df <- mnh_merged_df %>%
   mutate(MAT_INFECT_DIAG_TREAT_ANC = case_when(MAT_CHANC_INFECT_TREAT_ANC ==1 | MAT_CHLAMYDIA_INFECT_TREAT_ANC==1 |
                                                  MAT_GONORRHEA_INFECT_TREAT_ANC==1 | MAT_STI_OTHR_INFECT_TREAT_ANC==1 | 
@@ -2535,6 +2527,7 @@ mnh_merged_df <- mnh_merged_df %>%  # POC FIRST (MNH06)
                                                    M08_LEPT_IGM_LBORRES_1==2 | M08_LEPT_IGM_LBORRES_2==2 | M08_LEPT_IGM_LBORRES_3==2 | 
                                                    M08_LEPT_IGM_LBORRES_4==2 | M08_LEPT_IGM_LBORRES_5==2) ~ 0, 
                                                  TRUE ~ as.numeric(0)))
+
 table(MAT_INFECT_MEAS_POC_LAB_ANC = mnh_merged_df$MAT_INFECT_MEAS_POC_LAB_ANC, SITE= mnh_merged_df$SITE, useNA = "always")
 round(prop.table(table(MAT_INFECT_MEAS_POC_LAB_ANC = mnh_merged_df$MAT_INFECT_MEAS_POC_LAB_ANC, SITE= mnh_merged_df$SITE,  useNA = "always"),
                  margin=2)*100,2)
@@ -2549,22 +2542,29 @@ round(prop.table(table(MAT_INFECT_MEAS_POC_LAB_ANC = mnh_merged_df$MAT_INFECT_ME
 # - SHOULD "OTHER" BE INCLUDED HERE? 
 #########################################################################
 mnh_merged_df <- mnh_merged_df %>% 
-  mutate(MAT_INFECT_DIAG_IPC_POST_DELIV = case_when((M09_COMMUNIC_MHOCCUR_1_6==1 | M09_COMMUNIC_MHOCCUR_2_6==1 | M09_COMMUNIC_MHOCCUR_3_6==1 | 
-                                           M09_COMMUNIC_MHOCCUR_4_6==1 | M09_COMMUNIC_MHOCCUR_5_6==1 | M09_COMMUNIC_MHOCCUR_9_6==1 |
-                                           M09_COMMUNIC_MHOCCUR_10_6==1 |
-                                           M09_INFECT_MHOCCUR_1_6==1 | M09_INFECT_MHOCCUR_2_6==1 | M09_INFECT_MHOCCUR_3_6==1 | 
-                                           M09_INFECT_MHOCCUR_4_6==1 | M09_INFECT_MHOCCUR_5_6==1 | M09_INFECT_MHOCCUR_6_6==1 |
-                                           M09_INFECT_MHOCCUR_7_6==1 | M09_INFECT_MHOCCUR_8_6==1 | M09_INFECT_MHOCCUR_9_6==1 |
-                                           M09_INFECT_MHOCCUR_10_6==1) & (M09_INFECT_SRCE_2_6==1 | M09_INFECT_SRCE_3_6==1) ~ 1,
-                                           (M10_POST_DEL_INF_CEOCCUR_1_6==1 | M10_POST_DEL_INF_CEOCCUR_2_6==1 | M10_POST_DEL_INF_CEOCCUR_3_6==1 |
-                                             M10_POST_DEL_INF_CEOCCUR_4_6==1 | M10_POST_DEL_INF_CEOCCUR_5_6==1 | M10_POST_DEL_INF_CEOCCUR_6_6==1 | 
-                                             M10_POST_DEL_INF_CEOCCUR_7_6==1 | M10_POST_DEL_INF_CEOCCUR_8_6==1 | M10_POST_DEL_INF_CEOCCUR_9_6==1 |
-                                             M10_POST_DEL_INF_CEOCCUR_10_6==1 | M10_POST_DEL_INF_CEOCCUR_11_6==1 | M10_POST_DEL_INF_CEOCCUR_12_6==1 |
-                                             M10_POST_DEL_INF_CEOCCUR_13_6==1 | M10_POST_DEL_INF_CEOCCUR_14_6==1) ~1, # | M10_POST_DEL_INF_CEOCCUR_88_6==1 |
-                                         TRUE ~ as.numeric(0)))
+  mutate(MAT_INFECT_DIAG_IPC_POST_DELIV = case_when(((M09_COMMUNIC_MHOCCUR_1_6==1 | M09_COMMUNIC_MHOCCUR_2_6==1 | 
+                                                        M09_COMMUNIC_MHOCCUR_3_6==1 |  M09_COMMUNIC_MHOCCUR_4_6==1 | 
+                                                        M09_COMMUNIC_MHOCCUR_5_6==1 | M09_COMMUNIC_MHOCCUR_9_6==1 |
+                                                        M09_COMMUNIC_MHOCCUR_10_6==1 |
+                                                        M09_INFECT_MHOCCUR_1_6==1 | M09_INFECT_MHOCCUR_2_6==1 | M09_INFECT_MHOCCUR_3_6==1 | 
+                                                        M09_INFECT_MHOCCUR_4_6==1 | M09_INFECT_MHOCCUR_5_6==1 | M09_INFECT_MHOCCUR_6_6==1 |
+                                                        M09_INFECT_MHOCCUR_7_6==1 | M09_INFECT_MHOCCUR_8_6==1 | M09_INFECT_MHOCCUR_9_6==1 |
+                                                        M09_INFECT_MHOCCUR_10_6==1) & (M09_INFECT_SRCE_2_6==1 | M09_INFECT_SRCE_3_6==1)) ~1,
+                                                  
+                                                     (M10_POST_DEL_INF_CEOCCUR_1_6==1 | M10_POST_DEL_INF_CEOCCUR_2_6==1 |
+                                                        M10_POST_DEL_INF_CEOCCUR_3_6==1 | M10_POST_DEL_INF_CEOCCUR_4_6==1 |
+                                                        M10_POST_DEL_INF_CEOCCUR_5_6==1 | M10_POST_DEL_INF_CEOCCUR_6_6==1 | 
+                                                        M10_POST_DEL_INF_CEOCCUR_7_6==1 | M10_POST_DEL_INF_CEOCCUR_8_6==1 |
+                                                        M10_POST_DEL_INF_CEOCCUR_9_6==1 | M10_POST_DEL_INF_CEOCCUR_10_6==1 |
+                                                        M10_POST_DEL_INF_CEOCCUR_11_6==1 | M10_POST_DEL_INF_CEOCCUR_12_6==1 |
+                                                        M10_POST_DEL_INF_CEOCCUR_13_6==1 | M10_POST_DEL_INF_CEOCCUR_14_6==1) ~1, 
+                                                     # | M10_POST_DEL_INF_CEOCCUR_88_6==1 |
+                                                     TRUE ~ as.numeric(0)))
+
 table(MAT_INFECT_DIAG_IPC_POST_DELIV = mnh_merged_df$MAT_INFECT_DIAG_IPC_POST_DELIV, SITE = mnh_merged_df$SITE, useNA = "always")
 round(prop.table(table(MAT_INFECT_DIAG_IPC_POST_DELIV = mnh_merged_df$MAT_INFECT_DIAG_IPC_POST_DELIV, SITE = mnh_merged_df$SITE, useNA = "always"),
                  margin=2)*100,2)
+
 #######################################################
 # MATERNAL INFECTION DURING L&D - VISIT 6 - MEASURED # 
 # NOTE: THERE IS NO 'MEASURED' AT IPC.
@@ -2572,21 +2572,24 @@ round(prop.table(table(MAT_INFECT_DIAG_IPC_POST_DELIV = mnh_merged_df$MAT_INFECT
 
 #############################################################
 # MATERNAL INFECTION ***TREATMENT*** DURING L&D - VISIT 6  # 
-# - SHOULD "OTHER" BE ADDED HERE? 
+# - SHOULD "OTHER" BE ADDED HERE - YES I ADDED!
 #############################################################
 
 mnh_merged_df <- mnh_merged_df %>%
-  mutate(MAT_SYPH_INFECT_TREAT_IPC_POST_DELIV = case_when(M09_ADMIT_ABX_CMOCCUR_6==1 | # MADE THIS INTO AN "OR" INSTEAD OF "AND" EVENTOUGH IT SHOULD BE "AND".
-                                                            M09_ADMIT_ABX_CMTRT_1_6==1 | M09_ADMIT_ABX_CMTRT_2_6==1 | M09_ADMIT_ABX_CMTRT_3_6==1 |
-                                                            M09_ADMIT_ABX_CMTRT_4_6==1 | M09_ADMIT_ABX_CMTRT_5_6==1 | M09_ADMIT_ABX_CMTRT_6_6==1 |
-                                                            M09_ADMIT_ABX_CMTRT_7_6==1 | M09_ADMIT_ABX_CMTRT_8_6==1 | M09_ADMIT_ABX_CMTRT_9_6==1 ~ 1, 
-                                                          # M09_ADMIT_ABX_CMTRT_88==1
-                                                          
-                                                          # POST DELIVERY:
-                                                          (M10_LD_ABX_CMOCCUR_1_6==1 | M10_LD_ABX_CMOCCUR_2_6==1 | M10_LD_ABX_CMOCCUR_3_6==1 | 
-                                                            M10_LD_ABX_CMOCCUR_4_6==1 | M10_LD_ABX_CMOCCUR_5_6==1 | M10_LD_ABX_CMOCCUR_6_6==1 | 
-                                                            M10_LD_ABX_CMOCCUR_7_6==1) ~ 1, # | M10_LD_ABX_CMOCCUR_88_6==1
-                                                          TRUE ~ as.numeric(0)))
+  mutate(MAT_SYPH_INFECT_TREAT_IPC_POST_DELIV = case_when(((M09_ADMIT_ABX_CMOCCUR_6==1 | # MADE THIS INTO AN "OR" INSTEAD OF "AND" EVENTOUGH IT SHOULD BE "AND".
+                                                             M09_ADMIT_ABX_CMTRT_1_6==1 | M09_ADMIT_ABX_CMTRT_2_6==1 | M09_ADMIT_ABX_CMTRT_3_6==1 |
+                                                             M09_ADMIT_ABX_CMTRT_4_6==1 | M09_ADMIT_ABX_CMTRT_5_6==1 | M09_ADMIT_ABX_CMTRT_6_6==1 |
+                                                             M09_ADMIT_ABX_CMTRT_7_6==1 | M09_ADMIT_ABX_CMTRT_8_6==1 | M09_ADMIT_ABX_CMTRT_9_6==1) &
+                                                            # Indication is any of these reasons (i.e. UT, PID, dental infection, other, don't know etc):
+                                                            (M09_ADMIT_ABX_CMINDC_6 %in% c(1,2,3,4,5,6,7,88,99))) ~ 1, 
+         # M09_ADMIT_ABX_CMTRT_88==1
+         
+         # POST DELIVERY:
+         # NOTE: POST-DELVIERY DOESN'T HAVE INDICATION FOR WHY ABX GIVEN LIKE IPC DOES. 
+         (M10_LD_ABX_CMOCCUR_1_6==1 | M10_LD_ABX_CMOCCUR_2_6==1 | M10_LD_ABX_CMOCCUR_3_6==1 | 
+            M10_LD_ABX_CMOCCUR_4_6==1 | M10_LD_ABX_CMOCCUR_5_6==1 | M10_LD_ABX_CMOCCUR_6_6==1 | 
+            M10_LD_ABX_CMOCCUR_7_6==1) ~ 1, # | M10_LD_ABX_CMOCCUR_88_6==1
+         TRUE ~ as.numeric(0)))
 
 table(MAT_SYPH_INFECT_TREAT_IPC_POST_DELIV = mnh_merged_df$MAT_SYPH_INFECT_TREAT_IPC_POST_DELIV, SITE = mnh_merged_df$SITE, useNA = "always")
 round(prop.table(table(MAT_SYPH_INFECT_TREAT_IPC_POST_DELIV = mnh_merged_df$MAT_SYPH_INFECT_TREAT_IPC_POST_DELIV, 
@@ -2597,10 +2600,11 @@ round(prop.table(table(MAT_SYPH_INFECT_TREAT_IPC_POST_DELIV = mnh_merged_df$MAT_
 USE MNH06 PNC6, PNC1, PNC4, PNC6 (VISITS 7-10)
 ```{r}
 ##########################################################################
-# MATERNAL INFECTION DURING L&D AND POST-DELIVERY - VISIT 6 - DIAGNOSED # 
+# MATERNAL INFECTION DURING PNC - VISIT 7 - DIAGNOSED # 
 #TODO
-# - SHOULD "OTHER" BE INCLUDED HERE? 
+# - I INCLUDED SEPSIS HERE B/C IT'S ONE OF THE OPTIONS BUT I AM KEEPING IT SEPERATE AS MAT_DYS FOR OTHER VISITS - IS THIS CORRECT? 
 # - SHOULD COVID_FAMETHOD = 1 OR 2 BE INCLUDED? 
+# - # THERE ARE A LOT OF COVID-19 IMAGINING QUESTIONS HERE - SHOULD THOSE BE ACCOUNTED FOR?
 #########################################################################
 
 # START HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -2614,15 +2618,15 @@ mnh_merged_df <- mnh_merged_df %>% # VISIT 7
   mutate(MAT_INFECT_N_SEPSIS_DIAG_PNC = case_when(M12_POST_DEL_INF_MHOCCUR_1_7==1 | M12_POST_DEL_INF_MHOCCUR_2_7==1 | M12_POST_DEL_INF_MHOCCUR_3_7==1 | 
                                                     M12_POST_DEL_INF_MHOCCUR_4_7==1 | M12_POST_DEL_INF_MHOCCUR_5_7==1 | M12_POST_DEL_INF_MHOCCUR_6_7==1 | 
                                                     M12_POST_DEL_INF_MHOCCUR_7_7==1 | M12_POST_DEL_INF_MHOCCUR_8_7==1 | M12_POST_DEL_INF_MHOCCUR_9_7==1 |
-                                                    M12_POST_DEL_INF_MHOCCUR_10_7==1 | M12_POST_DEL_INF_MHOCCUR_11_7==1 | #_11 is SEPSIS.
+                                                    M12_POST_DEL_INF_MHOCCUR_10_7==1 | M12_POST_DEL_INF_MHOCCUR_11_7==1 ~1, #_11 is SEPSIS.
                                                     
                                                     # SARI, COVID-19, MALARIA, HIV:
-                                                    (M12_SARI_CEOCCUR_7==1 | !is.na(M12_SARI_CESTDAT_7)) |
-                                                    (M12_COVID_LBPERF_7==1 | !is.na(M12_COVID_LBDAT_7) | 
-                                                       (M12_COVID_FAMETHOD_7==1 | M12_COVID_FAMETHOD_7==2)) | 
-                                                    (M12_MALARIA_MHOCCUR_7==1 | !is.na(M12_MALARIA_MHSTDAT_7) | 
-                                                       (M12_MALARIA_FAMETHOD_7==1 | M12_MALARIA_FAMETHOD_7==2))| 
-                                                    (M12_HIV_MHOCCUR_7==1 | !is.na(M12_HIV_MHSTDAT_7)) ~ 1,
+                                                    (M12_SARI_CEOCCUR_7==1 | 
+                                                    (M12_COVID_LBPERF_7==1 &  
+                                                       (M12_COVID_FAMETHOD_7 %in% c(1,2))) | 
+                                                    (M12_MALARIA_MHOCCUR_7==1 | 
+                                                       (M12_MALARIA_FAMETHOD_7 %in% c(1,2)))| 
+                                                    M12_HIV_MHOCCUR_7==1) ~ 1,
                                                   
                                                   # VISIT 8: 
                                                   (M12_POST_DEL_INF_MHOCCUR_1_8==1 | M12_POST_DEL_INF_MHOCCUR_2_8==1 | M12_POST_DEL_INF_MHOCCUR_3_8==1 |
@@ -2631,12 +2635,12 @@ mnh_merged_df <- mnh_merged_df %>% # VISIT 7
                                                     M12_POST_DEL_INF_MHOCCUR_10_8==1 |M12_POST_DEL_INF_MHOCCUR_11_8==1) ~ 1,
                                                   
                                                   # SARI, COVID-19, MALARIA, HIV:
-                                                  ((M12_SARI_CEOCCUR_8==1 | !is.na(M12_SARI_CESTDAT_8)) |
-                                                    (M12_COVID_LBPERF_8==1 | !is.na(M12_COVID_LBDAT_8) | 
+                                                  (M12_SARI_CEOCCUR_8==1 |
+                                                    (M12_COVID_LBPERF_8==1 & 
                                                        (M12_COVID_FAMETHOD_8==1 | M12_COVID_FAMETHOD_8==2)) | 
-                                                    (M12_MALARIA_MHOCCUR_8==1 | !is.na(M12_MALARIA_MHSTDAT_8) | 
+                                                    (M12_MALARIA_MHOCCUR_8==1 & 
                                                        (M12_MALARIA_FAMETHOD_8==1 | M12_MALARIA_FAMETHOD_8==2)) | 
-                                                    (M12_HIV_MHOCCUR_8==1 | !is.na(M12_HIV_MHSTDAT_8))) ~ 1,
+                                                    (M12_HIV_MHOCCUR_8==1)) ~ 1,
                                                   
                                                   
                                                   # VISIT 9:
@@ -2647,12 +2651,12 @@ mnh_merged_df <- mnh_merged_df %>% # VISIT 7
                                                   
                                                   
                                                   # SARI, COVID-19, MALARIA, HIV:
-                                                  ((M12_SARI_CEOCCUR_9==1 | !is.na(M12_SARI_CESTDAT_9)) |
-                                                    (M12_COVID_LBPERF_9==1 | !is.na(M12_COVID_LBDAT_9) | 
-                                                       (M12_COVID_FAMETHOD_9==1 | M12_COVID_FAMETHOD_9==2)) | 
-                                                    (M12_MALARIA_MHOCCUR_9==1 | !is.na(M12_MALARIA_MHSTDAT_9) | 
-                                                       (M12_MALARIA_FAMETHOD_9==1 | M12_MALARIA_FAMETHOD_9==2)) | 
-                                                    (M12_HIV_MHOCCUR_9==1 | !is.na(M12_HIV_MHSTDAT_9))) ~ 1,
+                                                  (M12_SARI_CEOCCUR_9==1  | 
+                                                      (M12_COVID_LBPERF_9==1 |   # THERE ARE A LOT OF COVID-19 IMAGINING QUESTIONS HERE - SHOULD THOSE BE ACCOUNTED FOR? 
+                                                       (M12_COVID_FAMETHOD_9 %in% c(1,2))) | 
+                                                      (M12_MALARIA_MHOCCUR_9==1 | 
+                                                       (M12_MALARIA_FAMETHOD_9 %in% c(1,2))) | 
+                                                    M12_HIV_MHOCCUR_9==1) ~ 1,
                                                   
                                                   # VISIT 10: 
                                                   (M12_POST_DEL_INF_MHOCCUR_1_10==1 | M12_POST_DEL_INF_MHOCCUR_2_10==1 | M12_POST_DEL_INF_MHOCCUR_3_10==1 |
@@ -2661,16 +2665,16 @@ mnh_merged_df <- mnh_merged_df %>% # VISIT 7
                                                     M12_POST_DEL_INF_MHOCCUR_10_10==1 | M12_POST_DEL_INF_MHOCCUR_11_10==1) ~ 1,
                                                   
                                                   # SARI, COVID-19, MALARIA, HIV:
-                                                  ((M12_SARI_CEOCCUR_10==1 | !is.na(M12_SARI_CESTDAT_10)) |
-                                                    (M12_COVID_LBPERF_10==1 | !is.na(M12_COVID_LBDAT_10) | 
-                                                       (M12_COVID_FAMETHOD_10==1 | M12_COVID_FAMETHOD_10==2)) | 
-                                                    (M12_MALARIA_MHOCCUR_10==1 | !is.na(M12_MALARIA_MHSTDAT_10) | 
-                                                       (M12_MALARIA_FAMETHOD_10==1 | M12_MALARIA_FAMETHOD_10==2)) | 
-                                                    (M12_HIV_MHOCCUR_10==1 | !is.na(M12_HIV_MHSTDAT_10))) ~ 1,
+                                                  (M12_SARI_CEOCCUR_10==1 |
+                                                    (M12_COVID_LBPERF_10==1 &
+                                                       (M12_COVID_FAMETHOD_10 %in% c(1,2))) | 
+                                                    (M12_MALARIA_MHOCCUR_10==1 & 
+                                                       (M12_MALARIA_FAMETHOD_10 %in% c(1,2))) | 
+                                                    M12_HIV_MHOCCUR_10==1) ~ 1,
                                                   TRUE ~ as.numeric(0)))
 
-table(MAT_INFECT_N_SEPSIS_DIAG_PNC = mnh_merged_df$MAT_INFECT_N_SEPSIS_DIAG_PNC, useNA = "always")
-
+table(MAT_INFECT_N_SEPSIS_DIAG_PNC = mnh_merged_df$MAT_INFECT_N_SEPSIS_DIAG_PNC, SITE = mnh_merged_df$SITE, useNA = "always")
+round(prop.table(table(MAT_INFECT_N_SEPSIS_DIAG_PNC = mnh_merged_df$MAT_INFECT_N_SEPSIS_DIAG_PNC, SITE = mnh_merged_df$SITE, useNA = "always"), margin=2)*100, 2)
 
 
 ```
