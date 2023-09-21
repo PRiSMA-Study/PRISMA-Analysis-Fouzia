@@ -1480,12 +1480,31 @@ mnh_merged_df <- mnh_merged_df %>%
 table(ANY_PTB = mnh_merged_df$PRETERM_ANY, useNA = "always")
 ```
 
-***PLACENTA PREVIA
-```{r}
+***TERTIARY: PLACENTA PREVIA - PLACENTA_PREVIA***
+Placenta previa is defined at the partial or complete covering of the cervix by the placenta. Signs include vaginal bleeding without pain in the second or third trimester. Diagnosis made via ultrasound. Ocurring ≥20 weeks to prior to delivery. 
 
+- Look at just ANC-32 and IPC.
+```{r}
+mnh_merged_df <- mnh_merged_df %>% 
+  mutate(PLACENTA_PREVIA = case_when(M01_PREVIA_PERES_FTS1_4==3 | M09_APH_FAORRES_1_6==1 | M09_APH_FAORRES_2_6==1 ~ 1,
+                                     TRUE ~ as.numeric(0)))
+
+table(PLACENTA_PREVIA = mnh_merged_df$PLACENTA_PREVIA, useNA = "always")
 ```
 
-***UTERINE RUPTURE = MAT_UTER_RUP***
+***TERTIARY: PLACENTAL ABRUPTION - PLACENTAL_ABRUPT***
+Placental abruption is defined as the complete or partial separation of the placenta from the inner wall of the uterus before delivery. Signs include vaginal bleeding (painful or painless), pain during abdominal palpitations, and/or fetal distress. Diagnosis made via ultrasound. Ocurring ≥20 weeks to prior to delivery. 
+
+- LOOK AT ANC-32 OR IPC.
+```{r}
+# mnh_merged_df <- mnh_merged_df %>% 
+#   mutate(PLACENTAL_ABRUPT = case_when())
+```
+
+
+
+
+***TERTIARY: UTERINE RUPTURE = MAT_UTER_RUP***
 Tear in the muscular wall of the uterus during pregnancy or childbirth.
 L&D: 
 M09_RUPT_UTERUS_CEOCCUR
@@ -2500,6 +2519,11 @@ USE MNH06 PNC6, PNC1, PNC4, PNC6 (VISITS 7-10)
 
 # START HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+temp.df <- mnh_merged_df %>% 
+  select(MOMID, PREGID, M12_POST_DEL_INF_MHOCCUR_1_7, M12_POST_DEL_INF_MHOCCUR_2_7, M12_POST_DEL_INF_MHOCCUR_3_7,
+                                                    M12_POST_DEL_INF_MHOCCUR_4_7, M12_POST_DEL_INF_MHOCCUR_5_7, M12_POST_DEL_INF_MHOCCUR_6_7, 
+                                                    M12_POST_DEL_INF_MHOCCUR_7_7, M12_POST_DEL_INF_MHOCCUR_8_7, M12_POST_DEL_INF_MHOCCUR_9_7,
+                                                    M12_POST_DEL_INF_MHOCCUR_10_7, M12_POST_DEL_INF_MHOCCUR_11_7)
 mnh_merged_df <- mnh_merged_df %>% # VISIT 7
   mutate(MAT_INFECT_N_SEPSIS_DIAG_PNC = case_when(M12_POST_DEL_INF_MHOCCUR_1_7==1 | M12_POST_DEL_INF_MHOCCUR_2_7==1 | M12_POST_DEL_INF_MHOCCUR_3_7==1 | 
                                                     M12_POST_DEL_INF_MHOCCUR_4_7==1 | M12_POST_DEL_INF_MHOCCUR_5_7==1 | M12_POST_DEL_INF_MHOCCUR_6_7==1 | 
@@ -2548,7 +2572,7 @@ mnh_merged_df <- mnh_merged_df %>% # VISIT 7
                                                   (M12_POST_DEL_INF_MHOCCUR_1_10==1 | M12_POST_DEL_INF_MHOCCUR_2_10==1 | M12_POST_DEL_INF_MHOCCUR_3_10==1 |
                                                     M12_POST_DEL_INF_MHOCCUR_4_10==1 | M12_POST_DEL_INF_MHOCCUR_5_10==1 | M12_POST_DEL_INF_MHOCCUR_6_10==1 |
                                                     M12_POST_DEL_INF_MHOCCUR_7_10==1 | M12_POST_DEL_INF_MHOCCUR_8_10==1 | M12_POST_DEL_INF_MHOCCUR_9_10==1 |
-                                                    M12_POST_DEL_INF_MHOCCUR_10_10==1 | M12_POST_DEL_INF_MHOCCUR_11_10==1) ~ 1
+                                                    M12_POST_DEL_INF_MHOCCUR_10_10==1 | M12_POST_DEL_INF_MHOCCUR_11_10==1) ~ 1,
                                                   
                                                   # SARI, COVID-19, MALARIA, HIV:
                                                   ((M12_SARI_CEOCCUR_10==1 | !is.na(M12_SARI_CESTDAT_10)) |
@@ -2559,7 +2583,7 @@ mnh_merged_df <- mnh_merged_df %>% # VISIT 7
                                                     (M12_HIV_MHOCCUR_10==1 | !is.na(M12_HIV_MHSTDAT_10))) ~ 1,
                                                   TRUE ~ as.numeric(0)))
 
-table(MAT_INFECT_DIAG_PNC = mnh_merged_df$MAT_INFECT_DIAG_PNC, useNA = "always")
+table(MAT_INFECT_N_SEPSIS_DIAG_PNC = mnh_merged_df$MAT_INFECT_N_SEPSIS_DIAG_PNC, useNA = "always")
 
 
 
@@ -2572,7 +2596,6 @@ table(MAT_INFECT_DIAG_PNC = mnh_merged_df$MAT_INFECT_DIAG_PNC, useNA = "always")
 #TODO
 # - SHOULD "OTHER" BE INCLUDED HERE? 
 #########################################################################
-
 
 
 ```
