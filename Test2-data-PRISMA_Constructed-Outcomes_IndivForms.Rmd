@@ -709,7 +709,7 @@ merged_df <- merged_df %>%
                                       M09_DELIV_DSSTDAT_INF4_6, 
                                       M10_MAT_DSTERM_6, M23_CLOSE_DSDECOD, M23_DTHDAT)
   
-table(PREG_DEATH=merged_df$PREG_DEATH, SITE = merged_df$SITE, useNA = "always") # data is molsty 2=Alive or 4 = loss to follow up or NA. 
+table(PREG_DEATH=merged_df$PREG_DEATH, SITE = merged_df$SITE, useNA = "always") # data is mostly 2=Alive or 4 = loss to follow up or NA. 
 round(prop.table(table(PREG_DEATH=merged_df$PREG_DEATH, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 3)
 
 ```
@@ -1041,6 +1041,146 @@ M08_LEPT_IGM_LBORRES_5 <- ifelse("M08_LEPT_IGM_LBORRES_5" %in% names(merged_df),
 
 M08_LEPT_IGM_LBORRES_10 <- ifelse("M08_LEPT_IGM_LBORRES_10" %in% names(merged_df),
                                             merged_df$M08_LEPT_IGM_LBORRES_10, NA)
+
+# INFECTION VARIALBES DURING HOSPITALIZATION DURING PNC _14:
+
+M19_PRIMARY_MHTERM_14 <- ifelse("M19_PRIMARY_MHTERM_14" %in% names(merged_df),
+                                            merged_df$M19_PRIMARY_MHTERM_14, NA)
+
+M19_INFECTION_MHTERM_1_14 <- ifelse("M19_INFECTION_MHTERM_1_14" %in% names(merged_df),
+                                            merged_df$M19_INFECTION_MHTERM_1_14, NA)
+
+M19_INFECTION_MHTERM_2_14 <- ifelse("M19_INFECTION_MHTERM_2_14" %in% names(merged_df),
+                                            merged_df$M19_INFECTION_MHTERM_2_14, NA)
+
+M19_INFECTION_MHTERM_3_14 <- ifelse("M19_INFECTION_MHTERM_3_14" %in% names(merged_df),
+                                            merged_df$M19_INFECTION_MHTERM_3_14, NA)
+
+M19_INFECTION_MHTERM_4_14 <- ifelse("M19_INFECTION_MHTERM_4_14" %in% names(merged_df),
+                                            merged_df$M19_INFECTION_MHTERM_4_14, NA)
+
+M19_INFECTION_MHTERM_5_14 <- ifelse("M19_INFECTION_MHTERM_5_14" %in% names(merged_df),
+                                            merged_df$M19_INFECTION_MHTERM_5_14, NA)
+
+M19_INFECTION_MHTERM_6_14 <- ifelse("M19_INFECTION_MHTERM_6_14" %in% names(merged_df),
+                                            merged_df$M19_INFECTION_MHTERM_6_14, NA)
+
+M19_INFECTION_MHTERM_7_14 <- ifelse("M19_INFECTION_MHTERM_7_14" %in% names(merged_df),
+                                            merged_df$M19_INFECTION_MHTERM_7_14, NA)
+
+M19_INFECTION_MHTERM_8_14 <- ifelse("M19_INFECTION_MHTERM_8_14" %in% names(merged_df),
+                                            merged_df$M19_INFECTION_MHTERM_8_14, NA)
+
+M19_INFECTION_MHTERM_9_14 <- ifelse("M19_INFECTION_MHTERM_9_14" %in% names(merged_df),
+                                            merged_df$M19_INFECTION_MHTERM_9_14, NA)
+
+M19_INFECTION_MHTERM_10_14 <- ifelse("M19_INFECTION_MHTERM_10_14" %in% names(merged_df),
+                                            merged_df$M19_INFECTION_MHTERM_10_14, NA)
+
+M19_INFECTION_MHTERM_11_14 <- ifelse("M19_INFECTION_MHTERM_11_14" %in% names(merged_df),
+                                            merged_df$M19_INFECTION_MHTERM_11_14, NA)
+
+M19_INFECTION_MHTERM_12_14 <- ifelse("M19_INFECTION_MHTERM_12_14" %in% names(merged_df),
+                                            merged_df$M19_INFECTION_MHTERM_12_14, NA) # MATERNAL SEPSIS
+
+M19_INFECTION_MHTERM_13_14 <- ifelse("M19_INFECTION_MHTERM_13_14" %in% names(merged_df),
+                                            merged_df$M19_INFECTION_MHTERM_13_14, NA)
+
+M19_INFECTION_MHTERM_14_14 <- ifelse("M19_INFECTION_MHTERM_14_14" %in% names(merged_df),
+                                            merged_df$M19_INFECTION_MHTERM_14_14, NA)
+
+M19_INFECTION_MHTERM_15_14 <- ifelse("M19_INFECTION_MHTERM_15_14" %in% names(merged_df),
+                                            merged_df$M19_INFECTION_MHTERM_15_14, NA)
+
+M19_INFECTION_MHTERM_16_14 <- ifelse("M19_INFECTION_MHTERM_16_14" %in% names(merged_df),
+                                            merged_df$M19_INFECTION_MHTERM_16_14, NA)
+
+M19_INFECTION_MHTERM_17_14 <- ifelse("M19_INFECTION_MHTERM_17_14" %in% names(merged_df),
+                                            merged_df$M19_INFECTION_MHTERM_17_14, NA)
+
+M19_INFECTION_MHTERM_18_14 <- ifelse("M19_INFECTION_MHTERM_18_14" %in% names(merged_df),
+                                            merged_df$M19_INFECTION_MHTERM_18_14, NA)
+
+M19_INFECTION_MHTERM_19_14 <- ifelse("M19_INFECTION_MHTERM_19_14" %in% names(merged_df),
+                                            merged_df$M19_INFECTION_MHTERM_19_14, NA)
+
+M19_INFECTION_MHTERM_88_14 <- ifelse("M19_INFECTION_MHTERM_88_14" %in% names(merged_df),
+                                            merged_df$M19_INFECTION_MHTERM_88_14, NA)
+
+M19_ABX_CMOCCUR_14 <- ifelse("M19_ABX_CMOCCUR_14" %in% names(merged_df),
+                                            merged_df$M19_ABX_CMOCCUR_14, NA)
+
+M19_ABX_CMTRT_1_14 <- ifelse("M19_ABX_CMTRT_1_14" %in% names(merged_df),
+                                            merged_df$M19_ABX_CMTRT_1_14, NA)
+
+M19_ABX_CMTRT_2_14 <- ifelse("M19_ABX_CMTRT_2_14" %in% names(merged_df),
+                                            merged_df$M19_ABX_CMTRT_2_14, NA)
+
+M19_ABX_CMTRT_3_14 <- ifelse("M19_ABX_CMTRT_3_14" %in% names(merged_df),
+                                            merged_df$M19_ABX_CMTRT_3_14, NA)
+
+M19_ABX_CMTRT_4_14 <- ifelse("M19_ABX_CMTRT_4_14" %in% names(merged_df),
+                                            merged_df$M19_ABX_CMTRT_4_14, NA)
+
+M19_ABX_CMTRT_5_14 <- ifelse("M19_ABX_CMTRT_5_14" %in% names(merged_df),
+                                            merged_df$M19_ABX_CMTRT_5_14, NA)
+
+M19_ABX_CMTRT_6_14 <- ifelse("M19_ABX_CMTRT_6_14" %in% names(merged_df),
+                                            merged_df$M19_ABX_CMTRT_6_14, NA)
+
+M19_ABX_CMTRT_7_14 <- ifelse("M19_ABX_CMTRT_7_14" %in% names(merged_df),
+                                            merged_df$M19_ABX_CMTRT_7_14, NA)
+
+M19_ABX_CMTRT_8_14 <- ifelse("M19_ABX_CMTRT_8_14" %in% names(merged_df),
+                                            merged_df$M19_ABX_CMTRT_8_14, NA)
+
+M19_ABX_CMTRT_9_14 <- ifelse("M19_ABX_CMTRT_9_14" %in% names(merged_df),
+                                            merged_df$M19_ABX_CMTRT_9_14, NA)
+
+M19_ABX_CMTRT_88_14 <- ifelse("M19_ABX_CMTRT_88_14" %in% names(merged_df),
+                                            merged_df$M19_ABX_CMTRT_88_14, NA)
+
+M19_ABX_CMINDC_14 <- ifelse("M19_ABX_CMINDC_14" %in% names(merged_df),
+                                            merged_df$M19_ABX_CMINDC_14, NA)
+
+# MATERNAL HOSPITALIZATION DURING PNC (_14) - ORGAN DYSFUNCTION AND SEPSIS
+
+M19_PRIMARY_MHTERM_1 <- ifelse("M19_PRIMARY_MHTERM_1" %in% names(merged_df),
+                                            merged_df$M19_PRIMARY_MHTERM_1, NA)
+
+M19_ORGAN_FAIL_MHTERM_1_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_1_14" %in% names(merged_df),
+                                            merged_df$M19_ORGAN_FAIL_MHTERM_1_14, NA)
+
+M19_ORGAN_FAIL_MHTERM_2_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_2_14" %in% names(merged_df),
+                                            merged_df$M19_ORGAN_FAIL_MHTERM_2_14, NA)
+
+M19_ORGAN_FAIL_MHTERM_3_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_3_14" %in% names(merged_df),
+                                            merged_df$M19_ORGAN_FAIL_MHTERM_3_14, NA)
+
+M19_ORGAN_FAIL_MHTERM_4_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_4_14" %in% names(merged_df),
+                                            merged_df$M19_ORGAN_FAIL_MHTERM_4_14, NA)
+
+M19_ORGAN_FAIL_MHTERM_5_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_5_14" %in% names(merged_df),
+                                            merged_df$M19_ORGAN_FAIL_MHTERM_5_14, NA)
+
+M19_ORGAN_FAIL_MHTERM_6_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_6_14" %in% names(merged_df),
+                                            merged_df$M19_ORGAN_FAIL_MHTERM_6_14, NA)
+
+M19_ORGAN_FAIL_MHTERM_7_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_7_14" %in% names(merged_df),
+                                            merged_df$M19_ORGAN_FAIL_MHTERM_7_14, NA)
+
+M19_ORGAN_FAIL_MHTERM_88_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_88_14" %in% names(merged_df),
+                                            merged_df$M19_ORGAN_FAIL_MHTERM_88_14, NA)
+
+M19_ORGAN_FAIL_MHTERM_99_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_99_14" %in% names(merged_df),
+                                            merged_df$M19_ORGAN_FAIL_MHTERM_99_14, NA)
+
+M19_INFECTION_MHTERM_12_14 <- ifelse("M19_INFECTION_MHTERM_12_14" %in% names(merged_df),
+                                            merged_df$M19_INFECTION_MHTERM_12_14, NA)
+
+                                                     
+
+
 ```
 
 ```{r}
@@ -1400,8 +1540,8 @@ mutate(var_w_deliverydate = any(!is.na(c(M09_DELIV_DSSTDAT_INF1_6,
   mutate(MAT_DEATH = if_else(M23_CLOSE_DSDECOD==4 | M23_CLOSE_DSDECOD==5, 9, MAT_DEATH))
 
 #table(merged_df$MAT_DEATH)
-table(MAT_DEATH = merged_df$MAT_DEATH, SITE = merged_df$SITE) # data is molsty 2=Alive or 4 = loss to follow up or NA.
-round(prop.table(table(MAT_DEATH = merged_df$MAT_DEATH, SITE = merged_df$SITE), margin=2)*100, 2) # data is molsty 2=Alive or 4 = loss to follow up or NA. 
+table(MAT_DEATH = merged_df$MAT_DEATH, SITE = merged_df$SITE) # data is mostly 2=Alive or 4 = loss to follow up or NA.
+round(prop.table(table(MAT_DEATH = merged_df$MAT_DEATH, SITE = merged_df$SITE), margin=2)*100, 2) # data is mostly 2=Alive or 4 = loss to follow up or NA. 
 ```
 
 ***CRITICAL INTERVENTIONS***
@@ -1689,8 +1829,9 @@ table(merged_df$CHRON_HYPER, SITE = merged_df$SITE, useNA = "always")
 round(prop.table(table(merged_df$CHRON_HYPER, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 2)
 ```
 
-***GESTATIONAL HYPERTENSION (gHTN) - GEST_HYPER_MEAS***
-"A systolic blood pressure >140 mm Hg on two occasions at least 1 hour apart or diastolic blood pressure >90 mm Hg on two occasions at least 1 hour apart or severe gestational hypertension in pregnancy (not at time of delivery) defined as systolic blood pressure > 160 mmHg or a diastolic blood pressure >110 mmHg on two occasions at least 1 minute apart after 20 weeks gestation or severe gestational hypertension at the time of delivery defined as one systolic blood pressure > 160 mmHg or a diastolic blood pressure >110 mmHg among participants without chronic hypertension.
+# GESTATIONAL HYPERTENSION (gHTN) - GEST_HYPER_MEAS***
+# NEED TO REVISE GESTATIONAL HYPERTENSION TO INCLUDE MEDICATION USE
+# A systolic blood pressure >140 mm Hg on two occasions at least 1 hour apart or diastolic blood pressure >90 mm Hg on two occasions at least 1 hour apart or severe gestational hypertension in pregnancy (not at time of delivery) defined as systolic blood pressure > 160 mmHg or a diastolic blood pressure >110 mmHg on two occasions at least 1 minute apart after 20 weeks gestation or severe gestational hypertension at the time of delivery defined as one systolic blood pressure > 160 mmHg or a diastolic blood pressure >110 mmHg among participants without chronic hypertension.
 
 Suggested change: A systolic blood pressure ≥140 mm Hg OR diastolic blood pressure ≥90 mm Hg after 20 weeks gestation (among participants without chronic hypertension). "
 
@@ -1811,7 +1952,7 @@ temp.df <- merged_df %>% select(MOMID, PREGID, GEST_HYPER_MEAS, starts_with("M04
 #   M04_HTN_CMTRT_9)
 ```
 
-***POSTPARTUM HYPERTENSION - HYPER_PNC***
+# POSTPARTUM HYPERTENSION - HYPER_PNC***
 "Systolic blood pressure >140 mm Hg on two occasions at least 1 hour apart or diastolic blood pressure >90 mm Hg on two occasions at least 1 hour apart 
 Suggested change: Systolic blood pressure >140 mm Hg OR diastolic blood pressure >90 mm Hg after delivery."
 ```{r}
@@ -1837,7 +1978,7 @@ table(HYPER_PNC_MEAS = merged_df$HYPER_PNC_MEAS, SITE = merged_df$SITE, useNA = 
 round(prop.table(table(HYPER_PNC_MEAS = merged_df$HYPER_PNC_MEAS, SITE = merged_df$SITE, useNA = "always"), margin=2)*100,2)
 ```
 
-***SECONDARY: GESTATIONAL HYPERTENSION - GEST_HYPER_DIAG***
+# SECONDARY: GESTATIONAL HYPERTENSION - GEST_HYPER_DIAG***
 Gestational hypertension (diagnosed)
 
 ```{r}
@@ -1880,7 +2021,7 @@ table(SEVERE_GEST_HYPER_REP = merged_df$SEVERE_GEST_HYPER_REP, SITE = merged_df$
 round(prop.table(table(SEVERE_GEST_HYPER_REP = merged_df$SEVERE_GEST_HYPER_REP, SITE = merged_df$SITE, useNA = "always"), margin=2)*100,2)
 ```
 
-***GESTATIONAL PROTEINURIA - PROTEINURIA***
+# GESTATIONAL PROTEINURIA - PROTEINURIA***
 24 hour urine collection >300 mg protein OR single voided urine protein/creatinine ratio ≥0.3 OR Dipstick of 1+ or 2+.
 Measured ANC20,28,32,36
 IPC
@@ -1907,36 +2048,112 @@ temp.df <- merged_df %>%
 table(PROTEINURIA = merged_df$PROTEINURIA)
 ```
 
-***ORGAN DYSFUNCTION - MAT_DYS***
+# SEVERE FEATURES OF PREECLAMPISA (MEASURED)
+- Severe gestational hypertension (systolic >160 mmHg OR a diastolic >110 mmHg on two occasions at least 1 minute apart >20 weeks gestation or one occasion at delivery)
+- Hepatic abnormality (serum transaminase concentration AST or ALT ≥2 times the upper limit of the normal range)
+- Thrombocytopenia (<100,000 platelets/microL)
+- Hemolysis (serum bilirubin ≥1.2 mg/dL (20.52 umol/L) and hemoglobin <7 g/dL)
+- Rental insufficiency (serum creatinine >1.1 mg/dL)
+
+# AST: NORMAL RANGE = 3-45
+# ALT: NORMAL RANGE = 2-60
+```{r}
+# merged_df <- merged_df %>%
+#   mutate(MAT_PE_SEV_MEASURED = case_when(SEVERE_GEST_HYPER==1 | 
+#                                            (M08_AST_UL_LBORRES_2 >= 90 | M08_ALT_UL_LBORRES_2 >=120| # AST AND ALT 2X THE UPPER NORMAL RANGE
+#                                            (M08_CBC_PLATE_LBORRES_2 =< 100000) | 
+#                                              
+#                                            SERUM BILI >=1.2MG/DL OR 20.52 UMOL/l & HEMOGLOBIN <7G/DL | 
+#                                            SERUM CREATININE > 1.1))
+```
+
+
+
+# ORGAN DYSFUNCTION - MAT_DYS - WILL ONLY INCLUDE ORGAN DYSFUNCTION (NOT SEPSIS)
 Cardiovascular, respiratory, renal, coagulation/hematological, hepatic, neurological, and/or uterine dysfunction that occurred during pregnancy, childbirth or within 42 days of termination of pregnancy.
 ```{r echo=FALSE}
 ##################################################################################
 #TODO 
 # NOTES: 
-# - THIS IS LOOKING AT L&D AND HOSPITALIZATION. 
-# - THIS VAR WILL FEED INTO SEPSIS. #
-
+# - THIS IS LOOKING AT L&D, HOSPITALIZATION AT ANC OR PNC AND PNC SCHEDULED THROUGH VISIT 10.
 ##################################################################################
 merged_df <- merged_df %>% 
-  mutate(MAT_DYS = case_when(((M09_ORG_FAIL_MHOCCUR_1_6 ==1 | 
-                                M09_ORG_FAIL_MHOCCUR_2_6==1 |
-                                M09_ORG_FAIL_MHOCCUR_3_6==1 | 
-                                M09_ORG_FAIL_MHOCCUR_4_6==1 |
-                                M09_ORG_FAIL_MHOCCUR_5_6==1 | 
-                                M09_ORG_FAIL_MHOCCUR_6_6==1 | 
-                                M09_ORG_FAIL_MHOCCUR_7_6==1 | 
-                                M19_ORGAN_FAIL_MHTERM_1_13==1 | 
-                                M19_ORGAN_FAIL_MHTERM_2_13==1 | 
-                                M19_ORGAN_FAIL_MHTERM_3_13==1 | 
-                                M19_ORGAN_FAIL_MHTERM_4_13==1 |
-                                M19_ORGAN_FAIL_MHTERM_5_13==1 | 
-                                M19_ORGAN_FAIL_MHTERM_6_13==1 | 
-                                M19_ORGAN_FAIL_MHTERM_7_13==1) & (M09_ORG_FAIL_SRCE_1_6==2 | M09_ORG_FAIL_SRCE_1_6==3)) ~1,
+  mutate(MAT_DYS = case_when(((1 %in% c(M09_ORG_FAIL_MHOCCUR_1_6, M09_ORG_FAIL_MHOCCUR_2_6, M09_ORG_FAIL_MHOCCUR_3_6 # ORGAN DYS DURING L&D
+                                        M09_ORG_FAIL_MHOCCUR_4_6, M09_ORG_FAIL_MHOCCUR_5_6, M09_ORG_FAIL_MHOCCUR_6_6,   
+                                        M09_ORG_FAIL_MHOCCUR_7_6)) & (M09_ORG_FAIL_SRCE_1_6==2 | M09_ORG_FAIL_SRCE_1_6==3)) ~ 1,
+                                        
+                              # HOSPITALIZATION _13
+                                      (1 %in% c(M19_ORGAN_FAIL_MHTERM_1_13, M19_ORGAN_FAIL_MHTERM_2_13, M19_ORGAN_FAIL_MHTERM_3_13, 
+                                        M19_ORGAN_FAIL_MHTERM_4_13, M19_ORGAN_FAIL_MHTERM_5_13, M19_ORGAN_FAIL_MHTERM_6_13,  
+                                        M19_ORGAN_FAIL_MHTERM_7_13)) ~ 1, # THESE ARE 6 DIFFERENT TYPES OF ORGAN FAILURES
+                              
+                               # HOSPITALIZATION _14
+                                      (1 %in% c(M19_ORGAN_FAIL_MHTERM_1_14, M19_ORGAN_FAIL_MHTERM_2_14, M19_ORGAN_FAIL_MHTERM_3_14, 
+                                        M19_ORGAN_FAIL_MHTERM_4_14, M19_ORGAN_FAIL_MHTERM_5_14, M19_ORGAN_FAIL_MHTERM_6_14,  
+                                        M19_ORGAN_FAIL_MHTERM_7_14)) ~ 1, # THESE ARE 6 DIFFERENT TYPES OF ORGAN FAILURES
+                              
+                              # PNC VISIT (THIS IS NOT AVAILABLE AT ANC). SHOULDN'T HAVE BEEN COLLECTED ORGAN DYS AT PNC BUT WAS LEFT IN BY MISTAKE.
+                               # VISIT 7
+                                         (1 %in% c(M12_ORG_FAIL_MHOCCUR_1_7, M12_ORG_FAIL_MHOCCUR_2_7,
+                                                   M12_ORG_FAIL_MHOCCUR_3_7, M12_ORG_FAIL_MHOCCUR_4_7, 
+                                                   M12_ORG_FAIL_MHOCCUR_88_7,
+                                                   
+                                                   # VISIT 8
+                                                   M12_ORG_FAIL_MHOCCUR_1_8, M12_ORG_FAIL_MHOCCUR_2_8,
+                                                   M12_ORG_FAIL_MHOCCUR_3_8, M12_ORG_FAIL_MHOCCUR_4_8, 
+                                                   M12_ORG_FAIL_MHOCCUR_88_8,
+                                                   
+                                                   # VISIT 9
+                                                   M12_ORG_FAIL_MHOCCUR_1_9, M12_ORG_FAIL_MHOCCUR_2_9,
+                                                   M12_ORG_FAIL_MHOCCUR_3_9, M12_ORG_FAIL_MHOCCUR_4_9, 
+                                                   M12_ORG_FAIL_MHOCCUR_88_9,
+                                                   
+                                                   # VISIT 10
+                                                   M12_ORG_FAIL_MHOCCUR_1_10, M12_ORG_FAIL_MHOCCUR_2_10,
+                                                   M12_ORG_FAIL_MHOCCUR_3_10, M12_ORG_FAIL_MHOCCUR_4_10, 
+                                                   M12_ORG_FAIL_MHOCCUR_88_10)) ~ 1,
+                              
+                                 
                              TRUE ~ as.numeric(0)))
 # table(MAT_DYS = merged_df$MAT_DYS)
 
 table(MAT_DYS = merged_df$MAT_DYS, SITE = merged_df$SITE, useNA = "always")
 round(prop.table(table(MAT_DYS = merged_df$MAT_DYS, SITE = merged_df$SITE, useNA = "always"),margin=2)*100,2)
+
+
+merged_df <- merged_df %>%
+  mutate(MAT_SEPSIS_DIAG_PNC = case_when((1 %in% c(M12_POST_DEL_INF_MHOCCUR_11_7, M12_POST_DEL_INF_MHOCCUR_11_8, # MATERNAL SEPSIS DURING MNH12
+                                                  M12_POST_DEL_INF_MHOCCUR_11_9, M12_POST_DEL_INF_MHOCCUR_11_10)) ~ 1,
+                                         
+                                         # VISIT 7
+                                         (1 %in% c(M12_ORG_FAIL_MHOCCUR_1_7, M12_ORG_FAIL_MHOCCUR_2_7,
+                                                   M12_ORG_FAIL_MHOCCUR_3_7, M12_ORG_FAIL_MHOCCUR_4_7, 
+                                                   M12_ORG_FAIL_MHOCCUR_88_7,
+                                                   
+                                                   # VISIT 8
+                                                   M12_ORG_FAIL_MHOCCUR_1_8, M12_ORG_FAIL_MHOCCUR_2_8,
+                                                   M12_ORG_FAIL_MHOCCUR_3_8, M12_ORG_FAIL_MHOCCUR_4_8, 
+                                                   M12_ORG_FAIL_MHOCCUR_88_8,
+                                                   
+                                                   # VISIT 9
+                                                   M12_ORG_FAIL_MHOCCUR_1_9, M12_ORG_FAIL_MHOCCUR_2_9,
+                                                   M12_ORG_FAIL_MHOCCUR_3_9, M12_ORG_FAIL_MHOCCUR_4_9, 
+                                                   M12_ORG_FAIL_MHOCCUR_88_9,
+                                                   
+                                                   # VISIT 10
+                                                   M12_ORG_FAIL_MHOCCUR_1_10, M12_ORG_FAIL_MHOCCUR_2_10,
+                                                   M12_ORG_FAIL_MHOCCUR_3_10, M12_ORG_FAIL_MHOCCUR_4_10, 
+                                                   M12_ORG_FAIL_MHOCCUR_88_10)) ~ 1,
+                                         
+                                         
+                                         (M19_PRIMARY_MHTERM_14==5 | # DURING HOSPITALIZATION
+                                             (1 %in% c(M19_ORGAN_FAIL_MHTERM_1_14, M19_ORGAN_FAIL_MHTERM_2_14, 
+                                                       M19_ORGAN_FAIL_MHTERM_3_14, M19_ORGAN_FAIL_MHTERM_4_14, 
+                                                       M19_ORGAN_FAIL_MHTERM_5_14, M19_ORGAN_FAIL_MHTERM_6_14, 
+                                                       M19_ORGAN_FAIL_MHTERM_7_14, 
+                                                       M19_ORGAN_FAIL_MHTERM_88_14, M19_ORGAN_FAIL_MHTERM_99_14))) ~ 1, # OTHER AND DON'T KNOW.
+                                         M19_INFECTION_MHTERM_12_14==1 ~ 1, # MATERNAL SEPSIS OPTION ON MNH19
+                                         TRUE ~ as.numeric(0)))
 ```
 
 
@@ -2009,7 +2226,7 @@ temp.df <- merged_df %>%
   select(M08_CBC_LBPERF_1_1, M08_CBC_HB_LBORRES_1)
 ```
 
-***PREECLAMPSIA - PRE_MEAS***
+***PREECLAMPSIA - PE_MEAS***
 "- For those without preexisting hypertension: defined as gestational hypertension AND gestational proteinuria, OR clinical diagnosis of preeclampsia OR development of severe features (even in the absence of proteinuria). 
 - For those with preexisting hypertension: defined by incident gestational proteinuria OR clinical diagnosis of preeclampsia OR development of severe features. 
 
@@ -2017,8 +2234,8 @@ Suggested change:
 - For those without preexisting hypertension: defined as gestational hypertension AND gestational proteinuria OR development of severe features (even in the absence of proteinuria). 
 - For those with preexisting hypertension: defined by incident gestational proteinuria OR development of severe features."
 
-***PREECLAMPSIA - PRE_DIAG***
-***PREECLAMPSIA - PRE_ANY***
+***PREECLAMPSIA - PE_DIAG***
+***PREECLAMPSIA - PE_ANY***
 ```{r echo=FALSE}
 
 ```
@@ -2035,9 +2252,10 @@ temp.df <- merged_df %>% select(MOMID, PREGID, #,SITE
                                     M09_HDP_HTN_MHOCCUR_3_6, M19_HDP_HTN_MHOCCUR_3_13)
 
 merged_df <- merged_df %>%
-  mutate(PRE_DIAG = if_else(!is.na(M09_HDP_HTN_MHOCCUR_3_6) & M09_HDP_HTN_MHOCCUR_3_6==1, 1, 0))
+  mutate(PE_DIAG = if_else(!is.na(M09_HDP_HTN_MHOCCUR_3_6) & M09_HDP_HTN_MHOCCUR_3_6==1, 1, 0))
 
-table(PRE_DIAG = merged_df$PRE_DIAG, useNA = "always")
+table(PE_DIAG = merged_df$PE_DIAG, useNA = "always")
+round(prop.table(table(PE_DIAG = merged_df$PE_DIAG, SITE = merged_df$SITE, useNA = "always"), margin=2)*100,2)
 ```
 
 
@@ -2277,13 +2495,15 @@ table(UN_SURGERY = temp.df$UN_SURGERY)
 
 ```
 
-# SECONDARY: MATERNAL INFECTION AND SEPSIS (PREGNANCY) - ANC VISITS
+# SECONDARY: MATERNAL INFECTION AND SEPSIS (PREGNANCY)
 
 Any infection and/or organ dysfunction resulting from infection during pregnancy.
 Maternal infection: Any infection during pregnancy, delivery, and up to 42 days postpartum.
 Maternal sepsis: Organ dysfunction resulting from infection during pregnancy, delivery, and up to 42 days postpartum.
 ***MAT_INFECT_DIAG_ANC*** = just infection
 ***MAT_SEPSIS_DIAG_ANC*** = infection and organ dysfunction. 
+
+# MATERNAL INFECTION DIAGNOSED - WITHOUT HOSP (ANC) 
 ```{r}
 #################################################################################
 #TODO 
@@ -2326,7 +2546,10 @@ merged_df <- merged_df %>%
 
 table(MAT_INFECT_DIAG_ANC_WO_HOSP = merged_df$MAT_INFECT_DIAG_ANC_WO_HOSP, SITE = merged_df$SITE, useNA = "always")
 round(prop.table(table(MAT_INFECT_DIAG_ANC_WO_HOSP = merged_df$MAT_INFECT_DIAG_ANC_WO_HOSP, SITE = merged_df$SITE, useNA = "always"),margin=2)*100,2)
+```
 
+# MATERNAL INFECTION DIAGNOSED AT ANC - HOSPITALIZATION _13
+```{r}
 ################# ANC HOSPITALIZATION _13.
 merged_df <- merged_df %>%
   mutate(MAT_INFECT_DIAG_HOSP_ANC = case_when(M19_PRIMARY_MHTERM_13==2 | # 2= INFECTION; 5= ORGAN FAILURE
@@ -2360,7 +2583,7 @@ round(prop.table(table(MAT_INFECT_DIAG_ANC = merged_df$MAT_INFECT_DIAG_ANC, SITE
 
 ```
 
-MATERNAL INFECTION AT DIAGNOSIS THORUGH MEDICATION USE
+# MATERNAL INFECTION AT DIAGNOSIS THORUGH TREATMENT MEDICATION USE AT ANC
 ```{r}
 #############################################
 # MATERNAL INFECTION THROUGH MEDICATION USE #
@@ -2545,10 +2768,12 @@ table(MAT_INFECT_TREAT_ANC = merged_df$MAT_INFECT_TREAT_ANC, SITE = merged_df$SI
 round(prop.table(table(MAT_INFECT_TREAT_ANC = merged_df$MAT_INFECT_TREAT_ANC, SITE = merged_df$SITE, useNA = "always"), margin=2)*100,2)
 ```
 
-# MATERNAL INFECTION VARIABLE - MEASURED AT ANc - NO HOSPITALIZATION DATA HAS LABS FOR INFECTION (FINAL)
+# MATERNAL INFECTION VARIABLE - MEASURED AT ANC - NO HOSPITALIZATION DATA HAS LABS FOR INFECTION (FINAL)
+# DOESN'T INCLUDE UNSCHEDULED ANC VISITS YET! 
 ```{r}
 ###########################################################################
 # MATERNAL INFECTION MEASURED THROUGH POC MNH06 and LAB MNH06 - ANC ONLY #
+#TODO DOESN'T INCLUDE UNSCHEDULED ANC VISITS YET! 
 ##########################################################################
 
 merged_df <- merged_df %>%  # POC FIRST (MNH06)
@@ -2621,12 +2846,13 @@ round(prop.table(table(MAT_INFECT_MEAS_ANC = merged_df$MAT_INFECT_MEAS_ANC, SITE
 ```
 
 # MATERNAL SEPSIS DIAGNOSED (INCLUDING ORGAN DYS) AT ANC INCLUDING HOSPITALIZATION _13 (FINAL)
+# ------ NOTE THAT ORGAN DYSFUCTION OR SEPSIS IS NOT DONE IN MNH04 (CLINCIAL STATUS), MNH06 (POC DIAGNOSTICS), OR MNH08 (MATERNAL LABS) FOR ANC.  IT IS ONLY DURING HOSPITALIZATION
 ```{r}
 
 ######################################
 #TODO
 # - SEPSIS/ORGAN DYSFUNCTION INFO IS ONLY PRESENT AT HOSPITALIZATION FOR ANC IN MNH19
-# - THERE IS NO SEPSIS INFO IN MNH04, MNH06 OR MNH08
+# - THERE IS NO SEPSIS OR ORGAN DYSFUCTION INFO IN MNH04, MNH06 OR MNH08
 ######################################
 
 merged_df <- merged_df %>%
@@ -2642,6 +2868,8 @@ merged_df <- merged_df %>%
 
 table(MAT_SEPSIS_DIAG_ANC = merged_df$MAT_SEPSIS_DIAG_ANC, SITE = merged_df$SITE, useNA = "always") 
 round(prop.table(table(MAT_SEPSIS_DIAG_ANC = merged_df$MAT_SEPSIS_DIAG_ANC, SITE = merged_df$SITE, useNA = "always"),margin=2)*100,2)
+
+
 ```
 
 # MATERNAL INFECTIONSEPSIS_ANY - ALL ANC (INFECT DIAGNOSED, INFECT TREATED, INFECT MEASURED + SEPSIS DIAGNOSED) (FINAL)
@@ -2756,22 +2984,15 @@ table(MAT_INFECTIONSEPSIS_ANY_IPC = merged_df$MAT_INFECTIONSEPSIS_ANY_IPC, SITE 
 round(prop.table(table(MAT_INFECTIONSEPSIS_ANY_IPC = merged_df$MAT_INFECTIONSEPSIS_ANY_IPC, SITE = merged_df$SITE, useNA = "always"),margin=2)*100,2)
 ```
 
-#UAA UAG UGA
-
-***SECONDARY: MATERNAL INFECTION AND SEPSIS  - PNC VISIT***
+# MATERNAL INFECTION DIAGNOSIS - PNC VISIT
+# -------DOESN'T INLCUDE HOSPITALIZATION _14 DURING PNC YET
 USE MNH06 PNC6, PNC1, PNC4, PNC26 (VISITS 7-10)
 ```{r}
 ##########################################################################
 # MATERNAL INFECTION DURING PNC - VISIT 7-10 - DIAGNOSED # 
 #TODO
-# - I INCLUDED SEPSIS HERE B/C IT'S ONE OF THE OPTIONS BUT I AM KEEPING IT SEPERATE AS MAT_DYS FOR OTHER VISITS - IS THIS CORRECT? 
 # - SHOULD COVID_FAMETHOD = 1 OR 2 BE INCLUDED? ERS SAID ONLY INCLUDE 1 OR 2. 
 # - # THERE ARE A LOT OF COVID-19 IMAGINING QUESTIONS HERE - SHOULD THOSE BE ACCOUNTED FOR?
-# - REASON I AM INCLUDING SEPSIS HERE IS B/C IT IS PART OF MN12 - PNC CLINICAL DIAGNOSIS:
-# -------"WAS MOTHER DIAGNOSED WITH MATERNAL SEPSIS/SEPTIC SHOCK" WITH:
-# ------------POST_DEL_INF_MHOCCUR_11
-# -------AND THERE IS ANOTHER QUESTION: 
-# ------------WAS MOTHER DIAGNOSED WITH ORGAN FAILURE.
 #########################################################################
 
 temp.df <- merged_df %>% 
@@ -2782,14 +3003,10 @@ temp.df <- merged_df %>%
 
 
 merged_df <- merged_df %>%                  # VISIT 7
-  mutate(MAT_INFECT_N_SEPSIS_DIAG_PNC = case_when((1 %in% c(M12_POST_DEL_INF_MHOCCUR_1_7, M12_POST_DEL_INF_MHOCCUR_2_7, M12_POST_DEL_INF_MHOCCUR_3_7,
+  mutate(MAT_INFECT_DIAG_PNC_WO_HOSP = case_when((1 %in% c(M12_POST_DEL_INF_MHOCCUR_1_7, M12_POST_DEL_INF_MHOCCUR_2_7, M12_POST_DEL_INF_MHOCCUR_3_7,
                                                             M12_POST_DEL_INF_MHOCCUR_4_7, M12_POST_DEL_INF_MHOCCUR_5_7, M12_POST_DEL_INF_MHOCCUR_6_7, 
                                                             M12_POST_DEL_INF_MHOCCUR_7_7, M12_POST_DEL_INF_MHOCCUR_8_7, M12_POST_DEL_INF_MHOCCUR_9_7,
-                                                            M12_POST_DEL_INF_MHOCCUR_10_7, M12_POST_DEL_INF_MHOCCUR_11_7)) ~1, #_11 is SEPSIS.
-                                                  
-                                                  #ORGAN FAILURE QUESTION:
-                                                  (1 %in% c(M12_ORG_FAIL_MHOCCUR_1_7, M12_ORG_FAIL_MHOCCUR_2_7, M12_ORG_FAIL_MHOCCUR_3_7,
-                                                            M12_ORG_FAIL_MHOCCUR_4_7, M12_ORG_FAIL_MHOCCUR_88_7)) ~ 1,
+                                                            M12_POST_DEL_INF_MHOCCUR_10_7)) ~1, # SEPSIS NOT INCLUDED HERE.
                                                   
                                                   # SARI, COVID-19, MALARIA, HIV:
                                                   (M12_SARI_CEOCCUR_7==1 | 
@@ -2800,15 +3017,11 @@ merged_df <- merged_df %>%                  # VISIT 7
                                                      M12_HIV_MHOCCUR_7==1) ~ 1,
                                                   
                                                   # VISIT 8: 
-                                                  (M12_POST_DEL_INF_MHOCCUR_1_8==1 | M12_POST_DEL_INF_MHOCCUR_2_8==1 | M12_POST_DEL_INF_MHOCCUR_3_8==1 |
-                                                     M12_POST_DEL_INF_MHOCCUR_4_8==1 | M12_POST_DEL_INF_MHOCCUR_5_8==1 | M12_POST_DEL_INF_MHOCCUR_6_8==1 |
-                                                     M12_POST_DEL_INF_MHOCCUR_7_8==1 | M12_POST_DEL_INF_MHOCCUR_8_8==1 |M12_POST_DEL_INF_MHOCCUR_9_8==1 |
-                                                     M12_POST_DEL_INF_MHOCCUR_10_8==1 |M12_POST_DEL_INF_MHOCCUR_11_8==1) ~ 1,
-                                                  
-                                                  #ORGAN FAILURE QUESTION:
-                                                  (1 %in% c(M12_ORG_FAIL_MHOCCUR_1_8, M12_ORG_FAIL_MHOCCUR_2_8, M12_ORG_FAIL_MHOCCUR_3_8,
-                                                            M12_ORG_FAIL_MHOCCUR_4_8, M12_ORG_FAIL_MHOCCUR_88_8)) ~ 1,
-                                                  
+                                                  (1 %in% c(M12_POST_DEL_INF_MHOCCUR_1_8, M12_POST_DEL_INF_MHOCCUR_2_8, M12_POST_DEL_INF_MHOCCUR_3_8,
+                                                            M12_POST_DEL_INF_MHOCCUR_4_8, M12_POST_DEL_INF_MHOCCUR_5_8, M12_POST_DEL_INF_MHOCCUR_6_8, 
+                                                            M12_POST_DEL_INF_MHOCCUR_7_8, M12_POST_DEL_INF_MHOCCUR_8_8, M12_POST_DEL_INF_MHOCCUR_9_8,
+                                                            M12_POST_DEL_INF_MHOCCUR_10_8)) ~ 1,
+                                               
                                                   # SARI, COVID-19, MALARIA, HIV:
                                                   (M12_SARI_CEOCCUR_8==1 |
                                                      (M12_COVID_LBPERF_8==1 & 
@@ -2819,15 +3032,11 @@ merged_df <- merged_df %>%                  # VISIT 7
                                                   
                                                   
                                                   # VISIT 9:
-                                                  (M12_POST_DEL_INF_MHOCCUR_1_9==1 | M12_POST_DEL_INF_MHOCCUR_2_9==1 | M12_POST_DEL_INF_MHOCCUR_3_9==1 |
-                                                     M12_POST_DEL_INF_MHOCCUR_4_9==1 | M12_POST_DEL_INF_MHOCCUR_5_9==1 | M12_POST_DEL_INF_MHOCCUR_6_9==1 |
-                                                     M12_POST_DEL_INF_MHOCCUR_7_9==1 | M12_POST_DEL_INF_MHOCCUR_8_9==1 | M12_POST_DEL_INF_MHOCCUR_9_9==1 |
-                                                     M12_POST_DEL_INF_MHOCCUR_10_9==1 | M12_POST_DEL_INF_MHOCCUR_11_9==1) ~ 1,
-                                                  
-                                                  #ORGAN FAILURE QUESTION:
-                                                  (1 %in% c(M12_ORG_FAIL_MHOCCUR_1_9, M12_ORG_FAIL_MHOCCUR_2_9, M12_ORG_FAIL_MHOCCUR_3_9,
-                                                            M12_ORG_FAIL_MHOCCUR_4_9, M12_ORG_FAIL_MHOCCUR_88_9)) ~ 1,
-                                                  
+                                                  (1 %in% c(M12_POST_DEL_INF_MHOCCUR_1_9, M12_POST_DEL_INF_MHOCCUR_2_9, M12_POST_DEL_INF_MHOCCUR_3_9,
+                                                            M12_POST_DEL_INF_MHOCCUR_4_9, M12_POST_DEL_INF_MHOCCUR_5_9, M12_POST_DEL_INF_MHOCCUR_6_9, 
+                                                            M12_POST_DEL_INF_MHOCCUR_7_9, M12_POST_DEL_INF_MHOCCUR_8_9, M12_POST_DEL_INF_MHOCCUR_9_9,
+                                                            M12_POST_DEL_INF_MHOCCUR_10_9)) ~ 1,
+                    
                                                   # SARI, COVID-19, MALARIA, HIV:
                                                   (M12_SARI_CEOCCUR_9==1  | 
                                                      (M12_COVID_LBPERF_9==1 |   # THERE ARE A LOT OF COVID-19 IMAGINING QUESTIONS HERE - SHOULD THOSE BE ACCOUNTED FOR? 
@@ -2837,14 +3046,10 @@ merged_df <- merged_df %>%                  # VISIT 7
                                                      M12_HIV_MHOCCUR_9==1) ~ 1,
                                                   
                                                   # VISIT 10: 
-                                                  (M12_POST_DEL_INF_MHOCCUR_1_10==1 | M12_POST_DEL_INF_MHOCCUR_2_10==1 | M12_POST_DEL_INF_MHOCCUR_3_10==1 |
-                                                     M12_POST_DEL_INF_MHOCCUR_4_10==1 | M12_POST_DEL_INF_MHOCCUR_5_10==1 | M12_POST_DEL_INF_MHOCCUR_6_10==1 |
-                                                     M12_POST_DEL_INF_MHOCCUR_7_10==1 | M12_POST_DEL_INF_MHOCCUR_8_10==1 | M12_POST_DEL_INF_MHOCCUR_9_10==1 |
-                                                     M12_POST_DEL_INF_MHOCCUR_10_10==1 | M12_POST_DEL_INF_MHOCCUR_11_10==1) ~ 1,
-                                                  
-                                                  # ORGAN FAILURE QUESTION:
-                                                  (1 %in% c(M12_ORG_FAIL_MHOCCUR_1_10, M12_ORG_FAIL_MHOCCUR_2_10, M12_ORG_FAIL_MHOCCUR_3_10,
-                                                            M12_ORG_FAIL_MHOCCUR_4_10, M12_ORG_FAIL_MHOCCUR_88_10)) ~ 1,
+                                                  (1 %in% c(M12_POST_DEL_INF_MHOCCUR_1_10, M12_POST_DEL_INF_MHOCCUR_2_10, M12_POST_DEL_INF_MHOCCUR_3_10,
+                                                            M12_POST_DEL_INF_MHOCCUR_4_10, M12_POST_DEL_INF_MHOCCUR_5_10, M12_POST_DEL_INF_MHOCCUR_6_10, 
+                                                            M12_POST_DEL_INF_MHOCCUR_7_10, M12_POST_DEL_INF_MHOCCUR_8_10, M12_POST_DEL_INF_MHOCCUR_9_10,
+                                                            M12_POST_DEL_INF_MHOCCUR_10_10)) ~ 1,
                                                   
                                                   # SARI, COVID-19, MALARIA, HIV:
                                                   (M12_SARI_CEOCCUR_10==1 |
@@ -2855,11 +3060,45 @@ merged_df <- merged_df %>%                  # VISIT 7
                                                      M12_HIV_MHOCCUR_10==1) ~ 1,
                                                   TRUE ~ as.numeric(0)))
 
-table(MAT_INFECT_N_SEPSIS_DIAG_PNC = merged_df$MAT_INFECT_N_SEPSIS_DIAG_PNC, SITE = merged_df$SITE, useNA = "always")
-round(prop.table(table(MAT_INFECT_N_SEPSIS_DIAG_PNC = merged_df$MAT_INFECT_N_SEPSIS_DIAG_PNC, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 2)
+table(MAT_INFECT_DIAG_PNC_WO_HOSP = merged_df$MAT_INFECT_DIAG_PNC_WO_HOSP, SITE = merged_df$SITE, useNA = "always")
+round(prop.table(table(MAT_INFECT_DIAG_PNC_WO_HOSP = merged_df$MAT_INFECT_DIAG_PNC_WO_HOSP, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 2)
 ```
 
+# MATERNAL INFECTION DURING PNC DIAGNOSED DURING HOSPITALIZATION _14
+```{r}
+################# PNC HOSPITALIZATION _14.
+merged_df <- merged_df %>%
+  mutate(MAT_INFECT_DIAG_PNC_HOSP = case_when(M19_PRIMARY_MHTERM_14==2 | # 2= INFECTION; 5= ORGAN FAILURE
+                                                (1 %in% c(M19_INFECTION_MHTERM_1_14, M19_INFECTION_MHTERM_2_14, M19_INFECTION_MHTERM_3_14, 
+                                                          M19_INFECTION_MHTERM_4_14, M19_INFECTION_MHTERM_5_14, M19_INFECTION_MHTERM_6_14, 
+                                                          M19_INFECTION_MHTERM_7_14, M19_INFECTION_MHTERM_8_14, M19_INFECTION_MHTERM_9_14, 
+                                                          M19_INFECTION_MHTERM_10_14, M19_INFECTION_MHTERM_11_14, # NOT INCLUDING 12 B/C IT IS MATERNAL SEPSIS 
+                                                          M19_INFECTION_MHTERM_13_14, M19_INFECTION_MHTERM_14_14, M19_INFECTION_MHTERM_15_14, 
+                                                          M19_INFECTION_MHTERM_16_14,
+                                                          M19_INFECTION_MHTERM_17_14, M19_INFECTION_MHTERM_18_14, M19_INFECTION_MHTERM_19_14, 
+                                                          M19_INFECTION_MHTERM_88_14)) ~ 1, 
+                                              TRUE ~ as.numeric(0))) 
 
+table(MAT_INFECT_DIAG_PNC_HOSP = merged_df$MAT_INFECT_DIAG_PNC_HOSP, SITE = merged_df$SITE, useNA = "always")
+round(prop.table(table(MAT_INFECT_DIAG_PNC_HOSP = merged_df$MAT_INFECT_DIAG_PNC_HOSP, 
+                       SITE = merged_df$SITE, useNA = "always"),margin=2)*100,2)
+```
+
+# MATERNAL INFECTION DIAGNOSED DURING PNC INCL. HOSPITALIZATION (FINAL)
+```{r}
+merged_df <- merged_df %>%
+  mutate(MAT_INFECT_DIAG_PNC = case_when(1 %in% c(MAT_INFECT_DIAG_PNC_WO_HOSP, MAT_INFECT_DIAG_PNC_HOSP) ~ 1,
+                                         TRUE ~ as.numeric(0)))
+
+table(MAT_INFECT_DIAG_PNC = merged_df$MAT_INFECT_DIAG_PNC, SITE = merged_df$SITE, useNA = "always")
+
+round(prop.table(table(MAT_INFECT_DIAG_PNC = merged_df$MAT_INFECT_DIAG_PNC, 
+                       SITE = merged_df$SITE, useNA = "always"),margin=2)*100,2)
+
+```
+
+# MATERNAL INFECTION TREATEMENT - PNC (FINAL)
+# -----DOESN'T INLCUDE HOSPITALIZATION _14 DURING PNC YET
 ```{r}
 ##########################################################################
 # MATERNAL INFECTION DURING PNC - VISIT 7-10 - TREATMENT # 
@@ -2867,6 +3106,7 @@ round(prop.table(table(MAT_INFECT_N_SEPSIS_DIAG_PNC = merged_df$MAT_INFECT_N_SEP
 # - # THERE ARE A LOT OF COVID-19 IMAGINING QUESTIONS HERE - SHOULD THOSE BE ACCOUNTED FOR?
 # - NOTE THAT I AM NOT LOOKING AT HIV_MHOCUR (WAS MOTHER DIAGNOSED WITH HIV?) FIRST 
 # -------B/C IN ZAMBIA THIS QUESTION = 0 BUT THEN HIV MEDICATION ==1.
+# DOESN'T INLCUDE HOSPITALIZATION _14 DURING PNC YET
 
 #########################################################################
 # as.logical(sum(c(1,2,3) %in% c(2,3,4,5)))
@@ -2881,9 +3121,9 @@ temp.df <- merged_df %>%
          M12_HIV_CMTRT_21_7, M12_HIV_CMTRT_22_7, M12_HIV_CMTRT_23_7, M12_HIV_CMTRT_24_7,
          M12_HIV_CMTRT_25_7, M12_HIV_CMTRT_88_7)
 
-
+# SPECIFIC MALARIA OR TB ETC TREATMENT IS NOT MENTIONED IN M12, IT ONLY HAVE HIV SPECIFIC TREATMENTS LISTED. 
 merged_df <- merged_df %>% #VISIT 7
-  mutate(MAT_INFECT_TREAT_PNC = case_when((M12_HIV_CMOCCUR_7==1 | !is.na(M12_HIV_CMOCCUR_DAT_7)) | 
+  mutate(MAT_INFECT_TREAT_PNC_WO_HOSP = case_when((M12_HIV_CMOCCUR_7==1 | !is.na(M12_HIV_CMOCCUR_DAT_7)) | 
                                                  (1 %in% c(M12_HIV_CMTRT_1_7, M12_HIV_CMTRT_2_7, M12_HIV_CMTRT_3_7, M12_HIV_CMTRT_4_7,
                                                            M12_HIV_CMTRT_5_7, M12_HIV_CMTRT_6_7, M12_HIV_CMTRT_7_7, M12_HIV_CMTRT_8_7,
                                                            M12_HIV_CMTRT_9_7, M12_HIV_CMTRT_10_7, M12_HIV_CMTRT_11_7, M12_HIV_CMTRT_12_7,
@@ -2922,179 +3162,295 @@ merged_df <- merged_df %>% #VISIT 7
                                                            M12_HIV_CMTRT_21_10, M12_HIV_CMTRT_22_10, M12_HIV_CMTRT_23_10, M12_HIV_CMTRT_24_10,
                                                            M12_HIV_CMTRT_25_10, M12_HIV_CMTRT_88_10)) ~ 1, 
                                                TRUE ~ as.numeric(0)))
-table(merged_df$MAT_INFECT_TREAT_PNC, SITE = merged_df$SITE, useNA = "always")
-round(prop.table(table(merged_df$MAT_INFECT_TREAT_PNC, SITE = merged_df$SITE, useNA = "always"),margin=2)*100,2)
 
+table(MAT_INFECT_TREAT_PNC_WO_HOSP = merged_df$MAT_INFECT_TREAT_PNC_WO_HOSP, SITE = merged_df$SITE, useNA = "always")
+round(prop.table(table(MAT_INFECT_TREAT_PNC_WO_HOSP = merged_df$MAT_INFECT_TREAT_PNC_WO_HOSP, SITE = merged_df$SITE, useNA = "always"),margin=2)*100,2)
+```
+
+# MATERNAL INFECTION TREATMENT DURING PNC HOSPITALIZATION 
+```{r}
 ##########################################################################
-# MATERNAL INFECTION DURING PNC - DIAGNOSED # 
-#TODO
-# MNH08 ONLY DURING PNC6 - VISIT 10
+# MATERNAL INFECTION TREATMENT DURING HOSPITALIZATION # 
+#TODo
 #########################################################################
+merged_df <- merged_df %>%
+  mutate(MAT_INFECT_TREAT_PNC_HOSP = case_when(M19_ABX_CMOCCUR_14==1 | 
+                                                     ((1 %in% c(M19_ABX_CMTRT_1_14, M19_ABX_CMTRT_2_14, M19_ABX_CMTRT_3_14, 
+                                                                M19_ABX_CMTRT_4_14, M19_ABX_CMTRT_5_14, M19_ABX_CMTRT_6_14,
+                                                                M19_ABX_CMTRT_7_14, M19_ABX_CMTRT_8_14, M19_ABX_CMTRT_9_14,
+                                                                M19_ABX_CMTRT_88_14)) & M19_ABX_CMINDC_14!=8) ~ 1, # 'DON'T KNOW' IS NOT INCLUDED.
+                                                   TRUE ~ as.numeric(0)))
 
-# LAB DIAGNOSED (MNH08) 
-    #THESE LABS ARE NOT DONE DURING _13 VISITS.
-merged_df <- merged_df %>% 
-  mutate(MAT_INFECT_MEAS_PNC = case_when((1 %in% c(M08_MALBL_LBORRES_10, M08_PLACMAL_LBPERF_1_10, 
-                             M08_TB_CNFRM_LBORRES_10, M08_SYPH_TITER_LBPERF_1_10,
-                             M08_HEV_IGM_LBORRES_10, M08_CTNG_CT_LBORRES_10,
-                             M08_CTNG_NG_LBORRES_10, M08_ZCD_ZIKIGM_LBORRES_10,
-                             M08_ZCD_CHKIGM_LBORRES_10, M08_ZCD_DENIGM_LBORRES_10,
-                             M08_LEPT_IGM_LBORRES_10)) ~ 1, 
-                   
-                   # Inconclusive:
-                   (1 %in% c(M08_MALBL_LBORRES_10, M08_PLACMAL_LBPERF_1_10,
-                             M08_TB_CNFRM_LBORRES_10, M08_SYPH_TITER_LBPERF_1_10,
-                             M08_HEV_IGM_LBORRES_10, M08_CTNG_CT_LBORRES_10,
-                             M08_CTNG_NG_LBORRES_10, M08_ZCD_ZIKIGM_LBORRES_10,
-                             M08_ZCD_CHKIGM_LBORRES_10, M08_ZCD_DENIGM_LBORRES_10,
-                             M08_LEPT_IGM_LBORRES_10)) ~ 0, 
-                   TRUE ~ as.numeric(0)))
+table(MAT_INFECT_TREAT_PNC_HOSP = merged_df$MAT_INFECT_TREAT_PNC_HOSP, SITE = merged_df$SITE, useNA = "always")
 
-table(merged_df$MAT_INFECT_MEAS_PNC, SITE = merged_df$SITE, useNA = "always")
-round(prop.table(table(merged_df$MAT_INFECT_MEAS_PNC, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 2)
+round(prop.table(table(MAT_INFECT_TREAT_PNC_HOSP = merged_df$MAT_INFECT_TREAT_PNC_HOSP, 
+                       SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 2)
+```
+
+# MATERNAL INFECTION VARIABLE - TREATED AT ANC INCL. HOSP (FINAL)
+```{r}
+###############################################################################################################
+###############################################################################################################
+############ MATERNAL INFECTION TREATMENT DURING ANC INCLUDING HOSPITALIZATION ###############################
+
+merged_df <- merged_df %>%
+  mutate(MAT_INFECT_TREAT_PNC = case_when(1 %in% c(MAT_INFECT_TREAT_PNC_WO_HOSP, MAT_INFECT_TREAT_PNC_HOSP) ~ 1,
+         TRUE ~ as.numeric(0)))
+
+table(MAT_INFECT_TREAT_PNC = merged_df$MAT_INFECT_TREAT_PNC, SITE = merged_df$SITE, useNA = "always")
+round(prop.table(table(MAT_INFECT_TREAT_PNC = merged_df$MAT_INFECT_TREAT_PNC, SITE = merged_df$SITE, useNA = "always"), margin=2)*100,2)
 ```
 
 
-***SECONDARY: MATERNAL INFECTION AND SEPSIS (PREGNANCY) - HOSPITALIZATION (MNH19) VISIT***
+# MATERNAL INFECTION DURING PNC - MEASURED (FINAL)
+# ------ DOESN'T INCLUDE UNSCHEDULED ANC VISITS YET! 
 ```{r}
 ##########################################################################
-# MATERNAL INFECTION DURING HOSPITALIZATION - IT'S DIAGNOSED ONLY, NO MEASURED # 
+# MATERNAL INFECTION DURING PNC - MEASURED # 
 #TODO
-# - LOOK AT MNH19 - HOSPITALIZATION AND MNH27 - VERBAL AUTOPSY
-# - THIS DOESN'T CURRENTLY INCLUDE HOSPITALIZATION DURING PNC _14 
-# - DOESN'T CURRENTLY INCLUDE AUTOPSY MNH27 YET - I CAN'T FIND THE CRF VERSION - 
-# -----JUST SEE INSTRUMENT THAT IS ADMINSTERED IN THE FIELD - 09/22/2023
-# ------B/C THERE ARE NONE - AND I HAVEN'T CREATED AS OF 09/22/2023
+# MNH08 DURING PNC6 ONLY - VISIT 10
+# MNH 06 DURING PNC0, PNC1, PNC4, PNC6 (VISITS 7-10)
+# DOESN'T INCLUDE HOSPITALIZATION DURING PNC YET.
 #########################################################################
 
-# WOMAN CAN BE HOSPITALZIED DURING ANC _13 OR PNC_14.
-merged_df <- merged_df %>%
-  mutate(MAT_INFECT_DIAG_HOSP_VA_ANC_PNC = case_when(M19_PRIMARY_MHTERM_13==2 | # 2= INFECTION; 5= ORGAN FAILURE
-                                               (1 %in% c(M19_INFECTION_MHTERM_1_13, M19_INFECTION_MHTERM_2_13, M19_INFECTION_MHTERM_3_13, 
-                                                         M19_INFECTION_MHTERM_4_13, M19_INFECTION_MHTERM_5_13, M19_INFECTION_MHTERM_6_13, 
-                                                         M19_INFECTION_MHTERM_7_13, M19_INFECTION_MHTERM_8_13, M19_INFECTION_MHTERM_9_13, 
-                                                         M19_INFECTION_MHTERM_10_13, M19_INFECTION_MHTERM_11_13, # NOT INCLUDING 12 B/C IT IS MATERNAL SEPSIS 
-                                                         M19_INFECTION_MHTERM_13_13, M19_INFECTION_MHTERM_14_13, M19_INFECTION_MHTERM_15_13, 
-                                                         # THERE IS NO 16 B/C IT IS ENDOMETRITIS
-                                                         M19_INFECTION_MHTERM_17_13, M19_INFECTION_MHTERM_18_13, M19_INFECTION_MHTERM_19_13, 
-                                                         M19_INFECTION_MHTERM_88_13)) ~ 1, 
-         TRUE ~ as.numeric(0))) 
+# LAB DIAGNOSED (MNH08) - LABS ARE NOT DONE DURING HOSPITALIZATION _14 VISITS.
+# BUT MNH06 IS DONE DURING HOSPITALZIATION ( ASK ERS?)
 
-table(MAT_INFECT_DIAG_HOSP_VA_ANC_PNC=merged_df$MAT_INFECT_DIAG_HOSP_VA_ANC_PNC, SITE = merged_df$SITE, useNA = "always")
-round(prop.table(table(MAT_INFECT_DIAG_HOSP_VA_ANC_PNC = merged_df$MAT_INFECT_DIAG_HOSP_VA_ANC_PNC, 
-                       SITE = merged_df$SITE, useNA = "always"),margin=2)*100,2)
-
-
-
-##########################################################################
-# MATERNAL ***ORGAN DYSFUNCTION/SEPSIS*** DURING HOSPITALIZATION # 
-#TODO
-# LOOK AT MNH19 - HOSPITALIZATION AND MNH27 - VERBAL AUTOPSY
-# - WHAT IF M_19_PRIMARY_MHTERM == 5 (ORGAN FAILURE = YES) BUT ORGAN_FAIL_MHTERM_99==1 (DON'T KNOW)??? - ASK ERS
-#########################################################################
-merged_df <- merged_df %>%
-  mutate(MAT_SEPSIS_DIAG_HOSP_VA_ANC_PNC = case_when(M19_PRIMARY_MHTERM_13==5 |
-                                                       (1 %in% c(M19_ORGAN_FAIL_MHTERM_1_13, M19_ORGAN_FAIL_MHTERM_2_13, 
-                                                                 M19_ORGAN_FAIL_MHTERM_3_13, M19_ORGAN_FAIL_MHTERM_4_13, 
-                                                                 M19_ORGAN_FAIL_MHTERM_5_13, M19_ORGAN_FAIL_MHTERM_6_13, 
-                                                                 M19_ORGAN_FAIL_MHTERM_7_13, 
-                                                                 M19_ORGAN_FAIL_MHTERM_88_13, M19_ORGAN_FAIL_MHTERM_99_13)) ~ 1, # OTHER AND DON'T KNOW.
-                                                     M19_INFECTION_MHTERM_12_13==1 ~ 1,# MATERNAL SEPSIS OPTION ON MNH19
-                                                     TRUE ~ as.numeric(0)))
-
-table(MAT_SEPSIS_DIAG_HOSP_VA_ANC_PNC = merged_df$MAT_SEPSIS_DIAG_HOSP_VA_ANC_PNC, SITE = merged_df$SITE, useNA = "always")
-round(prop.table(table(MAT_SEPSIS_DIAG_HOSP_VA_ANc_PNC = merged_df$MAT_SEPSIS_DIAG_HOSP_VA_ANC_PNC, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 2)                                                  
-
-```
-
-# MATERNAL INFECTION ***AND*** SEPSIS
-```{r}
-###################################################################################################
-# MATERNAL INFECTION AND SEPSIS AND ORGAN DYSFUNCTION # 
-#TODO
-# - THIS IS DURING ANC, PNC, HOSPITAIATION, IPC (DIAGNOSED, MEASURED, TREATED) - ALL POSSIBILITIES.
-###################################################################################################
-
-merged_df <- merged_df %>%
-  mutate(MAT_INFECT_SEPSIS_ANY = case_when(1 %in% c(MAT_DYS, MAT_INFECT_DIAG_ANC, MAT_INFECT_SEPSIS_DIAG_ANC, 
-                                                    MAT_INFECT_DIAG_TREAT_ANC, MAT_INFECT_MEAS_POC_LAB_ANC,
-                                                    MAT_INFECT_DIAG_IPC_POST_DELIV, MAT_INFECT_TREAT_IPC_POST_DELIV, 
-                                                    MAT_INFECT_TREAT_IPC_POST_DELIV, MAT_INFECT_N_SEPSIS_DIAG_PNC, 
-                                                    MAT_INFECT_TREAT_PNC, MAT_INFECT_MEAS_PNC, 
-                                                    MAT_INFECT_DIAG_HOSP_VA_ANC_PNC, MAT_SEPSIS_DIAG_HOSP_VA_ANC_PNC, 
-                                                    MAT_INFECT_TREAT_DIAG_HOSP_ANC_PNC) ~ 1,
-                                           TRUE ~ as.numeric(0)))
-
-table(MAT_INFECT_SEPSIS_ANY = merged_df$MAT_INFECT_SEPSIS_ANY, SITE = merged_df$SITE, useNA = "always")
-round(prop.table(table(MAT_INFECT_SEPSIS_ANY = merged_df$MAT_INFECT_SEPSIS_ANY, SITE = merged_df$SITE, useNA = "always"), margin=2)*100,2)
-
-
-#### MATERNAL INFECTION AND SEPSIS IN PREGNANCY
-merged_df <- merged_df %>%
-  mutate(MAT_INFECT_SEPSIS_ANC_ANY = case_when(1 %in% c(MAT_INFECT_DIAG_ANC, MAT_INFECT_SEPSIS_DIAG_ANC, 
-                                                    MAT_INFECT_DIAG_TREAT_ANC, MAT_INFECT_MEAS_POC_LAB_ANC) ~ 1,
-         TRUE ~ as.numeric(0)))
-
-round(prop.table(table(MAT_INFECT_SEPSIS_ANC_ANY = merged_df$MAT_INFECT_SEPSIS_ANC_ANY, SITE = merged_df$SITE, useNA = "always"), margin=2)*100,2)
-
-#### MATERNAL INFECTION AND SEPSIS AT L&D
-merged_df <- merged_df %>%
-  mutate(MAT_INFECT_SEPSIS_IPC_ANY = case_when(1 %in% c(MAT_DYS, MAT_INFECT_DIAG_IPC_POST_DELIV, MAT_INFECT_TREAT_IPC_POST_DELIV, 
-                                                    MAT_INFECT_TREAT_IPC_POST_DELIV) ~ 1,
-         TRUE ~ as.numeric(0)))
-
-round(prop.table(table(MAT_INFECT_SEPSIS_IPC_ANY = merged_df$MAT_INFECT_SEPSIS_IPC_ANY, SITE = merged_df$SITE, useNA = "always"), margin=2)*100,2)
-
-#### MATERNAL INFECTION AND SEPSIS AT PNC
-merged_df <- merged_df %>%
-  mutate(MAT_INFECT_SEPSIS_PNC_ANY = case_when(1 %in% c(MAT_INFECT_N_SEPSIS_DIAG_PNC, # NO NEED TO ADD MAT_DYS B/C SEPSIS IS PART OF ITS DEFINITION.
-                                                    MAT_INFECT_TREAT_PNC, MAT_INFECT_MEAS_PNC) ~ 1,
-         TRUE ~ as.numeric(0)))
-
-round(prop.table(table(MAT_INFECT_SEPSIS_PNC_ANY = merged_df$MAT_INFECT_SEPSIS_PNC_ANY, SITE = merged_df$SITE, useNA = "always"), margin=2)*100,2)
-
-#### MATERNAL INFECTION AND SEPSIS DURING HOSPITALIZATION (ANC OR PNC) OR VERBAL AUTOPSY
-merged_df <- merged_df %>%
-  mutate(MAT_INFECT_SEPSIS_HOSP_ANC_PNC_vA_ANY = case_when(1 %in% c(MAT_INFECT_DIAG_HOSP_VA_ANC_PNC, MAT_SEPSIS_DIAG_HOSP_VA_ANC_PNC, 
-                                                                    MAT_INFECT_TREAT_DIAG_HOSP_ANC_PNC) ~ 1,
-                                                           TRUE ~ as.numeric(0)))
-
-round(prop.table(table(MAT_INFECT_SEPSIS_HOSP_ANC_PNC_vA_ANY = merged_df$MAT_INFECT_SEPSIS_HOSP_ANC_PNC_vA_ANY, 
-                       SITE = merged_df$SITE, useNA = "always"), margin=2)*100,2)
-```
-
-
-#SEPSIS
-```{r}
-
-##########################################################################
-# MATERNAL INFECTION TREATMENT DURING HOSPITALIZATION# 
-#TODO
-# LOOK AT MNH19 - HOSPITALIZATION AND MNH27 - VERBAL AUTOPSY
-# - WHAT IF M_19_PRIMARY_MHTERM == 5 (ORGAN FAILURE = YES) BUT ORGAN_FAIL_MHTERM_99==1 (DON'T KNOW)??? - ASK ERS
-#########################################################################
-
-############
-# SEPSIS #
-# - Should this be AND or OR.
-###########
-merged_df <- merged_df %>% 
-  mutate(MAT_INFECT_SEPSIS_DIAG_ANC = case_when(MAT_DYS==1 | MAT_INFECT_DIAG_ANC==1 ~ 1, 
+merged_df <- merged_df %>%  # POC FIRST (MNH06)
+  mutate(MAT_INFECT_MEAS_ANC = case_when((M06_HIV_POC_LBORRES_7==1 | M06_HIV_POC_LBORRES_8==1 | M06_HIV_POC_LBORRES_9==1 | 
+                                            M06_HIV_POC_LBORRES_10==1 | # M06_HIV_POC_LBORRES_14==1 | # UNSCHEDULED ANC VISITS _14
+                                            
+                                            M06_MALARIA_POC_LBORRES_7==1 | M06_MALARIA_POC_LBORRES_8==1 | M06_MALARIA_POC_LBORRES_9==1 |
+                                            M06_MALARIA_POC_LBORRES_10==1 | # M06_MALARIA_POC_LBORRES_14==1 | 
+                                            
+                                            M06_SYPH_POC_LBORRES_7==1 | M06_SYPH_POC_LBORRES_8==1 | M06_SYPH_POC_LBORRES_9==1 |
+                                            M06_SYPH_POC_LBORRES_10==1 | # M06_SYPH_POC_LBORRES_14==1 |
+                                            
+                                            M06_HBV_POC_LBORRES_7==1 | M06_HBV_POC_LBORRES_8==1 | M06_HBV_POC_LBORRES_9==1 | 
+                                            M06_HBV_POC_LBORRES_10==1 | # M06_HBV_POC_LBORRES_14==1 |
+                                            
+                                            M06_HCV_POC_LBORRES_7==1 | M06_HCV_POC_LBORRES_8==1 | M06_HCV_POC_LBORRES_9==1 | 
+                                            M06_HCV_POC_LBORRES_10==1 | # M06_HCV_POC_LBORRES_14==1 | 
+                                            
+                                            M06_COVID_POC_LBORRES_7==1 | M06_COVID_POC_LBORRES_8==1 | M06_COVID_POC_LBORRES_9==1 | 
+                                            M06_COVID_POC_LBORRES_10==1) ~ 1, #| M06_COVID_POC_LBORRES_14==1 
+                                         
+                                         # MNH08  
+                                         (1 %in% c(M08_MALBL_LBORRES_10, M08_PLACMAL_LBPERF_1_10, # MNH08 DONE ANLY DURING PNC6 (VISIT 10)
+                                                   M08_TB_CNFRM_LBORRES_10, M08_SYPH_TITER_LBPERF_1_10,
+                                                   M08_HEV_IGM_LBORRES_10, M08_CTNG_CT_LBORRES_10,
+                                                   M08_CTNG_NG_LBORRES_10, M08_ZCD_ZIKIGM_LBORRES_10,
+                                                   M08_ZCD_CHKIGM_LBORRES_10, M08_ZCD_DENIGM_LBORRES_10,
+                                                   M08_LEPT_IGM_LBORRES_10)) ~ 1, 
+                                         
+                                         # Inconclusive:
+                                         (1 %in% c(M08_MALBL_LBORRES_10, M08_PLACMAL_LBPERF_1_10,
+                                                   M08_TB_CNFRM_LBORRES_10, M08_SYPH_TITER_LBPERF_1_10,
+                                                   M08_HEV_IGM_LBORRES_10, M08_CTNG_CT_LBORRES_10,
+                                                   M08_CTNG_NG_LBORRES_10, M08_ZCD_ZIKIGM_LBORRES_10,
+                                                   M08_ZCD_CHKIGM_LBORRES_10, M08_ZCD_DENIGM_LBORRES_10,
+                                                   M08_LEPT_IGM_LBORRES_10)) ~ 0, 
                                          TRUE ~ as.numeric(0)))
-table(merged_df$MAT_INFECT_SEPSIS_DIAG_ANC, SITE= merged_df$SITE, useNA = "always")
 
-# LOOK AT Q12 IN M10 ALSO FOR INFECTION TREATMENT AT L&D AND POST DELIVERY.       
-# INCLUDE M09_INFECT_MHOCCUR_10_6==1 FOR SEPSIS/SEPTIC SHOCK FOR L&D
-# INCLUDE M10_POST_DEL_INF_CEOCCUR_14 - POST L&D FORM 
-
+table(MAT_INFECT_MEAS_PNC = merged_df$MAT_INFECT_MEAS_PNC, SITE = merged_df$SITE, useNA = "always")
+round(prop.table(table(MAT_INFECT_MEAS_PNC = merged_df$MAT_INFECT_MEAS_PNC, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 2)
 ```
 
 
-
-# MATERNAL INFECT_DIAGNOSED AT ANYTIME (ANC, ANC-HOSP, L&D, PNC, PNC-HOSP)
+# MATERNAL SEPSIS DIAGNOSED (INCLUDING ORGAN DYS) AT PNC INCLUDING HOSPITALIZATION _14 (FINAL)
+# ------ NOTE THAT ORGAN DYSFUCTION OR SEPSIS IS NOT DONE IN MNH06 (POC DIAGNOSITICS), MNH08 (MATERNAL LABS) FOR PNC.  
+# --------------IT IS ONLY IN OR MNH12 (CLINICAL STATUS) AND DURING HOSPITALIZATION
 ```{r}
 
+######################################
+#TODO
+# - SEPSIS/ORGAN DYSFUNCTION INFO IS ONLY PRESENT AT HOSPITALIZATION FOR PNC IN MNH12 AND MNH19 (HOSPITALIZATION _14)
+# - THERE IS NO SEPSIS INFO IN MNH04, MNH06 OR MNH08
+######################################
+
+
+merged_df <- merged_df %>%
+  mutate(MAT_SEPSIS_DIAG_PNC = case_when((1 %in% c(M12_POST_DEL_INF_MHOCCUR_11_7, M12_POST_DEL_INF_MHOCCUR_11_8, # MATERNAL SEPSIS DURING MNH12
+                                                  M12_POST_DEL_INF_MHOCCUR_11_9, M12_POST_DEL_INF_MHOCCUR_11_10)) ~ 1,
+                                         
+                                         # VISIT 7
+                                         (1 %in% c(M12_ORG_FAIL_MHOCCUR_1_7, M12_ORG_FAIL_MHOCCUR_2_7,
+                                                   M12_ORG_FAIL_MHOCCUR_3_7, M12_ORG_FAIL_MHOCCUR_4_7, 
+                                                   M12_ORG_FAIL_MHOCCUR_88_7,
+                                                   
+                                                   # VISIT 8
+                                                   M12_ORG_FAIL_MHOCCUR_1_8, M12_ORG_FAIL_MHOCCUR_2_8,
+                                                   M12_ORG_FAIL_MHOCCUR_3_8, M12_ORG_FAIL_MHOCCUR_4_8, 
+                                                   M12_ORG_FAIL_MHOCCUR_88_8,
+                                                   
+                                                   # VISIT 9
+                                                   M12_ORG_FAIL_MHOCCUR_1_9, M12_ORG_FAIL_MHOCCUR_2_9,
+                                                   M12_ORG_FAIL_MHOCCUR_3_9, M12_ORG_FAIL_MHOCCUR_4_9, 
+                                                   M12_ORG_FAIL_MHOCCUR_88_9,
+                                                   
+                                                   # VISIT 10
+                                                   M12_ORG_FAIL_MHOCCUR_1_10, M12_ORG_FAIL_MHOCCUR_2_10,
+                                                   M12_ORG_FAIL_MHOCCUR_3_10, M12_ORG_FAIL_MHOCCUR_4_10, 
+                                                   M12_ORG_FAIL_MHOCCUR_88_10)) ~ 1,
+                                         
+                                         
+                                         (M19_PRIMARY_MHTERM_14==5 | # DURING HOSPITALIZATION
+                                             (1 %in% c(M19_ORGAN_FAIL_MHTERM_1_14, M19_ORGAN_FAIL_MHTERM_2_14, 
+                                                       M19_ORGAN_FAIL_MHTERM_3_14, M19_ORGAN_FAIL_MHTERM_4_14, 
+                                                       M19_ORGAN_FAIL_MHTERM_5_14, M19_ORGAN_FAIL_MHTERM_6_14, 
+                                                       M19_ORGAN_FAIL_MHTERM_7_14, 
+                                                       M19_ORGAN_FAIL_MHTERM_88_14, M19_ORGAN_FAIL_MHTERM_99_14))) ~ 1, # OTHER AND DON'T KNOW.
+                                         M19_INFECTION_MHTERM_12_14==1 ~ 1, # MATERNAL SEPSIS OPTION ON MNH19
+                                         TRUE ~ as.numeric(0)))
+
+
+table(MAT_SEPSIS_DIAG_PNC = merged_df$MAT_SEPSIS_DIAG_PNC, SITE = merged_df$SITE, useNA = "always") 
+round(prop.table(table(MAT_SEPSIS_DIAG_PNC = merged_df$MAT_SEPSIS_DIAG_PNC, SITE = merged_df$SITE, useNA = "always"),margin=2)*100,2)
 ```
+
+# MATERNAL INFECTIONSEPSIS_ANY_PNC - ALL PNC (INFECT DIAGNOSED, INFECT TREATED, INFECT MEASURED + SEPSIS DIAGNOSED) (FINAL)
+```{r}
+merged_df <- merged_df %>%
+  mutate(MAT_INFECTIONSEPSIS_ANY_PNC = case_when(1 %in% c(MAT_INFECT_DIAG_PNC, MAT_INFECT_TREAT_PNC, MAT_INFECT_MEAS_PNC, MAT_SEPSIS_DIAG_PNC) ~ 1,
+         TRUE ~ as.numeric(0)))
+
+table(MAT_INFECTIONSEPSIS_ANY_PNC = merged_df$MAT_INFECTIONSEPSIS_ANY_PNC, SITE = merged_df$SITE, useNA = "always") 
+round(prop.table(table(MAT_INFECTIONSEPSIS_ANY_PNC = merged_df$MAT_INFECTIONSEPSIS_ANY_PNC, SITE = merged_df$SITE, useNA = "always"),margin=2)*100,2)
+
+```
+
+# MATERNAL INFECT_DIAGNOSED AT ANYTIME (ANC, ANC-HOSP, L&D, PNC, PNC-HOSP) _ANYTIME (FINAL)
+```{r}
+merged_df <- merged_df %>%
+  mutate(MAT_INFECT_DIAG_ANYTIME = case_when(1 %in% c(MAT_INFECT_DIAG_ANC, MAT_INFECT_DIAG_IPC, MAT_INFECT_DIAG_PNC) ~ 1,
+                                             TRUE ~ as.numeric(0)))
+
+table(MAT_INFECT_DIAG_ANYTIME = merged_df$MAT_INFECT_DIAG_ANYTIME, SITE = merged_df$SITE, useNA = "always")
+round(prop.table(table(MAT_INFECT_DIAG_ANYTIME = merged_df$MAT_INFECT_DIAG_ANYTIME, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 2)
+```
+
+# MATERNAL INFECTION TREAT AT ANC (& HOSP _13), L&D, PNC (& HOSP _14) _ANYTIME (FINAL)
+```{r}
+merged_df <- merged_df %>%
+  mutate(MAT_INFECT_TREAT_ANYTIME = case_when((1 %in% c(MAT_INFECT_TREAT_ANC, MAT_INFECT_TREAT_IPC, MAT_INFECT_TREAT_PNC)) ~ 1,
+                                             TRUE ~ as.numeric(0)))
+
+table(MAT_INFECT_TREAT_ANYTIME = merged_df$MAT_INFECT_TREAT_ANYTIME, SITE = merged_df$SITE, useNA = "always")
+round(prop.table(table(MAT_INFECT_TREAT_ANYTIME = merged_df$MAT_INFECT_TREAT_ANYTIME, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 2)
+
+```
+
+# MATERNAL INFECTION MEAS AT ANC (& HOSP _13), AND PNC (& HOSP _14) _ANYTIME - (L&D DOESN'T HAVE THIS MEASUREMENT) (FINAL)
+```{r}
+merged_df <- merged_df %>%
+  mutate(MAT_INFECT_MEAS_ANYTIME = case_when((1 %in% c(MAT_INFECT_MEAS_ANC, MAT_INFECT_MEAS_PNC)) ~ 1, # NO MEASUREMENT AT IPC. 
+                                             TRUE ~ as.numeric(0)))
+
+table(MAT_INFECT_MEAS_ANYTIME = merged_df$MAT_INFECT_MEAS_ANYTIME, SITE = merged_df$SITE, useNA = "always")
+round(prop.table(table(MAT_INFECT_MEAS_ANYTIME = merged_df$MAT_INFECT_MEAS_ANYTIME, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 2)
+
+```
+
+# MATERNAL SEPSIS DIAGNOSED AT ANC (& HOSP _13), L&D, PNC (& HOSP _14) _ANYTIME (FINAL)
+```{r}
+merged_df <- merged_df %>%
+  mutate(MAT_SEPSIS_DIAG_ANYTIME = case_when((1 %in% c(MAT_SEPSIS_DIAG_ANC, MAT_INFECT_TREAT_IPC, MAT_SEPSIS_DIAG_PNC)) ~ 1, # NO MEASUREMENT AT IPC. 
+                                             TRUE ~ as.numeric(0)))
+
+table(MAT_SEPSIS_DIAG_ANYTIME = merged_df$MAT_SEPSIS_DIAG_ANYTIME, SITE = merged_df$SITE, useNA = "always")
+round(prop.table(table(MAT_SEPSIS_DIAG_ANYTIME = merged_df$MAT_SEPSIS_DIAG_ANYTIME, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 2)
+
+```
+
+# MATERNAL INFECTION & SEPSIS BY ANY METHOD (DIAGNOSED, TREAT, MEASURED) AND AT ANY TIME POINT (ANC (& HOSP _13), L&D, PNC (& HOSP _14)) _ANYTIME (FINAL)
+```{r}
+merged_df <- merged_df %>%
+  mutate(MAT_INFECTIONSEPSIS_ANY_ANYTIME = case_when((1 %in% c(MAT_INFECTIONSEPSIS_ANY_ANC, MAT_INFECT_TREAT_IPC, MAT_INFECTIONSEPSIS_ANY_PNC)) ~ 1,
+                                             TRUE ~ as.numeric(0)))
+
+table(MAT_INFECTIONSEPSIS_ANY_ANYTIME = merged_df$MAT_INFECTIONSEPSIS_ANY_ANYTIME, SITE = merged_df$SITE, useNA = "always")
+round(prop.table(table(MAT_INFECTIONSEPSIS_ANY_ANYTIME = merged_df$MAT_INFECTIONSEPSIS_ANY_ANYTIME, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 2)
+
+```
+
+
+#################
+# WHO MATERNAL NEAR-MISS (MNM): 
+# Woman who nearly died but survived a life-threatening condition (i.e. organ dysfunction) that occurred during pregnancy, childbirth or within 42 days of termination of pregnancy, irrespective of gestational age and including abortions. 
+
+# CONSTRUCTED FROM: MAT_DEATH AND MAT_DYS.  I AM GOING TO USE SEPSIS VARIABLES THAT I CREATED UNDER INFECTION AND SEPSIS INSTEAD. 
+```{r}
+merged_df <- merged_df %>%
+  mutate(MAT_MNM = case_when((MAT_DEATH==0 & MAT_SEPSIS_DIAG_ANYTIME==1) ~ 1, 
+                             TRUE ~ as.numeric(0)))
+
+table(MAT_MNM = merged_df$MAT_MNM, SITE = merged_df$SITE, useNA = "always")
+round(prop.table(table(MAT_MNM = merged_df$MAT_MNM, SITE = merged_df$SITE, useNA = "always"), margin=2)*100,2)
+```
+
+####################
+# PREECLAMPSIA (MEASURED)
+CHRON_HYPER
+GEST_HYPER
+PROTEINURIA
+PRE_FEAT_SEV_MEAS
+US_GA_WKS_AGE_FTS1
+VISITS: ALL ANC AND PNC VISITS??? INCL HOSP.
+
+```{r}
+merged_df <- merged_df %>% 
+  mutate(PE_MEASURED)
+  
+```
+
+
+# 1. MATERNAL INFECTION & SEPSIS - SEVERE: ANY TYPE (DIAGNOSED, TREAT, MEASURED) AT ANC.
+# Infection-related severe maternal outcomes: infection + near-miss criteria or maternal death.
+```{r}
+######################################
+#TODO
+# - DOES THIS MATERNAL DEATH ALSO INCLUDE LATER MATERNAL DEATH
+# - THIS VAR NEEDS FEEDBACK FROM ERS
+######################################
+merged_df <- merged_df %>%
+  mutate(MAT_INFECTIONSEPSIS_ANY_SEVERE = case_when((MAT_INFECTIONSEPSIS_ANY_ANC==1 & MAT_MNM==1) ~ 1, # ADD NEAR-MISS OR MATERNAL DEATH.
+         TRUE ~ as.numeric(0)))
+
+table(MAT_INFECTIONSEPSIS_ANY_SEVERE = merged_df$MAT_INFECTIONSEPSIS_ANY_SEVERE, SITE = merged_df$SITE, useNA = "always")
+round(prop.table(table(MAT_INFECTIONSEPSIS_ANY_SEVERE = merged_df$MAT_INFECTIONSEPSIS_ANY_SEVERE, SITE = merged_df$SITE, useNA = "always"), margin=2)*100,2)
+```
+
+
+# 2. MATERNAL INFECTION & SEPSIS - COMPICATIONS: ANY TYPE (DIAGNOSED, TREAT, MEASURED) AT ANC 
+# Infections with complications: infection + invasive procedure, ICU admission to ICU, or facility transfer.
+# This will be complex - b/c SEVERE COMPLICATIONS variable includes MAT_INFECT, MAT_DYS, PE, PPH, UTERINE RUPTURE.
+```{r}
+######################################
+#TODO
+# - THIS VAR IS CURRENTLY INCOMPLETE.
+# - NEED TO CONSTRUCT VARIABLE MAT_SEV_COMP
+######################################
+merged_df <- merged_df %>%
+  mutate(MAT_INFECTIONSEPSIS_ANY_COMPLICATIONS = case_when((MAT_INFECTIONSEPSIS_ANY_ANC==1 & MAT_SEV_COMP==1) ~ 1, # 
+         TRUE ~ as.numeric(0))) #TODO not complete yet.
+
+```
+
+# 3. MATERNAL INFECTION & SEPSIS - LESS SEVERE: ANY TYPE (DIAGNOSED, TREAT, MEASURED) AT ANC 
+# Less severe infections: all other infections, subcategorized as chronic or acute infections. 
+```{r}
+######################################
+#TODO
+# - THIS VAR IS CURRENTLY INCOMPLETE.
+######################################
+merged_df <- merged_df %>%
+  mutate(MAT_INFECTIONSEPSIS_ANY_LESSSEVERE = case_when(MAT_INFECTIONSEPSIS_ANY_ANC==1 & 
+                                                          !(MAT_INFECTIONSEPSIS_ANY_SEVERE==1 | MAT_INFECTIONSEPSIS_ANY_COMPLICATIONS==1) ~ 1, # 
+         TRUE ~ as.numeric(0)))
+
+```
+
+
 
 
 ******************************************************************************************************
