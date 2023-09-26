@@ -556,6 +556,16 @@ merged_df <- merged_df %>% #b/c I am passing in the entire dataframe, I don't ne
   mutate_all(function(d) {
               if_else(d==77, NA, d) 
             })
+
+merged_df <- merged_df %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
+  mutate_all(function(d) {
+              if_else(d==-5, NA, d) 
+            })
+
+merged_df <- merged_df %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
+  mutate_all(function(d) {
+              if_else(d==55, NA, d) 
+            })
 ```
 
 *RUN CODE ABOVE*
@@ -841,7 +851,7 @@ ADD VARIABLES THAT DON'T EXIST HERE
 #                                              merged_df$M08_CBC_HB_LBORRES_10, NA) 
 
 
-# VISIT 11 and 12 hans't happened for anyone (PNC26 and PNC52) so variable M08_CBC_HB_LBORRES_11 or _12 don't exist:
+# VISIT 11 and 12 hasn't happened for anyone (PNC26 and PNC52) so variable M08_CBC_HB_LBORRES_11 or _12 don't exist:
 merged_df$M08_CBC_HB_LBORRES_11 <- ifelse("M08_CBC_HB_LBORRES_11" %in% names(merged_df),
                                             merged_df$M08_CBC_HB_LBORRES_11, NA) 
 
@@ -898,288 +908,285 @@ merged_df$M08_UA_PROT_LBORRES_14 <- ifelse("M08_UA_PROT_LBORRES_14" %in% names(m
                                             merged_df$M08_UA_PROT_LBORRES_14, NA)
 
 # INFECTION TEST VARS - SITES HAVEN'T STARTED USING THESE TESTS YETS - 09/20/2023
-M08_SYPH_TITER_LBPERF_1_1 <- ifelse("M08_SYPH_TITER_LBPERF_1_1" %in% names(merged_df),
+merged_df$M08_SYPH_TITER_LBPERF_1_1 <- ifelse("M08_SYPH_TITER_LBPERF_1_1" %in% names(merged_df),
                                             merged_df$M08_SYPH_TITER_LBPERF_1_1, NA)
 
-M08_SYPH_TITER_LBPERF_1_2 <- ifelse("M08_SYPH_TITER_LBPERF_1_2" %in% names(merged_df),
+merged_df$M08_SYPH_TITER_LBPERF_1_2 <- ifelse("M08_SYPH_TITER_LBPERF_1_2" %in% names(merged_df),
                                             merged_df$M08_SYPH_TITER_LBPERF_1_2, NA)
 
-M08_SYPH_TITER_LBPERF_1_3 <- ifelse("M08_SYPH_TITER_LBPERF_1_3" %in% names(merged_df),
+merged_df$M08_SYPH_TITER_LBPERF_1_3 <- ifelse("M08_SYPH_TITER_LBPERF_1_3" %in% names(merged_df),
                                             merged_df$M08_SYPH_TITER_LBPERF_1_3, NA)
 
-M08_SYPH_TITER_LBPERF_1_4 <- ifelse("M08_SYPH_TITER_LBPERF_1_4" %in% names(merged_df),
+merged_df$M08_SYPH_TITER_LBPERF_1_4 <- ifelse("M08_SYPH_TITER_LBPERF_1_4" %in% names(merged_df),
                                             merged_df$M08_SYPH_TITER_LBPERF_1_4, NA)
 
-M08_SYPH_TITER_LBPERF_1_5 <- ifelse("M08_SYPH_TITER_LBPERF_1_5" %in% names(merged_df),
+merged_df$M08_SYPH_TITER_LBPERF_1_5 <- ifelse("M08_SYPH_TITER_LBPERF_1_5" %in% names(merged_df),
                                             merged_df$M08_SYPH_TITER_LBPERF_1_5, NA)
 
-M08_SYPH_TITER_LBPERF_1_10 <- ifelse("M08_SYPH_TITER_LBPERF_1_10" %in% names(merged_df),
+merged_df$M08_SYPH_TITER_LBPERF_1_10 <- ifelse("M08_SYPH_TITER_LBPERF_1_10" %in% names(merged_df),
                                             merged_df$M08_SYPH_TITER_LBPERF_1_10, NA)
 
-M08_HEV_IGM_LBORRES_1 <- ifelse("M08_HEV_IGM_LBORRES_1" %in% names(merged_df),
+merged_df$M08_HEV_IGM_LBORRES_1 <- ifelse("M08_HEV_IGM_LBORRES_1" %in% names(merged_df),
                                             merged_df$M08_HEV_IGM_LBORRES_1, NA)
 
-M08_HEV_IGM_LBORRES_2 <- ifelse("M08_HEV_IGM_LBORRES_2" %in% names(merged_df),
+merged_df$M08_HEV_IGM_LBORRES_2 <- ifelse("M08_HEV_IGM_LBORRES_2" %in% names(merged_df),
                                             merged_df$M08_HEV_IGM_LBORRES_2, NA)
 
-M08_HEV_IGM_LBORRES_3 <- ifelse("M08_HEV_IGM_LBORRES_3" %in% names(merged_df),
+merged_df$M08_HEV_IGM_LBORRES_3 <- ifelse("M08_HEV_IGM_LBORRES_3" %in% names(merged_df),
                                             merged_df$M08_HEV_IGM_LBORRES_3, NA)
 
-M08_HEV_IGM_LBORRES_4 <- ifelse("M08_HEV_IGM_LBORRES_4" %in% names(merged_df),
+merged_df$M08_HEV_IGM_LBORRES_4 <- ifelse("M08_HEV_IGM_LBORRES_4" %in% names(merged_df),
                                             merged_df$M08_HEV_IGM_LBORRES_4, NA)
 
-M08_HEV_IGM_LBORRES_5 <- ifelse("M08_HEV_IGM_LBORRES_5" %in% names(merged_df),
+merged_df$M08_HEV_IGM_LBORRES_5 <- ifelse("M08_HEV_IGM_LBORRES_5" %in% names(merged_df),
                                             merged_df$M08_HEV_IGM_LBORRES_5, NA)
 
-M08_HEV_IGM_LBORRES_10 <- ifelse("M08_HEV_IGM_LBORRES_10" %in% names(merged_df),
+merged_df$M08_HEV_IGM_LBORRES_10 <- ifelse("M08_HEV_IGM_LBORRES_10" %in% names(merged_df),
                                             merged_df$M08_HEV_IGM_LBORRES_10, NA)
 
-M08_CTNG_CT_LBORRES_1 <- ifelse("M08_CTNG_CT_LBORRES_1" %in% names(merged_df),
+merged_df$M08_CTNG_CT_LBORRES_1 <- ifelse("M08_CTNG_CT_LBORRES_1" %in% names(merged_df),
                                             merged_df$M08_CTNG_CT_LBORRES_1, NA)
 
-M08_CTNG_CT_LBORRES_2 <- ifelse("M08_CTNG_CT_LBORRES_2" %in% names(merged_df),
+merged_df$M08_CTNG_CT_LBORRES_2 <- ifelse("M08_CTNG_CT_LBORRES_2" %in% names(merged_df),
                                             merged_df$M08_CTNG_CT_LBORRES_2, NA)
 
-M08_CTNG_CT_LBORRES_3 <- ifelse("M08_CTNG_CT_LBORRES_3" %in% names(merged_df),
+merged_df$M08_CTNG_CT_LBORRES_3 <- ifelse("M08_CTNG_CT_LBORRES_3" %in% names(merged_df),
                                             merged_df$M08_CTNG_CT_LBORRES_3, NA)
 
-M08_CTNG_CT_LBORRES_4 <- ifelse("M08_CTNG_CT_LBORRES_4" %in% names(merged_df),
+merged_df$M08_CTNG_CT_LBORRES_4 <- ifelse("M08_CTNG_CT_LBORRES_4" %in% names(merged_df),
                                             merged_df$M08_CTNG_CT_LBORRES_4, NA)
 
-M08_CTNG_CT_LBORRES_5 <- ifelse("M08_CTNG_CT_LBORRES_5" %in% names(merged_df),
+merged_df$M08_CTNG_CT_LBORRES_5 <- ifelse("M08_CTNG_CT_LBORRES_5" %in% names(merged_df),
                                             merged_df$M08_CTNG_CT_LBORRES_5, NA)
 
-M08_CTNG_CT_LBORRES_10 <- ifelse("M08_CTNG_CT_LBORRES_10" %in% names(merged_df),
+merged_df$M08_CTNG_CT_LBORRES_10 <- ifelse("M08_CTNG_CT_LBORRES_10" %in% names(merged_df),
                                             merged_df$M08_CTNG_CT_LBORRES_10, NA)
 
-M08_CTNG_NG_LBORRES_1 <- ifelse("M08_CTNG_NG_LBORRES_1" %in% names(merged_df),
+merged_df$M08_CTNG_NG_LBORRES_1 <- ifelse("M08_CTNG_NG_LBORRES_1" %in% names(merged_df),
                                             merged_df$M08_CTNG_NG_LBORRES_1, NA)
 
-M08_CTNG_NG_LBORRES_2 <- ifelse("M08_CTNG_NG_LBORRES_2" %in% names(merged_df),
+merged_df$M08_CTNG_NG_LBORRES_2 <- ifelse("M08_CTNG_NG_LBORRES_2" %in% names(merged_df),
                                             merged_df$M08_CTNG_NG_LBORRES_2, NA)
 
-M08_CTNG_NG_LBORRES_3 <- ifelse("M08_CTNG_NG_LBORRES_3" %in% names(merged_df),
+merged_df$M08_CTNG_NG_LBORRES_3 <- ifelse("M08_CTNG_NG_LBORRES_3" %in% names(merged_df),
                                             merged_df$M08_CTNG_NG_LBORRES_3, NA)
 
-M08_CTNG_NG_LBORRES_4 <- ifelse("M08_CTNG_NG_LBORRES_4" %in% names(merged_df),
+merged_df$M08_CTNG_NG_LBORRES_4 <- ifelse("M08_CTNG_NG_LBORRES_4" %in% names(merged_df),
                                             merged_df$M08_CTNG_NG_LBORRES_4, NA)
 
-M08_CTNG_NG_LBORRES_5 <- ifelse("M08_CTNG_NG_LBORRES_5" %in% names(merged_df),
+merged_df$M08_CTNG_NG_LBORRES_5 <- ifelse("M08_CTNG_NG_LBORRES_5" %in% names(merged_df),
                                             merged_df$M08_CTNG_NG_LBORRES_5, NA)
 
-M08_CTNG_NG_LBORRES_10 <- ifelse("M08_CTNG_NG_LBORRES_10" %in% names(merged_df),
+merged_df$M08_CTNG_NG_LBORRES_10 <- ifelse("M08_CTNG_NG_LBORRES_10" %in% names(merged_df),
                                             merged_df$M08_CTNG_NG_LBORRES_10, NA)
 
-M08_ZCD_ZIKIGM_LBORRES_1 <- ifelse("M08_ZCD_ZIKIGM_LBORRES_1" %in% names(merged_df),
+merged_df$M08_ZCD_ZIKIGM_LBORRES_1 <- ifelse("M08_ZCD_ZIKIGM_LBORRES_1" %in% names(merged_df),
                                             merged_df$M08_ZCD_ZIKIGM_LBORRES_1, NA)
 
-M08_ZCD_ZIKIGM_LBORRES_2 <- ifelse("M08_ZCD_ZIKIGM_LBORRES_2" %in% names(merged_df),
+merged_df$M08_ZCD_ZIKIGM_LBORRES_2 <- ifelse("M08_ZCD_ZIKIGM_LBORRES_2" %in% names(merged_df),
                                             merged_df$M08_ZCD_ZIKIGM_LBORRES_2, NA)
 
-M08_ZCD_ZIKIGM_LBORRES_3 <- ifelse("M08_ZCD_ZIKIGM_LBORRES_3" %in% names(merged_df),
+merged_df$M08_ZCD_ZIKIGM_LBORRES_3 <- ifelse("M08_ZCD_ZIKIGM_LBORRES_3" %in% names(merged_df),
                                             merged_df$M08_ZCD_ZIKIGM_LBORRES_3, NA)
 
-M08_ZCD_ZIKIGM_LBORRES_4 <- ifelse("M08_ZCD_ZIKIGM_LBORRES_4" %in% names(merged_df),
+merged_df$M08_ZCD_ZIKIGM_LBORRES_4 <- ifelse("M08_ZCD_ZIKIGM_LBORRES_4" %in% names(merged_df),
                                             merged_df$M08_ZCD_ZIKIGM_LBORRES_4, NA)
 
-M08_ZCD_ZIKIGM_LBORRES_5 <- ifelse("M08_ZCD_ZIKIGM_LBORRES_5" %in% names(merged_df),
+merged_df$M08_ZCD_ZIKIGM_LBORRES_5 <- ifelse("M08_ZCD_ZIKIGM_LBORRES_5" %in% names(merged_df),
                                             merged_df$M08_ZCD_ZIKIGM_LBORRES_5, NA)
 
-M08_ZCD_ZIKIGM_LBORRES_10 <- ifelse("M08_ZCD_ZIKIGM_LBORRES_10" %in% names(merged_df),
+merged_df$M08_ZCD_ZIKIGM_LBORRES_10 <- ifelse("M08_ZCD_ZIKIGM_LBORRES_10" %in% names(merged_df),
                                             merged_df$M08_ZCD_ZIKIGM_LBORRES_10, NA)
 
-M08_ZCD_CHKIGM_LBORRES_1 <- ifelse("M08_ZCD_CHKIGM_LBORRES_1" %in% names(merged_df),
+merged_df$M08_ZCD_CHKIGM_LBORRES_1 <- ifelse("M08_ZCD_CHKIGM_LBORRES_1" %in% names(merged_df),
                                             merged_df$M08_ZCD_CHKIGM_LBORRES_1, NA)
 
-M08_ZCD_CHKIGM_LBORRES_2 <- ifelse("M08_ZCD_CHKIGM_LBORRES_2" %in% names(merged_df),
+merged_df$M08_ZCD_CHKIGM_LBORRES_2 <- ifelse("M08_ZCD_CHKIGM_LBORRES_2" %in% names(merged_df),
                                             merged_df$M08_ZCD_CHKIGM_LBORRES_2, NA)
 
-M08_ZCD_CHKIGM_LBORRES_3 <- ifelse("M08_ZCD_CHKIGM_LBORRES_3" %in% names(merged_df),
+merged_df$M08_ZCD_CHKIGM_LBORRES_3 <- ifelse("M08_ZCD_CHKIGM_LBORRES_3" %in% names(merged_df),
                                             merged_df$M08_ZCD_CHKIGM_LBORRES_3, NA)
 
-M08_ZCD_CHKIGM_LBORRES_4 <- ifelse("M08_ZCD_CHKIGM_LBORRES_4" %in% names(merged_df),
+merged_df$M08_ZCD_CHKIGM_LBORRES_4 <- ifelse("M08_ZCD_CHKIGM_LBORRES_4" %in% names(merged_df),
                                             merged_df$M08_ZCD_CHKIGM_LBORRES_4, NA)
 
-M08_ZCD_CHKIGM_LBORRES_5 <- ifelse("M08_ZCD_CHKIGM_LBORRES_5" %in% names(merged_df),
+merged_df$M08_ZCD_CHKIGM_LBORRES_5 <- ifelse("M08_ZCD_CHKIGM_LBORRES_5" %in% names(merged_df),
                                             merged_df$M08_ZCD_CHKIGM_LBORRES_5, NA)
 
-M08_ZCD_CHKIGM_LBORRES_10 <- ifelse("M08_ZCD_CHKIGM_LBORRES_10" %in% names(merged_df),
+merged_df$M08_ZCD_CHKIGM_LBORRES_10 <- ifelse("M08_ZCD_CHKIGM_LBORRES_10" %in% names(merged_df),
                                             merged_df$M08_ZCD_CHKIGM_LBORRES_10, NA)
 
-M08_ZCD_DENIGM_LBORRES_1 <- ifelse("M08_ZCD_DENIGM_LBORRES_1" %in% names(merged_df),
+merged_df$M08_ZCD_DENIGM_LBORRES_1 <- ifelse("M08_ZCD_DENIGM_LBORRES_1" %in% names(merged_df),
                                             merged_df$M08_ZCD_DENIGM_LBORRES_1, NA)
 
-M08_ZCD_DENIGM_LBORRES_2 <- ifelse("M08_ZCD_DENIGM_LBORRES_2" %in% names(merged_df),
+merged_df$M08_ZCD_DENIGM_LBORRES_2 <- ifelse("M08_ZCD_DENIGM_LBORRES_2" %in% names(merged_df),
                                             merged_df$M08_ZCD_DENIGM_LBORRES_2, NA)
 
-M08_ZCD_DENIGM_LBORRES_3 <- ifelse("M08_ZCD_DENIGM_LBORRES_3" %in% names(merged_df),
+merged_df$M08_ZCD_DENIGM_LBORRES_3 <- ifelse("M08_ZCD_DENIGM_LBORRES_3" %in% names(merged_df),
                                             merged_df$M08_ZCD_DENIGM_LBORRES_3, NA)
 
-M08_ZCD_DENIGM_LBORRES_4 <- ifelse("M08_ZCD_DENIGM_LBORRES_4" %in% names(merged_df),
+merged_df$M08_ZCD_DENIGM_LBORRES_4 <- ifelse("M08_ZCD_DENIGM_LBORRES_4" %in% names(merged_df),
                                             merged_df$M08_ZCD_DENIGM_LBORRES_4, NA)
 
-M08_ZCD_DENIGM_LBORRES_5 <- ifelse("M08_ZCD_DENIGM_LBORRES_5" %in% names(merged_df),
+merged_df$M08_ZCD_DENIGM_LBORRES_5 <- ifelse("M08_ZCD_DENIGM_LBORRES_5" %in% names(merged_df),
                                             merged_df$M08_ZCD_DENIGM_LBORRES_5, NA)
 
-M08_ZCD_DENIGM_LBORRES_10 <- ifelse("M08_ZCD_DENIGM_LBORRES_10" %in% names(merged_df),
+merged_df$M08_ZCD_DENIGM_LBORRES_10 <- ifelse("M08_ZCD_DENIGM_LBORRES_10" %in% names(merged_df),
                                             merged_df$M08_ZCD_DENIGM_LBORRES_10, NA)
 
-M08_LEPT_IGM_LBORRES_1 <- ifelse("M08_LEPT_IGM_LBORRES_1" %in% names(merged_df),
+merged_df$M08_LEPT_IGM_LBORRES_1 <- ifelse("M08_LEPT_IGM_LBORRES_1" %in% names(merged_df),
                                             merged_df$M08_LEPT_IGM_LBORRES_1, NA)
 
-M08_LEPT_IGM_LBORRES_2 <- ifelse("M08_LEPT_IGM_LBORRES_2" %in% names(merged_df),
+merged_df$M08_LEPT_IGM_LBORRES_2 <- ifelse("M08_LEPT_IGM_LBORRES_2" %in% names(merged_df),
                                             merged_df$M08_LEPT_IGM_LBORRES_2, NA)
 
-M08_LEPT_IGM_LBORRES_3 <- ifelse("M08_LEPT_IGM_LBORRES_3" %in% names(merged_df),
+merged_df$M08_LEPT_IGM_LBORRES_3 <- ifelse("M08_LEPT_IGM_LBORRES_3" %in% names(merged_df),
                                             merged_df$M08_LEPT_IGM_LBORRES_3, NA)
 
-M08_LEPT_IGM_LBORRES_4 <- ifelse("M08_LEPT_IGM_LBORRES_4" %in% names(merged_df),
+merged_df$M08_LEPT_IGM_LBORRES_4 <- ifelse("M08_LEPT_IGM_LBORRES_4" %in% names(merged_df),
                                             merged_df$M08_LEPT_IGM_LBORRES_4, NA)
 
-M08_LEPT_IGM_LBORRES_5 <- ifelse("M08_LEPT_IGM_LBORRES_5" %in% names(merged_df),
+merged_df$M08_LEPT_IGM_LBORRES_5 <- ifelse("M08_LEPT_IGM_LBORRES_5" %in% names(merged_df),
                                             merged_df$M08_LEPT_IGM_LBORRES_5, NA)
 
-M08_LEPT_IGM_LBORRES_10 <- ifelse("M08_LEPT_IGM_LBORRES_10" %in% names(merged_df),
+merged_df$M08_LEPT_IGM_LBORRES_10 <- ifelse("M08_LEPT_IGM_LBORRES_10" %in% names(merged_df),
                                             merged_df$M08_LEPT_IGM_LBORRES_10, NA)
 
 # INFECTION VARIALBES DURING HOSPITALIZATION DURING PNC _14:
 
-M19_PRIMARY_MHTERM_14 <- ifelse("M19_PRIMARY_MHTERM_14" %in% names(merged_df),
+merged_df$M19_PRIMARY_MHTERM_14 <- ifelse("M19_PRIMARY_MHTERM_14" %in% names(merged_df),
                                             merged_df$M19_PRIMARY_MHTERM_14, NA)
 
-M19_INFECTION_MHTERM_1_14 <- ifelse("M19_INFECTION_MHTERM_1_14" %in% names(merged_df),
+merged_df$M19_INFECTION_MHTERM_1_14 <- ifelse("M19_INFECTION_MHTERM_1_14" %in% names(merged_df),
                                             merged_df$M19_INFECTION_MHTERM_1_14, NA)
 
-M19_INFECTION_MHTERM_2_14 <- ifelse("M19_INFECTION_MHTERM_2_14" %in% names(merged_df),
+merged_df$M19_INFECTION_MHTERM_2_14 <- ifelse("M19_INFECTION_MHTERM_2_14" %in% names(merged_df),
                                             merged_df$M19_INFECTION_MHTERM_2_14, NA)
 
-M19_INFECTION_MHTERM_3_14 <- ifelse("M19_INFECTION_MHTERM_3_14" %in% names(merged_df),
+merged_df$M19_INFECTION_MHTERM_3_14 <- ifelse("M19_INFECTION_MHTERM_3_14" %in% names(merged_df),
                                             merged_df$M19_INFECTION_MHTERM_3_14, NA)
 
-M19_INFECTION_MHTERM_4_14 <- ifelse("M19_INFECTION_MHTERM_4_14" %in% names(merged_df),
+merged_df$M19_INFECTION_MHTERM_4_14 <- ifelse("M19_INFECTION_MHTERM_4_14" %in% names(merged_df),
                                             merged_df$M19_INFECTION_MHTERM_4_14, NA)
 
-M19_INFECTION_MHTERM_5_14 <- ifelse("M19_INFECTION_MHTERM_5_14" %in% names(merged_df),
+merged_df$M19_INFECTION_MHTERM_5_14 <- ifelse("M19_INFECTION_MHTERM_5_14" %in% names(merged_df),
                                             merged_df$M19_INFECTION_MHTERM_5_14, NA)
 
-M19_INFECTION_MHTERM_6_14 <- ifelse("M19_INFECTION_MHTERM_6_14" %in% names(merged_df),
+merged_df$M19_INFECTION_MHTERM_6_14 <- ifelse("M19_INFECTION_MHTERM_6_14" %in% names(merged_df),
                                             merged_df$M19_INFECTION_MHTERM_6_14, NA)
 
-M19_INFECTION_MHTERM_7_14 <- ifelse("M19_INFECTION_MHTERM_7_14" %in% names(merged_df),
+merged_df$M19_INFECTION_MHTERM_7_14 <- ifelse("M19_INFECTION_MHTERM_7_14" %in% names(merged_df),
                                             merged_df$M19_INFECTION_MHTERM_7_14, NA)
 
-M19_INFECTION_MHTERM_8_14 <- ifelse("M19_INFECTION_MHTERM_8_14" %in% names(merged_df),
+merged_df$M19_INFECTION_MHTERM_8_14 <- ifelse("M19_INFECTION_MHTERM_8_14" %in% names(merged_df),
                                             merged_df$M19_INFECTION_MHTERM_8_14, NA)
 
-M19_INFECTION_MHTERM_9_14 <- ifelse("M19_INFECTION_MHTERM_9_14" %in% names(merged_df),
+merged_df$M19_INFECTION_MHTERM_9_14 <- ifelse("M19_INFECTION_MHTERM_9_14" %in% names(merged_df),
                                             merged_df$M19_INFECTION_MHTERM_9_14, NA)
 
-M19_INFECTION_MHTERM_10_14 <- ifelse("M19_INFECTION_MHTERM_10_14" %in% names(merged_df),
+merged_df$M19_INFECTION_MHTERM_10_14 <- ifelse("M19_INFECTION_MHTERM_10_14" %in% names(merged_df),
                                             merged_df$M19_INFECTION_MHTERM_10_14, NA)
 
-M19_INFECTION_MHTERM_11_14 <- ifelse("M19_INFECTION_MHTERM_11_14" %in% names(merged_df),
+merged_df$M19_INFECTION_MHTERM_11_14 <- ifelse("M19_INFECTION_MHTERM_11_14" %in% names(merged_df),
                                             merged_df$M19_INFECTION_MHTERM_11_14, NA)
 
-M19_INFECTION_MHTERM_12_14 <- ifelse("M19_INFECTION_MHTERM_12_14" %in% names(merged_df),
+merged_df$M19_INFECTION_MHTERM_12_14 <- ifelse("M19_INFECTION_MHTERM_12_14" %in% names(merged_df),
                                             merged_df$M19_INFECTION_MHTERM_12_14, NA) # MATERNAL SEPSIS
 
-M19_INFECTION_MHTERM_13_14 <- ifelse("M19_INFECTION_MHTERM_13_14" %in% names(merged_df),
+merged_df$M19_INFECTION_MHTERM_13_14 <- ifelse("M19_INFECTION_MHTERM_13_14" %in% names(merged_df),
                                             merged_df$M19_INFECTION_MHTERM_13_14, NA)
 
-M19_INFECTION_MHTERM_14_14 <- ifelse("M19_INFECTION_MHTERM_14_14" %in% names(merged_df),
+merged_df$M19_INFECTION_MHTERM_14_14 <- ifelse("M19_INFECTION_MHTERM_14_14" %in% names(merged_df),
                                             merged_df$M19_INFECTION_MHTERM_14_14, NA)
 
-M19_INFECTION_MHTERM_15_14 <- ifelse("M19_INFECTION_MHTERM_15_14" %in% names(merged_df),
+merged_df$M19_INFECTION_MHTERM_15_14 <- ifelse("M19_INFECTION_MHTERM_15_14" %in% names(merged_df),
                                             merged_df$M19_INFECTION_MHTERM_15_14, NA)
 
-M19_INFECTION_MHTERM_16_14 <- ifelse("M19_INFECTION_MHTERM_16_14" %in% names(merged_df),
+merged_df$M19_INFECTION_MHTERM_16_14 <- ifelse("M19_INFECTION_MHTERM_16_14" %in% names(merged_df),
                                             merged_df$M19_INFECTION_MHTERM_16_14, NA)
 
-M19_INFECTION_MHTERM_17_14 <- ifelse("M19_INFECTION_MHTERM_17_14" %in% names(merged_df),
+merged_df$M19_INFECTION_MHTERM_17_14 <- ifelse("M19_INFECTION_MHTERM_17_14" %in% names(merged_df),
                                             merged_df$M19_INFECTION_MHTERM_17_14, NA)
 
-M19_INFECTION_MHTERM_18_14 <- ifelse("M19_INFECTION_MHTERM_18_14" %in% names(merged_df),
+merged_df$M19_INFECTION_MHTERM_18_14 <- ifelse("M19_INFECTION_MHTERM_18_14" %in% names(merged_df),
                                             merged_df$M19_INFECTION_MHTERM_18_14, NA)
 
-M19_INFECTION_MHTERM_19_14 <- ifelse("M19_INFECTION_MHTERM_19_14" %in% names(merged_df),
+merged_df$M19_INFECTION_MHTERM_19_14 <- ifelse("M19_INFECTION_MHTERM_19_14" %in% names(merged_df),
                                             merged_df$M19_INFECTION_MHTERM_19_14, NA)
 
-M19_INFECTION_MHTERM_88_14 <- ifelse("M19_INFECTION_MHTERM_88_14" %in% names(merged_df),
+merged_df$M19_INFECTION_MHTERM_88_14 <- ifelse("M19_INFECTION_MHTERM_88_14" %in% names(merged_df),
                                             merged_df$M19_INFECTION_MHTERM_88_14, NA)
 
-M19_ABX_CMOCCUR_14 <- ifelse("M19_ABX_CMOCCUR_14" %in% names(merged_df),
+merged_df$M19_ABX_CMOCCUR_14 <- ifelse("M19_ABX_CMOCCUR_14" %in% names(merged_df),
                                             merged_df$M19_ABX_CMOCCUR_14, NA)
 
-M19_ABX_CMTRT_1_14 <- ifelse("M19_ABX_CMTRT_1_14" %in% names(merged_df),
+merged_df$M19_ABX_CMTRT_1_14 <- ifelse("M19_ABX_CMTRT_1_14" %in% names(merged_df),
                                             merged_df$M19_ABX_CMTRT_1_14, NA)
 
-M19_ABX_CMTRT_2_14 <- ifelse("M19_ABX_CMTRT_2_14" %in% names(merged_df),
+merged_df$M19_ABX_CMTRT_2_14 <- ifelse("M19_ABX_CMTRT_2_14" %in% names(merged_df),
                                             merged_df$M19_ABX_CMTRT_2_14, NA)
 
-M19_ABX_CMTRT_3_14 <- ifelse("M19_ABX_CMTRT_3_14" %in% names(merged_df),
+merged_df$M19_ABX_CMTRT_3_14 <- ifelse("M19_ABX_CMTRT_3_14" %in% names(merged_df),
                                             merged_df$M19_ABX_CMTRT_3_14, NA)
 
-M19_ABX_CMTRT_4_14 <- ifelse("M19_ABX_CMTRT_4_14" %in% names(merged_df),
+merged_df$M19_ABX_CMTRT_4_14 <- ifelse("M19_ABX_CMTRT_4_14" %in% names(merged_df),
                                             merged_df$M19_ABX_CMTRT_4_14, NA)
 
-M19_ABX_CMTRT_5_14 <- ifelse("M19_ABX_CMTRT_5_14" %in% names(merged_df),
+merged_df$M19_ABX_CMTRT_5_14 <- ifelse("M19_ABX_CMTRT_5_14" %in% names(merged_df),
                                             merged_df$M19_ABX_CMTRT_5_14, NA)
 
-M19_ABX_CMTRT_6_14 <- ifelse("M19_ABX_CMTRT_6_14" %in% names(merged_df),
+merged_df$M19_ABX_CMTRT_6_14 <- ifelse("M19_ABX_CMTRT_6_14" %in% names(merged_df),
                                             merged_df$M19_ABX_CMTRT_6_14, NA)
 
-M19_ABX_CMTRT_7_14 <- ifelse("M19_ABX_CMTRT_7_14" %in% names(merged_df),
+merged_df$M19_ABX_CMTRT_7_14 <- ifelse("M19_ABX_CMTRT_7_14" %in% names(merged_df),
                                             merged_df$M19_ABX_CMTRT_7_14, NA)
 
-M19_ABX_CMTRT_8_14 <- ifelse("M19_ABX_CMTRT_8_14" %in% names(merged_df),
+merged_df$M19_ABX_CMTRT_8_14 <- ifelse("M19_ABX_CMTRT_8_14" %in% names(merged_df),
                                             merged_df$M19_ABX_CMTRT_8_14, NA)
 
-M19_ABX_CMTRT_9_14 <- ifelse("M19_ABX_CMTRT_9_14" %in% names(merged_df),
+merged_df$M19_ABX_CMTRT_9_14 <- ifelse("M19_ABX_CMTRT_9_14" %in% names(merged_df),
                                             merged_df$M19_ABX_CMTRT_9_14, NA)
 
-M19_ABX_CMTRT_88_14 <- ifelse("M19_ABX_CMTRT_88_14" %in% names(merged_df),
+merged_df$M19_ABX_CMTRT_88_14 <- ifelse("M19_ABX_CMTRT_88_14" %in% names(merged_df),
                                             merged_df$M19_ABX_CMTRT_88_14, NA)
 
-M19_ABX_CMINDC_14 <- ifelse("M19_ABX_CMINDC_14" %in% names(merged_df),
+merged_df$M19_ABX_CMINDC_14 <- ifelse("M19_ABX_CMINDC_14" %in% names(merged_df),
                                             merged_df$M19_ABX_CMINDC_14, NA)
 
 # MATERNAL HOSPITALIZATION DURING PNC (_14) - ORGAN DYSFUNCTION AND SEPSIS
 
-M19_PRIMARY_MHTERM_1 <- ifelse("M19_PRIMARY_MHTERM_1" %in% names(merged_df),
+merged_df$M19_PRIMARY_MHTERM_1 <- ifelse("M19_PRIMARY_MHTERM_1" %in% names(merged_df),
                                             merged_df$M19_PRIMARY_MHTERM_1, NA)
 
-M19_ORGAN_FAIL_MHTERM_1_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_1_14" %in% names(merged_df),
+merged_df$M19_ORGAN_FAIL_MHTERM_1_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_1_14" %in% names(merged_df),
                                             merged_df$M19_ORGAN_FAIL_MHTERM_1_14, NA)
 
-M19_ORGAN_FAIL_MHTERM_2_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_2_14" %in% names(merged_df),
+merged_df$M19_ORGAN_FAIL_MHTERM_2_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_2_14" %in% names(merged_df),
                                             merged_df$M19_ORGAN_FAIL_MHTERM_2_14, NA)
 
-M19_ORGAN_FAIL_MHTERM_3_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_3_14" %in% names(merged_df),
+merged_df$M19_ORGAN_FAIL_MHTERM_3_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_3_14" %in% names(merged_df),
                                             merged_df$M19_ORGAN_FAIL_MHTERM_3_14, NA)
 
-M19_ORGAN_FAIL_MHTERM_4_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_4_14" %in% names(merged_df),
+merged_df$M19_ORGAN_FAIL_MHTERM_4_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_4_14" %in% names(merged_df),
                                             merged_df$M19_ORGAN_FAIL_MHTERM_4_14, NA)
 
-M19_ORGAN_FAIL_MHTERM_5_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_5_14" %in% names(merged_df),
+merged_df$M19_ORGAN_FAIL_MHTERM_5_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_5_14" %in% names(merged_df),
                                             merged_df$M19_ORGAN_FAIL_MHTERM_5_14, NA)
 
-M19_ORGAN_FAIL_MHTERM_6_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_6_14" %in% names(merged_df),
+merged_df$M19_ORGAN_FAIL_MHTERM_6_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_6_14" %in% names(merged_df),
                                             merged_df$M19_ORGAN_FAIL_MHTERM_6_14, NA)
 
-M19_ORGAN_FAIL_MHTERM_7_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_7_14" %in% names(merged_df),
+merged_df$M19_ORGAN_FAIL_MHTERM_7_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_7_14" %in% names(merged_df),
                                             merged_df$M19_ORGAN_FAIL_MHTERM_7_14, NA)
 
-M19_ORGAN_FAIL_MHTERM_88_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_88_14" %in% names(merged_df),
+merged_df$M19_ORGAN_FAIL_MHTERM_88_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_88_14" %in% names(merged_df),
                                             merged_df$M19_ORGAN_FAIL_MHTERM_88_14, NA)
 
-M19_ORGAN_FAIL_MHTERM_99_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_99_14" %in% names(merged_df),
+merged_df$M19_ORGAN_FAIL_MHTERM_99_14 <- ifelse("M19_ORGAN_FAIL_MHTERM_99_14" %in% names(merged_df),
                                             merged_df$M19_ORGAN_FAIL_MHTERM_99_14, NA)
 
-M19_INFECTION_MHTERM_12_14 <- ifelse("M19_INFECTION_MHTERM_12_14" %in% names(merged_df),
+merged_df$M19_INFECTION_MHTERM_12_14 <- ifelse("M19_INFECTION_MHTERM_12_14" %in% names(merged_df),
                                             merged_df$M19_INFECTION_MHTERM_12_14, NA)
-
-                                                     
-
 
 ```
 
@@ -1458,6 +1465,7 @@ table(ANEMIA_PNC4=merged_df$MAT_ANEMIA_MEAS9, useNA = "always")
 
 Email from ES and Gates on Sept 10, 2023: Anemia prevalence by GA: what percent of women are anemic for each visit window? Stratify by mild, moderate and severe. Also, calculate for any anemia (< 11 for pregnancy and PNC-1,2,3). 
 
+# MATERNAL ANEMIA ANY
 Any anemia during pregnancy and PNC1,2,3 
 ```{r echo=FALSE}
 merged_df <- merged_df %>% 
@@ -1811,7 +1819,7 @@ table(LATE_MAT_DEATH = merged_df$LATE_MAT_DEATH, SITE = merged_df$SITE, useNA = 
 #TODO Convert M23 info for closeout response and date into an OR not AND.
 ```
 
-***CHRONIC HYPERTENSION - CHRON_HYPER***
+# CHRONIC HYPERTENSION - CHRON_HYPER***
 Clinical diagnosis of chronic hypertension AND/OR systolic blood pressure ≥140 mm Hg AND/OR diastolic blood pressure ≥90 mm Hg before 20 weeks’ gestation.
 ENROLLMENT
 
@@ -1830,6 +1838,7 @@ round(prop.table(table(merged_df$CHRON_HYPER, SITE = merged_df$SITE, useNA = "al
 ```
 
 # GESTATIONAL HYPERTENSION (gHTN) - GEST_HYPER_MEAS***
+
 # NEED TO REVISE GESTATIONAL HYPERTENSION TO INCLUDE MEDICATION USE
 # A systolic blood pressure >140 mm Hg on two occasions at least 1 hour apart or diastolic blood pressure >90 mm Hg on two occasions at least 1 hour apart or severe gestational hypertension in pregnancy (not at time of delivery) defined as systolic blood pressure > 160 mmHg or a diastolic blood pressure >110 mmHg on two occasions at least 1 minute apart after 20 weeks gestation or severe gestational hypertension at the time of delivery defined as one systolic blood pressure > 160 mmHg or a diastolic blood pressure >110 mmHg among participants without chronic hypertension.
 
@@ -1854,7 +1863,7 @@ MNH01	US_GA_WKS_AGE_FTS1	1st fetus: GA by ultrasound at TODAY’s visit:  weeks
 		
 Medications include magnesium sulfate, hydralazine, methyldopa (aldomet), atenolol, nifedipine, betamethasone, labetalol, and dexamethasone. 
 
-***SEVERE GESTATIONAL HYPERTENSION - SEVERE_GEST_HYPER***
+# SEVERE GESTATIONAL HYPERTENSION - SEVERE_GEST_HYPER***
 In pregnancy defined as systolic blood pressure ≥160 mmHg or a diastolic blood pressure ≥110 mmHg on two occasions at least 1 minute apart after 20 weeks gestation OR at the time of delivery defined as one systolic blood pressure ≥160 mmHg or a diastolic blood pressure ≥110 mmHg among participants without chronic hypertension.
 ```{r echo=FALSE}
 ###################################################################################################
@@ -2011,7 +2020,7 @@ table(GEST_HYPER_DIAG = merged_df$GEST_HYPER_DIAG, SITE = merged_df$SITE, useNA 
 round(prop.table(table(GEST_HYPER_DIAG = merged_df$GEST_HYPER_DIAG, SITE = merged_df$SITE, useNA = "always"), margin=2)*100,2)
 ```
 
-***SEVERE GESTATIONAL HYPERTENSION - DIAGNOSED***
+# SEVERE GESTATIONAL HYPERTENSION - DIAGNOSED***
 ```{r}
 merged_df <- merged_df %>% 
   mutate(SEVERE_GEST_HYPER_REP = case_when(M09_HDP_HTN_MHOCCUR_3_6==1 & M09_PREECLAMPSIA_CEOCCUR_3_6==1 ~ 1,
@@ -2028,6 +2037,12 @@ IPC
 PNC0,1,4,6
 Hospitalizations.
 ```{r echo=FALSE}
+# merged_df <- merged_df %>% 
+#   mutate(PROTEINURIA2 = case_when((c('2', '3') %in% c(M08_UA_PROT_LBORRES_2, M08_UA_PROT_LBORRES_3, M08_UA_PROT_LBORRES_4, 
+#                                                 M08_UA_PROT_LBORRES_5, M08_UA_PROT_LBORRES_6, M08_UA_PROT_LBORRES_7,
+#                                                 M08_UA_PROT_LBORRES_8, M08_UA_PROT_LBORRES_9, M08_UA_PROT_LBORRES_10,
+#                                                 M08_UA_PROT_LBORRES_13, M08_UA_PROT_LBORRES_14)) ~ 1,
+#                                  TRUE ~ as.numeric(0)))
 merged_df <- merged_df %>% 
   mutate(PROTEINURIA = ifelse((!is.na(M08_UA_PROT_LBORRES_2) & (M08_UA_PROT_LBORRES_2 == 2 | M08_UA_PROT_LBORRES_2==3)) | 
                                 (!is.na(M08_UA_PROT_LBORRES_3) & (M08_UA_PROT_LBORRES_3 == 2 | M08_UA_PROT_LBORRES_3==3)) |
@@ -2048,6 +2063,63 @@ temp.df <- merged_df %>%
 table(PROTEINURIA = merged_df$PROTEINURIA)
 ```
 
+# HELLP (MAT_HELLP)
+Presence of all lab abnormalities: hemolysis, elevated liver enzymes, and low platelet count.
+
+# MNH08	AST_ul_LBORRES	Provide AST/SGOT test results:  Units/L
+# Constructed	MAT_ANEMIA_ANY	Any maternal anemia
+# MNH08	TBILIRUBIN_LBORRES	Provide Total Bilirubin test results:  µmol/L
+# MNH08	DBILIRUBIN_LBORRES	Provide Direct Bilirubin test results:  µmol/L
+# MNH08	ALP_LBORRES	Provide Alkaline phosphatase (ALP) test results:  Units/L
+# MNH08	GAMMAGT_LBORRES	Provide Gamma GT test results:  units/L
+# MNH08	CBC_PLATE_LBORRES	Provide results: Platelets count:  x10³/mm³
+
+# CREAT_umoll_LBORRES - COMES FROM KIDNEYS - SO THIS DOESN'T GO IN HELLP DEFINITION. 
+# ---- THIS SHOULD JUST HAVE: HEMOLYSIS, ELEVATED LIVER ENZYMES, AND LOW PLATELETS. 
+
+# BILIRUBIN AT ANC-32 (VIST 4), PNC0 (VIST 7), PNC1 (VISIT 8)
+# BILRUBIN >1.2 MG/DL OR 20.52 UMOL/L
+```{r}
+###################
+# Results that will help confirm hemolysis are an elevated reticulocyte count, 
+# increased lactate dehydrogenase (LDH), elevated unconjugated bilirubin, 
+# and decreased Haptoglobin. LDH is found intracellularly, 
+ #therefore when RBCs rupture, this value increases. Haptoglobin binds free hemoglobin
+
+# - USE INDIRECT BILIRUBIN (UNCONJUGATED) IN HEMOLYSIS MEASURE - THIS IS SERUM BILI.
+# - USE DIRECT BILI (CONJUGATED) IN LIVER DX.
+
+# i can only measure hemolysis at week 32 with MNH08 b/c maternal bili is only checked then. 
+# What about at L&D? - IT IS NOT CHECKED AT L&D. 
+
+#####################
+# MATERNAL HEMOLYSIS - ONLY AT ANC-32
+#####################
+merged_df <- merged_df %>%
+  mutate(MAT_HEMOLYSIS = case_when((MAT_ANEMIA_MEAS4 == "severe" & M08_IBILIRUBIN_LBORRES_4 >=20.52 | M08_GAMMAGT_LBORRES_2) ~ 1,
+                                    TRUE ~ as.numeric(0)))
+                               
+table(MAT_HEMOLYSIS = merged_df$MAT_HEMOLYSIS, SITE = merged_df$SITE, useNA = "always")
+round(prop.table(table(MAT_HEMOLYSIS = merged_df$MAT_HEMOLYSIS, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 2)
+
+####################
+# HELLP
+####################
+
+merged_df <- merged_df %>%
+  mutate(MAT_HELLP = case_when((MAT_HEMOLYSIS ==1 | M08_AST_UL_LBORRES_4 >= 90 | M08_ALT_UL_LBORRES_4 >= 120 | # AST AND ALT 2X THE UPPER NORMAL RANGE
+                                           (M08_CBC_PLATE_LBORRES_4 >=0 & M08_CBC_PLATE_LBORRES_4 < 100)) ~ 1, 
+         TRUE ~ as.numeric(0)))
+
+table(MAT_HELLP = merged_df$MAT_HELLP, SITE = merged_df$SITE, useNA = "always")
+round(prop.table(table(MAT_HELLP = merged_df$MAT_HELLP, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 2)
+
+temp.df <- merged_df %>%
+  select(MOMID, SITE, MAT_HELLP, MAT_HEMOLYSIS, M08_AST_UL_LBORRES_4, M08_ALT_UL_LBORRES_4, M08_CBC_PLATE_LBORRES_4)
+
+```
+
+
 # SEVERE FEATURES OF PREECLAMPISA (MEASURED)
 - Severe gestational hypertension (systolic >160 mmHg OR a diastolic >110 mmHg on two occasions at least 1 minute apart >20 weeks gestation or one occasion at delivery)
 - Hepatic abnormality (serum transaminase concentration AST or ALT ≥2 times the upper limit of the normal range)
@@ -2055,19 +2127,84 @@ table(PROTEINURIA = merged_df$PROTEINURIA)
 - Hemolysis (serum bilirubin ≥1.2 mg/dL (20.52 umol/L) and hemoglobin <7 g/dL)
 - Rental insufficiency (serum creatinine >1.1 mg/dL)
 
+# NOTE: SEVERE gHTN IS MEASURED AT SEVERAL TP BEYOND 20 WEEK GESTATION BUT OTHER FEATURES SUCH AS HEMOLYSIS, LIVER, PLATELET, AND KIDNEY AR ONLY DONE AT WEEK 32. 
+
+# SEV_GEST_HYPER
+# MAT_DYS
+# MAT_HELLP
+# CBC_PLATE_LBORRES
+# CREAT_umoll_LBORRES
+
 # AST: NORMAL RANGE = 3-45
 # ALT: NORMAL RANGE = 2-60
 ```{r}
-# merged_df <- merged_df %>%
-#   mutate(MAT_PE_SEV_MEASURED = case_when(SEVERE_GEST_HYPER==1 | 
-#                                            (M08_AST_UL_LBORRES_2 >= 90 | M08_ALT_UL_LBORRES_2 >=120| # AST AND ALT 2X THE UPPER NORMAL RANGE
-#                                            (M08_CBC_PLATE_LBORRES_2 =< 100000) | 
-#                                              
-#                                            SERUM BILI >=1.2MG/DL OR 20.52 UMOL/l & HEMOGLOBIN <7G/DL | 
-#                                            SERUM CREATININE > 1.1))
+##################################################################################
+#TODO 
+# NOTES: 
+# - SEVERE gHTN IS MEASURED AT SEVERAL TP BEYOND 20 WEEK GESTATION BUT OTHER FEATURES SUCH AS:
+# --------HEMOLYSIS, LIVER, PLATELET, AND KIDNEY AR ONLY DONE AT WEEK 32. 
+#TODO - NEED TO FIX GESTATIONAL HYPERTENSION VARIBLE TO INCLUDE ANY 2 TP AND TO INLCUDE MEDICATION USE.
+##################################################################################
+merged_df <- merged_df %>%
+  mutate(MAT_PE_SEV_MEAS = case_when((SEVERE_GEST_HYPER==1 |
+                                           (MAT_HEMOLYSIS ==1 | # HEMOGLOBIN <7 & BILI HIGH
+                                              M08_AST_UL_LBORRES_4 >= 90 | M08_ALT_UL_LBORRES_4 >= 120 | # HEPATIC ABNORMALITY: AST AND ALT 2X THE UPPER NORMAL RANGE
+                                              (M08_CBC_PLATE_LBORRES_4 >=0 & M08_CBC_PLATE_LBORRES_4 < 100)) | # LOW PLATELET
+                                           M08_CREAT_UMOLL_LBORRES_4 > 1.1) ~ 1, # KIDNEY FUNCTION 
+                                         TRUE ~ as.numeric(0)))
+
+table(MAT_PE_SEV_MEAS = merged_df$MAT_PE_SEV_MEAS, SITE = merged_df$SITE, useNA = "always" )
+round(prop.table(table(MAT_PE_SEV_MEAS = merged_df$MAT_PE_SEV_MEAS, SITE = merged_df$SITE, useNA = "always" ), margin=2)*100, 2)
+                                         
 ```
 
+# PREECLAMPSIA (PE) WITH cHTN (FINAL)
+```{r}
+##################################################################################
+#TODO 
+# NOTES: 
+# - THIS INCLUDES cHTN + GESTATIONAL PROTEINURIA
+##################################################################################
 
+merged_df <- merged_df %>%
+  mutate(MAT_PE_CHRONIC_HTN_MEAS = case_when((CHRON_HYPER ==1 & PROTEINURIA==1) ~ 1,
+                                      TRUE ~ as.numeric(0)))
+
+table(MAT_PE_CHRONIC_HTN_MEAS = merged_df$MAT_PE_CHRONIC_HTN_MEAS, SITE = merged_df$SITE, useNA = "always")
+round(prop.table(table(MAT_PE_CHRONIC_HTN_MEAS = merged_df$MAT_PE_CHRONIC_HTN_MEAS, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 2)
+```
+
+# PREECLAMPSIA (PE) WITH cHTN (FINAL)
+```{r}
+##################################################################################
+#TODO 
+# NOTES: 
+# - THIS INCLUDES gHTN + GESTATIONAL PROTEINURIA
+##################################################################################
+
+merged_df <- merged_df %>%
+  mutate(MAT_PE_GEST_HTN_MEAS = case_when((GEST_HYPER_MEAS ==1 & PROTEINURIA==1) ~ 1,
+                                      TRUE ~ as.numeric(0)))
+
+table(MAT_PE_GEST_HTN_MEAS = merged_df$MAT_PE_GEST_HTN_MEAS, SITE = merged_df$SITE, useNA = "always")
+round(prop.table(table(MAT_PE_GEST_HTN_MEAS = merged_df$MAT_PE_GEST_HTN_MEAS, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 2)
+
+```
+
+# PREECLAMPSIA (PE) ANY (CHRONIC, GESTATIONAL, OR WITH SEVERE FEATURES) MEASURED (FINAL)
+```{r}
+merged_df <- merged_df %>%
+  mutate(MAT_PE_ANY_MEAS = case_when((MAT_PE_SEV_MEAS==1 |
+                                       MAT_PE_CHRONIC_HTN_MEAS==1 | 
+                                       MAT_PE_GEST_HTN_MEAS==1) ~ 1,
+                                     TRUE ~ as.numeric(0)))
+
+table(MAT_PE_ANY_MEAS = merged_df$MAT_PE_ANY_MEAS, SITE = merged_df$SITE, useNA = "always")
+round(prop.table(table(MAT_PE_ANY_MEAS = merged_df$MAT_PE_ANY_MEAS, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 2)
+
+```
+
+# PREECLAMPSIA MEASURED IS COMPLETE, NEED TO CREATE DIAGONSED AND SELF-REPORTED VERSIONS! 
 
 # ORGAN DYSFUNCTION - MAT_DYS - WILL ONLY INCLUDE ORGAN DYSFUNCTION (NOT SEPSIS)
 Cardiovascular, respiratory, renal, coagulation/hematological, hepatic, neurological, and/or uterine dysfunction that occurred during pregnancy, childbirth or within 42 days of termination of pregnancy.
@@ -2078,7 +2215,7 @@ Cardiovascular, respiratory, renal, coagulation/hematological, hepatic, neurolog
 # - THIS IS LOOKING AT L&D, HOSPITALIZATION AT ANC OR PNC AND PNC SCHEDULED THROUGH VISIT 10.
 ##################################################################################
 merged_df <- merged_df %>% 
-  mutate(MAT_DYS = case_when(((1 %in% c(M09_ORG_FAIL_MHOCCUR_1_6, M09_ORG_FAIL_MHOCCUR_2_6, M09_ORG_FAIL_MHOCCUR_3_6 # ORGAN DYS DURING L&D
+  mutate(MAT_DYS = case_when(((1 %in% c(M09_ORG_FAIL_MHOCCUR_1_6, M09_ORG_FAIL_MHOCCUR_2_6, M09_ORG_FAIL_MHOCCUR_3_6, # ORGAN DYS DURING L&D
                                         M09_ORG_FAIL_MHOCCUR_4_6, M09_ORG_FAIL_MHOCCUR_5_6, M09_ORG_FAIL_MHOCCUR_6_6,   
                                         M09_ORG_FAIL_MHOCCUR_7_6)) & (M09_ORG_FAIL_SRCE_1_6==2 | M09_ORG_FAIL_SRCE_1_6==3)) ~ 1,
                                         
@@ -2112,80 +2249,17 @@ merged_df <- merged_df %>%
                                                    M12_ORG_FAIL_MHOCCUR_1_10, M12_ORG_FAIL_MHOCCUR_2_10,
                                                    M12_ORG_FAIL_MHOCCUR_3_10, M12_ORG_FAIL_MHOCCUR_4_10, 
                                                    M12_ORG_FAIL_MHOCCUR_88_10)) ~ 1,
-                              
-                                 
+                      
                              TRUE ~ as.numeric(0)))
 # table(MAT_DYS = merged_df$MAT_DYS)
 
 table(MAT_DYS = merged_df$MAT_DYS, SITE = merged_df$SITE, useNA = "always")
 round(prop.table(table(MAT_DYS = merged_df$MAT_DYS, SITE = merged_df$SITE, useNA = "always"),margin=2)*100,2)
 
-
-merged_df <- merged_df %>%
-  mutate(MAT_SEPSIS_DIAG_PNC = case_when((1 %in% c(M12_POST_DEL_INF_MHOCCUR_11_7, M12_POST_DEL_INF_MHOCCUR_11_8, # MATERNAL SEPSIS DURING MNH12
-                                                  M12_POST_DEL_INF_MHOCCUR_11_9, M12_POST_DEL_INF_MHOCCUR_11_10)) ~ 1,
-                                         
-                                         # VISIT 7
-                                         (1 %in% c(M12_ORG_FAIL_MHOCCUR_1_7, M12_ORG_FAIL_MHOCCUR_2_7,
-                                                   M12_ORG_FAIL_MHOCCUR_3_7, M12_ORG_FAIL_MHOCCUR_4_7, 
-                                                   M12_ORG_FAIL_MHOCCUR_88_7,
-                                                   
-                                                   # VISIT 8
-                                                   M12_ORG_FAIL_MHOCCUR_1_8, M12_ORG_FAIL_MHOCCUR_2_8,
-                                                   M12_ORG_FAIL_MHOCCUR_3_8, M12_ORG_FAIL_MHOCCUR_4_8, 
-                                                   M12_ORG_FAIL_MHOCCUR_88_8,
-                                                   
-                                                   # VISIT 9
-                                                   M12_ORG_FAIL_MHOCCUR_1_9, M12_ORG_FAIL_MHOCCUR_2_9,
-                                                   M12_ORG_FAIL_MHOCCUR_3_9, M12_ORG_FAIL_MHOCCUR_4_9, 
-                                                   M12_ORG_FAIL_MHOCCUR_88_9,
-                                                   
-                                                   # VISIT 10
-                                                   M12_ORG_FAIL_MHOCCUR_1_10, M12_ORG_FAIL_MHOCCUR_2_10,
-                                                   M12_ORG_FAIL_MHOCCUR_3_10, M12_ORG_FAIL_MHOCCUR_4_10, 
-                                                   M12_ORG_FAIL_MHOCCUR_88_10)) ~ 1,
-                                         
-                                         
-                                         (M19_PRIMARY_MHTERM_14==5 | # DURING HOSPITALIZATION
-                                             (1 %in% c(M19_ORGAN_FAIL_MHTERM_1_14, M19_ORGAN_FAIL_MHTERM_2_14, 
-                                                       M19_ORGAN_FAIL_MHTERM_3_14, M19_ORGAN_FAIL_MHTERM_4_14, 
-                                                       M19_ORGAN_FAIL_MHTERM_5_14, M19_ORGAN_FAIL_MHTERM_6_14, 
-                                                       M19_ORGAN_FAIL_MHTERM_7_14, 
-                                                       M19_ORGAN_FAIL_MHTERM_88_14, M19_ORGAN_FAIL_MHTERM_99_14))) ~ 1, # OTHER AND DON'T KNOW.
-                                         M19_INFECTION_MHTERM_12_14==1 ~ 1, # MATERNAL SEPSIS OPTION ON MNH19
-                                         TRUE ~ as.numeric(0)))
 ```
 
 
-***SECONDARY: HELLP = MAT_HELLP***
-MNH08	AST_ul_LBORRES
-Constructed	MAT_ANEMIA_ANY
-MNH08	TBILIRUBIN_LBORRES
-MNH08	DBILIRUBIN_LBORRES
-MNH08	ALP_LBORRES
-MNH08	GAMMAGT_LBORRES
-MNH08	CBC_PLATE_LBORRES
-
-Severe gestational hypertension (systolic >160 mmHg OR a diastolic >110 mmHg on two occasions at least 1 minute apart >20 weeks gestation or one occasion at delivery)
-Hepatic abnormality (serum transaminase concentration AST or ALT ≥2 times the upper limit of the normal range)
-Thrombocytopenia (<100,000 platelets/microL)
-Hemolysis (serum bilirubin ≥1.2 mg/dL (20.52 umol/L) and hemoglobin <7 g/dL)
-Rental insufficiency (serum creatinine >1.1 mg/dL)
-
-
-```{r}
-##################################################################################
-#TODO 
-# NOTES: 
-# - WHAT IS THE UPPER LIMIT OF NORMAL RANGE FOR AST OR ALT - NEED TO LOOK UP.
-# - WHERE IS THE ALT VARIABLE? 
-
-##################################################################################
-temp.df <- merged_df %>% 
-  select(M08_AST_ul_LBORRES_1)
-```
-
-***SEVERE FEATURES OF PREECLAMPSIA - MAT_PRE_SEV_MEAS***
+# SEVERE FEATURES OF PREECLAMPSIA - MAT_PRE_SEV_DIAG???***
 
 SEVERE_GEST_HYPER	Severe gestational hypertension
 MAT_DYS	Organ dysfunction
@@ -2226,20 +2300,6 @@ temp.df <- merged_df %>%
   select(M08_CBC_LBPERF_1_1, M08_CBC_HB_LBORRES_1)
 ```
 
-***PREECLAMPSIA - PE_MEAS***
-"- For those without preexisting hypertension: defined as gestational hypertension AND gestational proteinuria, OR clinical diagnosis of preeclampsia OR development of severe features (even in the absence of proteinuria). 
-- For those with preexisting hypertension: defined by incident gestational proteinuria OR clinical diagnosis of preeclampsia OR development of severe features. 
-
-Suggested change: 
-- For those without preexisting hypertension: defined as gestational hypertension AND gestational proteinuria OR development of severe features (even in the absence of proteinuria). 
-- For those with preexisting hypertension: defined by incident gestational proteinuria OR development of severe features."
-
-***PREECLAMPSIA - PE_DIAG***
-***PREECLAMPSIA - PE_ANY***
-```{r echo=FALSE}
-
-```
-
 
 ***PREECLAMPSIA (DIAGNOSED) - SECONDARY OUTCOME: PRE_DIAG***
 LnD:
@@ -2259,7 +2319,7 @@ round(prop.table(table(PE_DIAG = merged_df$PE_DIAG, SITE = merged_df$SITE, useNA
 ```
 
 
-***GESTATIONAL DIABETES - SECONDARY OUTCOME: GEST_DIAB***
+# GESTATIONAL DIABETES - SECONDARY OUTCOME: GEST_DIAB***
 
 Look at: 
 - MNH04 ANC28, 32, 36
