@@ -12,7 +12,6 @@ outfile <- 'text_to_paste.txt'
 # Clear the file
 cat() %>% write_lines(outfile, append = FALSE)
 
-
 varnames <- df %>% select(MOMID, SITE, starts_with(c("M08_CBC_", "M06_HB_"))) %>% names()
  
 for (var in varnames) {
@@ -21,6 +20,6 @@ for (var in varnames) {
     paste0('    paste0(sum(is.na(', var,')),'),
     '" (",',
     paste0('         format(round(sum(is.na(', var, '))/n()*100, 2),nsmall=2, digits=3),'),
-    '         ")")) %>%') %>%
+    '         ")"), ') %>%
     write_lines(outfile, append = TRUE)
 }
