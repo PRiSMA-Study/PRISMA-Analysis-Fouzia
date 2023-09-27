@@ -8,7 +8,7 @@ library(dplyr)
 # do the select to get
 
 df <- read.csv('data_out/mat_anemia.csv')
-outfile <- 'text_to_paste.txt'
+outfile <- 'code_generated_anemia.txt'
 # Clear the file
 cat() %>% write_lines(outfile, append = FALSE)
 
