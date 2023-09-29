@@ -1,0 +1,213 @@
+---
+title: "Mat_GDM_analysis"
+author: "Fouzia Farooq"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, warning=FALSE}
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(knitr)
+library(stringr)
+# library(ThemePark)
+library(purrr)
+library(lubridate)
+library(readr)
+library(tidyr)
+library(haven)
+library(tableone)
+library(kableExtra)
+
+```
+
+```{r}
+diabetes_df <- read.csv('data_out/mat_diabetes.csv', header = TRUE)
+```
+
+# Convert "1907-07-07" to NA:
+# CATEGORICAL: 
+# ---- 77, Not applicable 
+# ---- 55, Missing 
+# ---- 66, Refused to answer
+# ---- 99, Don't know
+
+# CONTINUOUS:
+# ---- -7, Not applicable 
+# ---- -5, Missing 
+# ---- -6, Refused to answer
+# ---- -9, Don't know
+# DATE: 
+# ---- 07-07-1907, Not applicable 
+# ---- 05-05-1905, Missing 
+# ---- 06-06-1906, Refused to answer
+# ---- 09-09-1909, Don't know
+
+# TIME: 
+# ---- 77:77, Not applicable 
+# ---- 55:55, Missing 
+# ---- 66:66, Refused to answer
+# ---- 99:99, Don't know
+```{r echo=FALSE}
+CONVERT_NA <- TRUE
+if(CONVERT_NA ==TRUE){
+  
+  diabetes_df <- diabetes_df %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
+    mutate_all(function(d) {
+      if_else(d=="1907-07-07", NA, d)
+    })
+  
+  diabetes_df <- diabetes_df %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
+    mutate_all(function(d) {
+      if_else(d==-7, NA, d)
+    })
+  
+  diabetes_df <- diabetes_df %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
+    mutate_all(function(d) {
+      if_else(d==77, NA, d)
+    })
+  
+  # -5 IS MISSING FOR CONTINOUS
+  diabetes_df <- diabetes_df %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
+    mutate_all(function(d) {
+      if_else(d==-5, NA, d)
+    })
+  
+  # 55 IS MISSING FOR CATEGORICAL
+  diabetes_df <- diabetes_df %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
+    mutate_all(function(d) {
+      if_else(d==55, NA, d) 
+    })
+  
+  # 55:55 IS MISSING FOR TIME
+  diabetes_df <- diabetes_df %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
+    mutate_all(function(d) {
+      if_else(d=='55:55', NA, d)
+    })
+  
+}
+```
+
+# SETSET TO WOMEN WHO HAVE VISIT 3
+```{r}
+diabetes_df2 <- diabetes_df  %>% filter(!is.na(M08_LBSTDAT_3)) # SUBSET TO WOMEN WHO HAD A DELIVERY # n=2395 women
+```
+
+# GESTATIONAL DIABETES - SECONDARY OUTCOME: GEST_DIAB***
+
+Look at: 
+- MNH04 ANC28, 32, 36
+- MNH06 ANC 28
+- MNH08 <20, 28
+- MNH09 L&D/IPC: M09_GEST_DIAB_MHOCCUR_6
+- MNH19 Hospitalization visit
+
+```{r echo=FALSE}
+##################################################################################
+#TODO 
+# NOTES: 
+# 1. NEED TO ADD ADDITIONAL CONDITIONS FOR DIAGNOSED # 
+# 2. ALL OF MEASURED variables are NA - FASTING OGTT, HbA1c# 
+
+##################################################################################
+
+# This is DIAGNOSED at enrollment, ANC28, 32, 36 through MNH04.
+
+#tapply(diabetes_df$M08_HBA1C_LBORRES_1, diabetes_df$SITE, summary)
+# %>% group_by(SITE) %>% summary(M08_HBA1C_LBORRES_1)
+
+# HAVE YOU EVER BEEN DIAGNOSED WITH DIABETES (PRE-EXISITING OR CHRONIC) NEED FROM VISITS 3,4,5.
+diabetes_df <- diabetes_df2 %>% 
+  mutate(GEST_DIAB_DIAG = case_when((is.na(M04_DIABETES_EVER_MHOCCUR_3==0) | M04_DIABETES_EVER_MHOCCUR_3==0 | 
+                                       is.na(M04_DIABETES_EVER_MHOCCUR_4) | M04_DIABETES_EVER_MHOCCUR_4==0 | 
+                                       is.na(M04_DIABETES_EVER_MHOCCUR_5) | M04_DIABETES_EVER_MHOCCUR_5==0) &
+                                      ((M09_GEST_DIAB_MHOCCUR_6==1 | # WAS MOTHER DIAGNOSED WITH GDM
+                                          (M09_INDUCED_PROCCUR_6==1 & M09_INDUCED_PRINDC_6==8)) |
+                                         (M19_PRIMARY_MHTERM_13==4 & M19_LD_COMPL_MHTERM_3_13)) ~ 1,
+                                    TRUE ~ as.numeric(0)))
+
+table(GEST_DIAB_DIAG = diabetes_df$GEST_DIAB_DIAG, SITE = diabetes_df$SITE, useNA = "always")
+round(prop.table(table(GEST_DIAB_DIAG = diabetes_df$GEST_DIAB_DIAG, SITE = diabetes_df$SITE, useNA = "always"), margin=2)*100,2)
+
+############ 
+# MEASURED # 
+############
+# confirm HbA1C at enrollment is high
+# M08_HBA1C_LBORRES_1
+#(M06_BGLUC_POC_MMOLL_LBORRES_3>5.1) & # At ANC28, POC diagnostics in fasting is >5.1
+
+diabetes_df <- diabetes_df %>% 
+  filter(!is.na(M08_LBSTDAT_3)) %>% # & M08_HBA1C_PRCNT_1<6.5) %>% 
+  #dplyr::filter(SITE=="Pakistan") %>%
+  mutate(GEST_DIAB_MEAS = case_when((((is.na(M08_HBA1C_PRCNT_1) | M08_HBA1C_PRCNT_1<6.5) & 
+                                        ((M08_BGLUC_PRETEST_MMOLL_LBORRES_3>=5.1 | # confirm pre test (fasting) OGTT is high at ANC28
+                                           # when fasting OGTT is high, then 1-hr or 2-hr should be also high at ANC28
+                                           M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3>=10.0) |  # 1-hr at ANC28
+                                        M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3 >=8.5))) ~ 1,
+                                    
+                                    #  (is.na(M06_BGLUC_POC_MMOLL_LBORRES) &
+                                    is.na(M08_BGLUC_PRETEST_MMOLL_LBORRES_3) & is.na(M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3) &
+                                      is.na(M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3) ~ as.numeric(NA),
+                                    TRUE ~ as.numeric(0))) 
+
+table(GEST_DIAB_MEAS = diabetes_df$GEST_DIAB_MEAS, SITE = diabetes_df$SITE, useNA = "always")
+round(prop.table(table(GEST_DIAB_MEAS = diabetes_df$GEST_DIAB_MEAS, SITE = diabetes_df$SITE, useNA = "always"), margin=2)*100,2)
+
+
+# overt diabetes:
+test.df <- diabetes_df 
+test.df <- test.df %>% filter(!is.na(M08_LBSTDAT_1)) %>%
+  mutate(OVERT_DIA = case_when(M08_HBA1C_PRCNT_1>=6.5 ~ 1,
+         TRUE ~ as.numeric(0)))
+
+table(test.df$OVERT_DIA, test.df$SITE, useNA = "always")
+round(prop.table(table(test.df$OVERT_DIA, test.df$SITE, useNA = "always"), margin=2)*100,2)
+
+# OGTT: 
+test.df <- test.df %>% filter(!is.na(M08_LBSTDAT_3)) %>%
+  mutate(OGTT_PRE = case_when(M08_BGLUC_PRETEST_MMOLL_LBORRES_3>=5.1 ~ 1,
+         TRUE ~ as.numeric(0)))
+table(test.df$OGTT_PRE, test.df$SITE, useNA = "always")
+round(prop.table(table(test.df$OGTT_PRE, test.df$SITE, useNA = "always"), margin=2)*100,2)
+
+# OGTT 1-hr: 
+test.df <- test.df %>% filter(!is.na(M08_LBSTDAT_3)) %>%
+  mutate(OGTT_1hr = case_when(M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3>=10.0 ~ 1,
+         TRUE ~ as.numeric(0))) #%>%
+     #filter(OGTT_1hr==1) %>% select(MOMID, OGTT_1hr, M08_BGLUC_ORAL_1HR_MMOLL_LBORRES)
+table(test.df$OGTT_1hr, test.df$SITE, useNA = "always")
+round(prop.table(table(test.df$OGTT_1hr, test.df$SITE, useNA = "always"), margin=2)*100,2)
+
+# OGTT 2-hr: 
+test.df <- test.df %>% filter(!is.na(M08_LBSTDAT_3)) %>%
+  mutate(OGTT_2hr = case_when(M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3 >=8.5 ~ 1,
+         TRUE ~ as.numeric(0)))
+
+table(test.df$OGTT_2hr, test.df$SITE, useNA = "always")
+round(prop.table(table(test.df$OGTT_2hr, test.df$SITE, useNA = "always"), margin=2)*100,2)
+
+test.df <- test.df %>%
+  mutate(GEST_DIAB_MEAS_TEST = case_when((OVERT_DIA==0 & (OGTT_PRE==1  | OGTT_1hr==1 | OGTT_2hr==1)) ~ 1,
+         TRUE ~ as.numeric(0)))
+table(test.df$GEST_DIAB_MEAS_TEST, test.df$SITE)
+round(prop.table(table(test.df$GEST_DIAB_MEAS_TEST, test.df$SITE, useNA = "always"), margin=2)*100,2)
+
+
+
+
+temp.df <- diabetes_df %>%
+  select(MOMID, PREGID, SITE, DELIVERED_FF, GEST_DIAB_MEAS, M08_HBA1C_LBORRES_1) %>% filter(SITE=="Pakistan")
+        # M04_DIABETES_EVER_MHOCCUR_3, M04_DIABETES_EVER_MHOCCUR_4, M04_DIABETES_EVER_MHOCCUR_5,
+        # M09_GEST_DIAB_MHOCCUR_6, M09_INDUCED_PROCCUR_6, M09_INDUCED_PRINDC_6,
+        # M19_PRIMARY_MHTERM_13, M19_LD_COMPL_MHTERM_3_13,
+        
+        # MEASURED VARS:
+      #  M06_BGLUC_POC_MMOLL_LBORRES_3, M08_BGLUC_PRETEST_MMOLL_LBORRES_3,
+     #   M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3, M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3) %>% filter(SITE=="Pakistan")
+write.csv(temp.df, 'data_out/diabetes.temp.csv')
+```

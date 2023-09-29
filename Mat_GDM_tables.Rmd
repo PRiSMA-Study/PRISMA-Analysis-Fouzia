@@ -1,0 +1,275 @@
+---
+title: "Mat_GDM_tables"
+author: "Fouzia Farooq"
+date: '`r Sys.Date()`'
+output: html_document
+---
+
+---
+title: "<span style='font-size: 18px'> <span style='text-align: center'> PRISMA-Maternal-Outcomes (Issued: 2023-09-27)"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: 4
+  word_document:
+    toc: yes
+    toc_depth: '4'
+  pdf_document:
+    toc: yes
+    toc_depth: '4'
+    df_print: kable
+always_allow_html: true
+
+# knit: (function(inputFile, encoding) { 
+#       out_dir <- 'output';
+#       rmarkdown::render(inputFile,
+#                         encoding=encoding, 
+#                         output_file=file.path(dirname(inputFile), out_dir, 'PRISMA-Maternal-Outcomes-Report')) })
+---
+
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+
+
+##### **Includes data from synapse last updated:** {.unlisted .unnumbered}
+#####  2023-09-15 {.unlisted .unnumbered}
+
+
+```{css, echo=FALSE}
+.table caption {
+  color: black;
+  font-weight: bold;
+}
+```
+
+
+```{r, data setup, include = FALSE}
+
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+```{r}
+library(knitr)
+library(tidyverse)
+library(reshape2)
+library(lubridate)
+library(kableExtra)
+library(emo)
+library(naniar)
+library(dplyr)
+library(RColorBrewer)
+```
+
+```{r}
+
+df <- diabetes_df # the file that is generated in 'Mat_GDM_analysis.Rmd' -- run that first.
+```
+\newpage
+
+### Gestational Diabetes 
+**Definition:**
+<br>
+<br>
+
+*Denominator: Enrolled women with a delivery date.
+<br>
+<br>
+
+# ANC Clinical status question "Have you ever been diagnosed of diabetes" doesn't exist for Visit 5 (ANC36)
+Table 1: Anemia
+```{r}
+
+# M04_DIABETES_EVER_MHOCCUR_3, M04_DIABETES_EVER_MHOCCUR_4, M04_DIABETES_EVER_MHOCCUR_5,
+# M09_GEST_DIAB_MHOCCUR_6, M09_INDUCED_PROCCUR_6, M09_INDUCED_PRINDC_6,
+# M19_PRIMARY_MHTERM_13, M19_LD_COMPL_MHTERM_3_13,
+# 
+# MEASURED VARS:
+# M08_HBA1C_LBORRES_1,M06_BGLUC_POC_MMOLL_LBORRES_3,
+# M08_BGLUC_PRETEST_MMOLL_LBORRES_3, M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3, M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3
+
+
+# diabetes_df <- diabetes_df %>% 
+#   mutate(GEST_DIAB_DIAG = case_when((M04_DIABETES_EVER_MHOCCUR_3==0 | M04_DIABETES_EVER_MHOCCUR_4==0 | M04_DIABETES_EVER_MHOCCUR_5==0) &
+#                                       ((M09_GEST_DIAB_MHOCCUR_6==1 | # WAS MOTHER DIAGNOSED WITH GDM
+#                                       (M09_INDUCED_PROCCUR_6==1 & M09_INDUCED_PRINDC_6==8)) |
+#                                       (M19_PRIMARY_MHTERM_13==4 & M19_LD_COMPL_MHTERM_3_13)) ~ 1,
+#                                     TRUE ~ as.numeric(0)))
+
+
+diabetes_table <- df %>%
+  rowwise() %>%
+  group_by(SITE) %>%
+  summarise(
+    ########## MEASURED
+    # confirm HbA1C at enrollment is high
+    "Enrollment HbA1c: M08_HBA1C_LBORRES_1, n (%)" =
+      paste0(sum(is.na(M08_HBA1C_LBORRES_1)),
+             " (",
+             format(round(sum(is.na(M08_HBA1C_LBORRES_1))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    # # At ANC28, POC diagnostics in fasting is >5.1
+    # "ANC28 POC fasting: M06_BGLUC_POC_MMOLL_LBORRES_3, n (%)" =
+    #   paste0(sum(is.na(M06_BGLUC_POC_MMOLL_LBORRES_3)),
+    #          " (",
+    #          format(round(sum(is.na(M06_BGLUC_POC_MMOLL_LBORRES_3))/n()*100, 2),nsmall=2, digits=3),
+    #          ")"),
+    
+    # confirm Pre-test (fasting) OGTT is high (-1)
+        "ANC28 Pretest fasting OGTT: M08_BGLUC_PRETEST_MMOLL_LBORRES_3, n (%)" =
+      paste0(sum(is.na(M08_BGLUC_PRETEST_MMOLL_LBORRES_3)),
+             " (",
+             format(round(sum(is.na(M08_BGLUC_PRETEST_MMOLL_LBORRES_3))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    # when fasting OGTT is high, then 1-hr (_2) or 2-hr (-3) should be also high 
+    # 1-hr (_2) test:
+            "ANC28 1-hr OGTT: M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3, n (%)" =
+      paste0(sum(is.na(M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3)),
+             " (",
+             format(round(sum(is.na(M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    # 2-hr (_3) test:
+               "ANC28 2-hr OGTT: M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3, n (%)" =
+      paste0(sum(is.na(M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3)),
+             " (",
+             format(round(sum(is.na(M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3))/n()*100, 2),nsmall=2, digits=3),
+             ")")) %>%
+  
+  t() %>% as.data.frame() %>% 
+  `colnames<-`(c(.[1,])) %>% 
+  slice(-1)
+  
+    
+    # "Missing both at Visit 1 = NA, n (%)" =
+    #   paste0(sum(is.na(M08_CBC_HB_LBORRES_1) & is.na(M06_HB_POC_LBORRES_1)),
+    #          " (",
+    #          format(round(sum(is.na(M08_CBC_HB_LBORRES_1) & is.na(M06_HB_POC_LBORRES_1))/n()*100, 2), nsmall=2, digits=3),
+    #          ")"),
+    # "anemia category high " =
+    #   paste0(sum(MAT_ANEMIA_MEAS1 == "high hb >=15g/dl")),
+    # " (",
+    # format(round(sum(MAT_ANEMIA_MEAS1 == "high hb >=15g/dl")/n()*100,2), nsmall=2, digits=3),
+    # ")")
+    
+```
+
+
+```{r}
+diabetes_table  %>% 
+  `rownames<-` (c(
+    "Enrollment HbA1c: M08_HBA1C_LBORRES_1, n (%)",
+    "ANC28 Pretest fasting OGTT: M08_BGLUC_PRETEST_MMOLL_LBORRES_3, n (%)",
+    "ANC28 1-hr OGTT: M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3, n (%)",
+    "ANC28 2-hr OGTT: M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3, n (%)")) %>%
+  
+  
+  mutate_all(funs(str_replace(., "NaN", "0"))) %>% 
+  kbl(caption = "", booktabs = TRUE) %>%
+  kable_paper(bootstrap_options = "striped", 
+              full_width = T, html_font = "Cambria", position = "left",
+              latex_options = c("repeat_header", "HOLD_position")) %>% 
+  kable_styling(font_size = 14) %>%
+  row_spec(0, extra_css = "border-bottom: 0px white;") #
+
+ #"Missing M08_CBC_HB_LBORRES_1 = NA, n (%)",#%>% 
+ # pack_rows("PRISMA measured birthweight (categorical), n (%)", 5, 8, label_row_css = "color: steelblue;") %>% 
+  # pack_rows("Any method measured birthweight (categorical), n (%)", 9, 12, label_row_css = "color: steelblue;") 
+```
+
+# DIAGNOSED
+```{r}
+# diabetes_df <- diabetes_df %>% 
+#   mutate(GEST_DIAB_DIAG = case_when((M04_DIABETES_EVER_MHOCCUR_3==0 | M04_DIABETES_EVER_MHOCCUR_4==0 | M04_DIABETES_EVER_MHOCCUR_5==0) &
+#                                       ((M09_GEST_DIAB_MHOCCUR_6==1 | # WAS MOTHER DIAGNOSED WITH GDM
+#                                       (M09_INDUCED_PROCCUR_6==1 & M09_INDUCED_PRINDC_6==8)) |
+#                                       (M19_PRIMARY_MHTERM_13==4 & M19_LD_COMPL_MHTERM_3_13)) ~ 1,
+#                                     TRUE ~ as.numeric(0)))
+
+
+diabetes_table <- df %>%
+  rowwise() %>%
+  group_by(SITE) %>%
+  summarise(
+    ########## DIAGNOSED 
+    # 
+    "ANC28 - Diagnosed with Diabetes in the past?: M04_DIABETES_EVER_MHOCCUR_3, n (%)" =
+      paste0(sum(is.na(M04_DIABETES_EVER_MHOCCUR_3)),
+             " (",
+             format(round(sum(is.na(M04_DIABETES_EVER_MHOCCUR_3))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    "ANC32 - Diagnosed with Diabetes in the past?: M04_DIABETES_EVER_MHOCCUR_4, n (%)" =
+      paste0(sum(is.na(M04_DIABETES_EVER_MHOCCUR_4)),
+             " (",
+             format(round(sum(is.na(M04_DIABETES_EVER_MHOCCUR_4))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    "ANC36 - Diagnosed with Diabetes in the past?: M04_DIABETES_EVER_MHOCCUR_5, n (%)" =
+      paste0(sum(is.na(M04_DIABETES_EVER_MHOCCUR_5)),
+             " (",
+             format(round(sum(is.na(M04_DIABETES_EVER_MHOCCUR_5))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    "L&D Induced: M09_INDUCED_PROCCUR_6, n (%)" =
+      paste0(sum(is.na(M09_INDUCED_PROCCUR_6)),
+             " (",
+             format(round(sum(is.na(M09_INDUCED_PROCCUR_6))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    
+    "L&D Induced: M09_INDUCED_PRINDC_6, n (%)" =
+      paste0(sum(is.na(M09_INDUCED_PRINDC_6)),
+             " (",
+             format(round(sum(is.na(M09_INDUCED_PRINDC_6))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    
+    "Hospitalization: M19_PRIMARY_MHTERM_13, n (%)" =
+      paste0(sum(is.na(M19_PRIMARY_MHTERM_13)),
+             " (",
+             format(round(sum(is.na(M19_PRIMARY_MHTERM_13))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    "Hospitalization: M19_LD_COMPL_MHTERM_3_13, n (%)" =
+      paste0(sum(is.na(M19_LD_COMPL_MHTERM_3_13)),
+             " (",
+             format(round(sum(is.na(M19_LD_COMPL_MHTERM_3_13))/n()*100, 2),nsmall=2, digits=3),
+             ")"))%>%
+  
+  t() %>% as.data.frame() %>% 
+  `colnames<-`(c(.[1,])) %>% 
+  slice(-1)
+    
+```
+
+```{r}
+diabetes_table  %>% 
+  `rownames<-` (c(
+    "ANC28 - Diagnosed with Diabetes in the past?: M04_DIABETES_EVER_MHOCCUR_3, n (%)",
+    "ANC32 - Diagnosed with Diabetes in the past?: M04_DIABETES_EVER_MHOCCUR_4, n (%)",
+    "ANC36 - Diagnosed with Diabetes in the past?: M04_DIABETES_EVER_MHOCCUR_5, n (%)",
+    "L&D Induced: M09_INDUCED_PROCCUR_6, n (%)",
+    "L&D Induced: M09_INDUCED_PRINDC_6, n (%)",
+    "Hospitalization: M19_PRIMARY_MHTERM_13, n (%)",
+    "Hospitalization: M19_LD_COMPL_MHTERM_3_13, n (%)")) %>%
+  
+  
+  mutate_all(funs(str_replace(., "NaN", "0"))) %>% 
+  kbl(caption = "", booktabs = TRUE) %>%
+  kable_paper(bootstrap_options = "striped", 
+              full_width = T, html_font = "Cambria", position = "left",
+              latex_options = c("repeat_header", "HOLD_position")) %>% 
+  kable_styling(font_size = 14) %>%
+  row_spec(0, extra_css = "border-bottom: 0px white;") #
+
+ #"Missing M08_CBC_HB_LBORRES_1 = NA, n (%)",#%>% 
+ # pack_rows("PRISMA measured birthweight (categorical), n (%)", 5, 8, label_row_css = "color: steelblue;") %>% 
+  # pack_rows("Any method measured birthweight (categorical), n (%)", 9, 12, label_row_css = "color: steelblue;") 
+```
+
+    
