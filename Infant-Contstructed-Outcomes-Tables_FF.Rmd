@@ -14,11 +14,11 @@ output:
     df_print: kable
 always_allow_html: true
 
-knit: (function(inputFile, encoding) { 
-      out_dir <- 'output';
-      rmarkdown::render(inputFile,
-                        encoding=encoding, 
-                        output_file=file.path(dirname(inputFile), out_dir, 'PRISMA-Infant-Outcomes-Report')) })
+# knit: (function(inputFile, encoding) { 
+#       out_dir <- 'output';
+#       rmarkdown::render(inputFile,
+#                         encoding=encoding, 
+#                         output_file=file.path(dirname(inputFile), out_dir, 'PRISMA-Infant-Outcomes-Report')) })
 ---
 
 &nbsp;
@@ -62,8 +62,10 @@ library(RColorBrewer)
 
 UploadDate <- "2023-09-01"
 
-path_to_data <- "D:/Users/stacie.loisate/Box/PRISMA-Analysis/Infant-Constructed-Variables/"
-path_to_save <- "D:/Users/stacie.loisate/Box/PRISMA-Analysis/Infant-Constructed-Variables/output"
+# path_to_data <- "D:/Users/stacie.loisate/Box/PRISMA-Analysis/Infant-Constructed-Variables/"
+# path_to_save <- "D:/Users/stacie.loisate/Box/PRISMA-Analysis/Infant-Constructed-Variables/output"
+path_to_data <-  'D:/Users/fouziafarooq/Documents/PRISMA_constructed-outcomes/data_out/'# - for AWS data
+path_to_save <- "D:/Users/fouziafarooq/Documents/PRISMA_constructed-outcomes/data_out/" # for AWS on my D:
 
 lowbirthweight <- read.csv(paste0(path_to_data, "lowbirthweight.csv"))
 preterm_birth <- read.csv(paste0(path_to_data, "preterm_birth.csv"))
