@@ -1,0 +1,408 @@
+---
+title: "PRISMA_ Maternal-Infant-Constructed-Outcomes"
+author: "Fouzia Farooq"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+Constructed variables: 
+https://docs.google.com/spreadsheets/d/1dfOWoZNm0RipnIRIucHt3kAFiPl3nISD3U2jA3btKXo/edit#gid=252197818
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, warning=FALSE}
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(knitr)
+library(stringr)
+library(ThemePark)
+library(purrr)
+library(lubridate)
+```
+The varname structure for the newly integrated forms (hospitalizations, adverse events, and protocol deviation) are as follows:
+“M[xx]_varname_VISIT[y], where [xx] is the form number and [y] is the visit sequence number (i.e. if first hospitalization, this will be 1, second hospitalization will be 2…..)
+
+```{r}
+# path_to_data <- 'Z:/SynapseCSVs/Kenya/2023-07-28/' # If MNH*.xlsx files are located elsewhere, set this to, for example, 'data/' or '//TNT/...'
+
+# path_to_data <- 'Z:/Processed Data/2023-07-28/'
+
+path_to_data <- 'Z:/Processed Data/2023-08-04/'
+```
+
+```{r}
+
+form_data_filename <- paste0(path_to_data, 'MatData_Wide_2023-08-08',".RData")
+
+form_df <- load(form_data_filename)
+    
+form_data_filename <- paste0(path_to_data, 'InfData_Wide_2023-08-08',".RData")
+form_df <- load(form_data_filename)  
+    
+    
+# Create a data subset from maternal and infant files:
+
+inf_subset_df <- InfData_Wide %>% dplyr::select(SITE, MOMID, PREGID, INFANTID, 
+                                                M11_INF_DSTERM,
+                                                M11_BW_FAORRES, M11_BW_EST_FAORRES,
+                                                M11_BREATH_FAIL_CEOCCUR,
+                                                M11_INF_DSTERM, M11_BW_FAORRES, M11_BW_EST_FAORRES) %>%
+  dplyr::filter(!is.na(MOMID)) %>%
+  dplyr::filter(!is.na(PREGID)) %>%
+  dplyr::filter(!is.na(INFANTID))
+
+mat_subset_df <- MatData_Wide %>% dplyr::select(SITE, MOMID, PREGID, SCRNID, DOB, M01_US_OHOLOC_1, 
+                                                M04_FETAL_LOSS_DSSTDAT_1, M04_FETAL_LOSS_DSSTDAT_2,
+                                                M04_FETAL_LOSS_DSSTDAT_3,
+                                                M04_FETAL_LOSS_DSSTDAT_4, M04_FETAL_LOSS_DSSTDAT_5,
+                                                M09_DELIV_DSSTDAT_INF1_6, M09_BIRTH_DSTERM_INF1_6,
+                                                M01_GA_LMP_WEEKS_SCORRES_1, M01_GA_LMP_DAYS_SCORRES_1,
+                                                M01_US_GA_WKS_AGE_FTS1_1,
+                                                M01_US_GA_WKS_AGE_FTS2_1, M01_US_GA_WKS_AGE_FTS2_1,
+                                                M01_US_GA_WKS_AGE_FTS3_1, M01_US_GA_WKS_AGE_FTS4_1,
+                                                M01_US_GA_DAYS_AGE_FTS1_1, M01_US_GA_DAYS_AGE_FTS2_1,
+                                                M01_US_GA_DAYS_AGE_FTS3_1, M01_US_GA_DAYS_AGE_FTS4_1,
+                                                M01_GA_LMP_WEEKS_SCORRES_1, M01_GA_LMP_DAYS_SCORRES_1,
+                                                M09_CRY_CEOCCUR_INF1_6, M09_FHR_VSTAT_INF1_6, M09_MACER_CEOCCUR_INF1_6,
+                                                M09_CORD_PULS_CEOCCUR_INF1_6,
+                                                M01_US_OHOSTDAT_1, M01_US_OHOSTDAT_2, M01_US_OHOSTDAT_3, 
+                                                M01_US_OHOSTDAT_4, M01_US_OHOSTDAT_5,
+                                                M04_FETAL_LOSS_DSSTDAT_1, M04_FETAL_LOSS_DSSTDAT_2, 
+                                                M04_FETAL_LOSS_DSSTDAT_3, M04_FETAL_LOSS_DSSTDAT_4,
+                                                M04_FETAL_LOSS_DSSTDAT_5,
+                                                M04_FETAL_LOSS_DSDECOD_1, M04_FETAL_LOSS_DSDECOD_2, 
+                                                M04_FETAL_LOSS_DSDECOD_3, M04_FETAL_LOSS_DSDECOD_4,
+                                                M04_FETAL_LOSS_DSDECOD_5,
+                                                M09_DELIV_DSSTDAT_INF1_6, M09_DELIV_DSSTDAT_INF2_6, 
+                                                M09_DELIV_DSSTDAT_INF3_6, M09_DELIV_DSSTDAT_INF4_6,
+                                                M09_BIRTH_DSTERM_INF1_6, M09_BIRTH_DSTERM_INF2_6, 
+                                                M09_BIRTH_DSTERM_INF3_6, M09_BIRTH_DSTERM_INF4_6,
+                                                M09_DELIV_DSSTDAT_INF1_6, M09_DELIV_DSSTDAT_INF2_6, 
+                                                M09_DELIV_DSSTDAT_INF3_6, M09_DELIV_DSSTDAT_INF4_6,
+                                                M09_BIRTH_DSTERM_INF1_6, M09_BIRTH_DSTERM_INF2_6, 
+                                                M09_BIRTH_DSTERM_INF3_6, M09_BIRTH_DSTERM_INF4_6, 
+                                                M04_FETAL_LOSS_DSSTDAT_1, M04_FETAL_LOSS_DSSTDAT_2, 
+                                                M04_FETAL_LOSS_DSSTDAT_3, M04_FETAL_LOSS_DSSTDAT_4, 
+                                                M04_FETAL_LOSS_DSSTDAT_5, M04_FETAL_LOSS_DSDECOD_1,
+                                                M04_FETAL_LOSS_DSDECOD_2,M04_FETAL_LOSS_DSDECOD_3,
+                                                M04_FETAL_LOSS_DSDECOD_4, M04_FETAL_LOSS_DSDECOD_5,
+                                                M09_DELIV_DSSTDAT_INF1_6, M09_DELIV_DSSTDAT_INF2_6, 
+                                                M09_DELIV_DSSTDAT_INF3_6,  M09_DELIV_DSSTDAT_INF4_6,
+                                                M09_BIRTH_DSTERM_INF1_6, M09_BIRTH_DSTERM_INF2_6, 
+                                                M09_BIRTH_DSTERM_INF3_6, M09_BIRTH_DSTERM_INF4_6,
+                                                M09_DELIV_DSSTDAT_INF1_6, M09_DELIV_DSSTDAT_INF2_6,
+                                                M09_DELIV_DSSTDAT_INF3_6, M09_DELIV_DSSTDAT_INF4_6,
+                                                M10_MAT_DSTERM_6, M23_CLOSE_DSDECOD, M23_ACC_DDORRES, M23_DTHDAT,
+                                                M10_MAT_DSTERM_6, M23_CLOSE_DSDECOD, M23_DTHDAT, 
+                                                #M19_PREG_FAORES (try: the variable is there but called M19_PREG_FAORRES_VISIT{x} where {x} 
+                                                # is the visit number based on total number of visits or To see the total number of MNH19 
+                                                #forms filled out by an individual, refer to M19_VISITS_TOT)
+                                                # Maternal anemia:
+                                                starts_with(c("M06_DIAG_VSDAT_", "M06_TYPE_VISIT_", "M06_HB_POC_LBORRES_", "M08_LBSTDAT_")), 
+                                                starts_with(c("M08_TYPE_VISIT_", "M08_CBC_HB_LBORRES", "M09_DELIV_DSSTDAT_INF",
+                                                              "M19_TIMING_OHOCAT_VISIT", "M19_CBC_LBDAT_VISIT", "M19_CBC_HB_LBORRES_VISIT",
+                                                              "M19_HB_POC_LBTSTDAT_VISIT", "M19_HB_POC_LBORRES_VISIT"))) %>%
+  
+  
+  dplyr::filter(!is.na(MOMID)) %>%
+  dplyr::filter(!is.na(PREGID)) %>%
+  dplyr::filter(MOMID != "")
+
+temp.df <- mat_subset_df %>% group_by(SITE, MOMID) %>%
+  filter(n()>1) %>% ungroup()
+
+temp.df <- inf_subset_df %>% group_by(SITE, MOMID, PREGID) %>%
+  filter(n()>1) %>% ungroup() # Shows 25 IDs that are b/c of 12 twins and 1 INFANT ID that is 'n/a' and has the same PREGID as the twins. Will remove this row. Dataset will have n=12 twin pregnancies.
+
+mat_inf_subset_df <- left_join(mat_subset_df, inf_subset_df, by = c("SITE", "MOMID", "PREGID"))
+
+mat_inf_subset_df <- mat_inf_subset_df %>% dplyr::filter(if_else(is.na(INFANTID), TRUE,
+                                                                  INFANTID != "n/a")) # Have to be very careful with NA in a logical expression.  Dplyr filter only includes rows where the expression is TRUE but not where it's FALSE or NA.
+
+# mat_inf_subset: 3360 makes sense b/c n=12 twin pregnancies so 12 extra rows in the mat_subset_df of 3348.  
+
+
+# Stacie: 2543 enrolled and we have 3015 have an MNH02 (Screened but not enrolled.).
+# B/c there is no enrollment yes/no variable, Stacie has been doing a variable from: Enrolled when age requirement, viable pregnancy with GA>= weeks by US, Outside catchment area, did not consent.
+
+```
+
+Fetal/Infant outcomes
+1. GA_BOE: use US_GA_DAYS_AGE_FTS1,2,3,4 and US_GA_WKS_AGE_FTS1,2,3,4 to calculate the biggest fetus.  Use the biggest fetus to do the calculations for GA_DIFF_WKS and GA_DIFF_DAYS.  In the constructed outcomes sheets, it is not listed correctly (b/c only asking to use first fetus)
+2. Use the biggest infant using US and GA_LMP_WEEKS_SCORRES and GA_LMP_DAYS to calc. variable GA_DIFF_WKS and GA_DIFF_DAYS 
+```{r}
+# STEP 1:
+mat_inf_subset_df <- mat_inf_subset_df %>% 
+  rowwise() %>% mutate(biggest_M01_US_GA_DAYS_FTS = max(((M01_US_GA_WKS_AGE_FTS1_1*7) + M01_US_GA_DAYS_AGE_FTS1_1),
+                                     ((M01_US_GA_WKS_AGE_FTS2_1*7) + M01_US_GA_DAYS_AGE_FTS2_1),
+                                     ((M01_US_GA_WKS_AGE_FTS3_1*7) + M01_US_GA_DAYS_AGE_FTS3_1),
+                                     ((M01_US_GA_WKS_AGE_FTS4_1*7) + M01_US_GA_DAYS_AGE_FTS4_1), na.rm = TRUE)) %>%
+  mutate(biggest_M01_US_GA_DAYS_FTS = if_else(biggest_M01_US_GA_DAYS_FTS<0, NA, biggest_M01_US_GA_DAYS_FTS)) # <0 covers '-Inf' cases and where it's only -7.
+
+# STEP 2: 
+mat_inf_subset_df <- mat_inf_subset_df %>% 
+  rowwise() %>%
+  mutate(M01_GA_LMP_DAYS_CALC_1 = (M01_GA_LMP_WEEKS_SCORRES_1*7)+ M01_GA_LMP_DAYS_SCORRES_1) %>%
+  mutate(M01_GA_LMP_DAYS_CALC_1 = if_else(M01_GA_LMP_DAYS_CALC_1<0, NA, M01_GA_LMP_DAYS_CALC_1))
+
+# STEP 3: 
+mat_inf_subset_df <- mat_inf_subset_df %>%
+  dplyr::mutate(GA_DIFF_WKS = (M01_GA_LMP_DAYS_CALC_1 - biggest_M01_US_GA_DAYS_FTS) %/% 7, # Floor of the number of weeks used here. 
+                GA_DIFF_DAYS = M01_GA_LMP_DAYS_CALC_1 - biggest_M01_US_GA_DAYS_FTS)
+```
+
+If the GA by LMP is less than 9 weeks 0 days:
+- If discrepancy between LMP and US ≤5 days = GA by LMP
+- If LMP unknown or discrepancy between LMP and US ≥5 days = GA by US
+
+If the GA by LMP is between 9 weeks 0 days and 15 weeks 6 days:
+- If discrepancy between LMP and US ≤7 days → BOE = GA by LMP
+- If LMP is unknown OR discrepancy between LMP and US ≥7 days = GA by US
+
+If GA by LMP is greater than 16 weeks 0 days:
+- If discrepancy between LMP and US ≤10 days = GA by LMP
+- If LMP is unknown or discrepancy between LMP and US ≥10 days = GA by US
+
+```{r}
+mat_inf_subset_df <- mat_inf_subset_df %>%
+  mutate(GA_BOE = case_when(M01_GA_LMP_DAYS_CALC_1 %/% 7 < 9 ~ 
+                              if_else(abs(GA_DIFF_DAYS) <= 5, 
+                                      M01_GA_LMP_DAYS_CALC_1, 
+                                      biggest_M01_US_GA_DAYS_FTS),
+                            M01_GA_LMP_DAYS_CALC_1 %/% 7 < 16 ~
+                              if_else(abs(GA_DIFF_DAYS) <=7, 
+                                      M01_GA_LMP_DAYS_CALC_1, biggest_M01_US_GA_DAYS_FTS),
+                             M01_GA_LMP_DAYS_CALC_1 %/% 7 >= 16 ~
+                              if_else(abs(GA_DIFF_DAYS) <=10,
+                                      M01_GA_LMP_DAYS_CALC_1, biggest_M01_US_GA_DAYS_FTS),
+                            TRUE ~ biggest_M01_US_GA_DAYS_FTS)) %>% 
+  mutate(GA_BOE_WKS = GA_BOE %/% 7,
+         GA_BOE_DAYS = GA_BOE %% 7)
+temp.df <- mat_inf_subset_df %>% select(SITE, M01_GA_LMP_DAYS_CALC_1, biggest_M01_US_GA_DAYS_FTS, GA_BOE, GA_BOE_WKS, GA_BOE_DAYS) %>% 
+  mutate(diff_GA = abs(M01_GA_LMP_DAYS_CALC_1 - biggest_M01_US_GA_DAYS_FTS))
+
+table(diff_LMP_US = temp.df$diff_GA, temp.df$SITE, useNA = "always")
+
+table(GA_BOE = mat_inf_subset_df$GA_BOE_WKS, mat_inf_subset_df$SITE,  useNA = "always")
+
+table(mat_inf_subset_df$M01_GA_LMP_DAYS_CALC_1, mat_inf_subset_df$SITE, useNA = "always")
+```
+
+Neonatal mortality (Death of a live born baby during the first 28 days of life from any cause. )
+
+DELIV_DSSTDAT_INF1	Date of delivery:
+BIRTH_DSTERM_INF1	Birth outcome
+DTHDAT	Specify date of death:
+DTHDAT	Record date of death:
+```{r}
+temp.df <- mat_inf_subset_df %>% 
+  mutate(NEO_DTH = case_when(is.na(M11_DTH)))
+  
+```
+####################
+#MATERNAL OUTCOMES:
+####################
+
+*Pregnancy-related death:*
+"Death from any cause during pregnancy and childbirth or within 42 days of termination of pregnancy, irrespective of the duration and site of the pregnancy.
+
+M09_DELIV_DSSTDAT_INF1,2,3,4
+M10_MAT_DSTERM
+M23_CLOSE_DSDECOD
+M23_DTHDAT
+
+CLOSE_DSDECOD==1 | 2 then MAT_DEATH=1 (1=Alive)
+CLOSE_DSDECOD==2 (2=Alive)
+CLOSE_DSDECOD==4 | 5 | 6 then MAT_DEATH=9
+
+```{r}
+mat_inf_subset_df <- mat_inf_subset_df %>%
+  mutate_if(is.Date, #is.Date is asking the variable (entire col) is a date type or not.
+            function(d) {
+              if_else(d == as.Date("1907-07-07"), as.Date(NA), as.Date(d))
+            }) %>%
+  mutate(var_w_deliverydate = any(!is.na(c(M09_DELIV_DSSTDAT_INF1_6, #'any' is checking if anything in these columns by row(dplyr is doing the by-row part) is NA.
+  M09_DELIV_DSSTDAT_INF2_6,
+  M09_DELIV_DSSTDAT_INF3_6,
+  M09_DELIV_DSSTDAT_INF4_6)))) %>% 
+  rowwise() %>%
+  mutate(PREG_DEATH = if_else(M23_CLOSE_DSDECOD == 3 | !is.na(M23_DTHDAT), 
+                              if_else(var_w_deliverydate,
+                                      as.numeric(M23_DTHDAT - as.Date(max(M09_DELIV_DSSTDAT_INF1_6, M09_DELIV_DSSTDAT_INF2_6, 
+                                                                          M09_DELIV_DSSTDAT_INF3_6, M09_DELIV_DSSTDAT_INF4_6, 
+                                                                          na.rm = TRUE)) < 
+                                                   as.difftime(42, units = "days")),
+                                      1), 
+                              0)) %>% 
+  mutate(PREG_DEATH = if_else(M23_CLOSE_DSDECOD==4 | M23_CLOSE_DSDECOD==5, 9, PREG_DEATH))
+
+table(PREG_DEATH=mat_inf_subset_df$PREG_DEATH, SITE=mat_inf_subset_df$SITE, useNA = "always")
+```
+
+*Maternal Anemia*
+Definition: Low hemoglobin levels and/or diagnosis of anemia in pregnancy, at labor and delivery, and through 6 months postpartum. 
+Variable: MAT_ANEMIA_ANY
+
+Create: MAT_ANEMIA_MEAS
+"1, Mild
+2, Moderate
+3, Severe
+0, None
+
+using: 
+"ANC
+L&D
+PNC
+Hospitalization"
+
+MNH06	DIAG_VSDAT
+MNH06	TYPE_VISIT
+MNH06	HB_POC_LBORRES
+MNH08	LBSTDAT
+MNH08	TYPE_VISIT
+MNH08	CBC_HB_LBORRES
+MNH09	DELIV_DSSTDAT_INF1
+MNH19	TIMING_OHOCAT
+MNH19	CBC_LBDAT
+MNH19	CBC_HB_LBORRES
+MNH19	HB_POC_LBTSTDAT
+MNH19	HB_POC_LBORRES
+
+//Maternal anemia in pregnancy
+mutate(MAT_ANEMIA_MEAS = 1
+if ((MNH06_TYPE_VISIT==1 | MNH06_TYPE_VISIT==2 | MNH06_TYPE_VISIT==3 | MNH06_TYPE_VISIT==4) & (MNH06_SPHB_LBORRES, 10, 10.9) | (MNH06_HB_POC_LBORRES,10,10.9))) | ((MNH08_TYPE_VISIT==1 | MNH08_TYPE_VISIT==2 | MNH08_TYPE_VISIT==3 | MNH08_TYPE_VISIT==4) & (MNH08_CBC_HB_LBORRES,10,10.9)) | (MNH19_TIMING_OHOCAT==1 & (M19_HB_POC_LBORRES,10,10.9) | (M19_CBC_HB_LBORRES,10,10.9))
+
+mutate(MAT_ANEMIA_MEAS = 1
+if ((M06_TYPE_VISIT_1 ==1 | M06_TYPE_VISIT_2==2 | M06_TYPE_VISIT_3==3 | M06_TYPE_VISIT_==4) & between(MNH06_HB_POC_LBORRES,10,10.9))) | ((M08_TYPE_VISIT_1==1 | M08_TYPE_VISIT_2==2 | M08_TYPE_VISIT_3==3 | M08_TYPE_VISIT_4==4) & (M08_CBC_HB_LBORRES,10,10.9)) | (M19_TIMING_OHOCAT==1 & (MNH19_HB_POC_LBORRES,10,10.9) | (MNH19_CBC_HB_LBORRES,10,10.9)) #TODO Are we ignoring SpHb measurements for this var?
+
+Another idea:
+Create anemia levels for each ANC Visit
+WHO Hb thresholds g/dl:
+Mild: 10.0-10.9
+Moderate: 7.0-9.9
+Severe: <7
+Normal: <=11.0
+Excess Hb: >13
+
+Create: MAT_ANEMIA_DIAG
+
+```{r}
+temp.df <- mat_inf_subset_df[1:200, ] %>%
+  select(SITE, MOMID, PREGID, (starts_with(c("M06_DIAG_VSDAT_", "M06_TYPE_VISIT_", "M06_HB_POC_LBORRES_", "M08_LBSTDAT_"))),
+         starts_with(c("M08_TYPE_VISIT_", "M08_CBC_HB_LBORRES", "M09_DELIV_DSSTDAT_INF",
+                       "M19_TIMING_OHOCAT_VISIT", "M19_CBC_LBDAT_VISIT", "M19_CBC_HB_LBORRES_VISIT",
+                       "M19_HB_POC_LBTSTDAT_VISIT", "M19_HB_POC_LBORRES_VISIT")))  %>%
+  mutate(MAT_ANEMIA_MEAS1 = case_when(between(M06_HB_POC_LBORRES_1, 10, 10.9)| between(M08_CBC_HB_LBORRES_1, 10, 10.9)~"mild",
+                                      between(M06_HB_POC_LBORRES_1, 7.0, 9.9) | between(M08_CBC_HB_LBORRES_1, 7.0, 9.9)~"moderate",
+                                      between(M06_HB_POC_LBORRES_1, 6.9, 0) | between(M08_CBC_HB_LBORRES_1, 6.9, 0)~"severe",
+                                      between(M06_HB_POC_LBORRES_1, 11, 12.9) | between(M08_CBC_HB_LBORRES_1, 11, 12.9)~"normal",
+                                      (M06_HB_POC_LBORRES_1 > 12.9) | (M08_CBC_HB_LBORRES_1 > 12.9)~"excess_hb",
+                                      TRUE ~ as.character(NA))) %>%
+  mutate(MAT_ANEMIA_MEAS2 = case_when(between(M06_HB_POC_LBORRES_2, 10, 10.9)| between(M08_CBC_HB_LBORRES_2, 10, 10.9)~"mild",
+                                      between(M06_HB_POC_LBORRES_2, 7.0, 9.9) | between(M08_CBC_HB_LBORRES_2, 7.0, 9.9)~"moderate",
+                                      between(M06_HB_POC_LBORRES_2, 6.9, 0) | between(M08_CBC_HB_LBORRES_2, 6.9, 0)~"severe",
+                                      between(M06_HB_POC_LBORRES_2, 11, 12.9) | between(M08_CBC_HB_LBORRES_2, 11, 12.9)~"normal",
+                                      (M06_HB_POC_LBORRES_2 > 12.9) | (M08_CBC_HB_LBORRES_2 > 12.9)~"excess_hb",
+                                      TRUE ~ as.character(NA)))
+                                      
+table(temp.df$MAT_ANEMIA_MEAS2, temp.df$SITE, useNA = "always")
+```
+
+```{r}
+  mutate(MAT_ANEMIA_MEAS1 = case_when((if_any(num_range('M06_TYPE_VISIT_', 1:4), ~ !is.na(.x)) & #at least 1 visit is non-missing 
+                                        if_any(num_range('M06_HB_POC_LBORRES_', 1:4), ~ between(.x, 10, 10.9)))  ~ 1,
+                                     TRUE ~ 2)) %>% select(M06_TYPE_VISIT_1, M06_TYPE_VISIT_2, M06_TYPE_VISIT_3, M06_TYPE_VISIT_4,
+                                                           M06_HB_POC_LBORRES_1, M06_HB_POC_LBORRES_2, 
+                                                           M06_HB_POC_LBORRES_3, M06_HB_POC_LBORRES_4, MAT_ANEMIA_MEAS)
+```
+
+
+```{r}
+
+temp.df <- mat_inf_subset_df[1:20, ] %>%
+  select((starts_with(c("M06_DIAG_VSDAT_", "M06_TYPE_VISIT_", "M06_HB_POC_LBORRES_", "M08_LBSTDAT_"))),
+         starts_with(c("M08_TYPE_VISIT_", "M08_CBC_HB_LBORRES", "M09_DELIV_DSSTDAT_INF",
+                       "M19_TIMING_OHOCAT_VISIT", "M19_CBC_LBDAT_VISIT", "M19_CBC_HB_LBORRES_VISIT",
+                       "M19_HB_POC_LBTSTDAT_VISIT", "M19_HB_POC_LBORRES_VISIT"))) %>%
+  mutate(MAT_ANEMIA_MEAS1 = case_when((if_any(num_range('M06_TYPE_VISIT_', 1:4), ~ !is.na(.x)) & #at least 1 visit is non-missing 
+                                        if_any(num_range('M06_HB_POC_LBORRES_', 1:4), ~ between(.x, 10, 10.9)))  ~ 1,
+                                     TRUE ~ 2)) %>% select(M06_TYPE_VISIT_1, M06_TYPE_VISIT_2, M06_TYPE_VISIT_3, M06_TYPE_VISIT_4,
+                                                           M06_HB_POC_LBORRES_1, M06_HB_POC_LBORRES_2, 
+                                                           M06_HB_POC_LBORRES_3, M06_HB_POC_LBORRES_4, MAT_ANEMIA_MEAS)
+
+temp.df <- mat_inf_subset_df[1:20, ] %>%
+  select((starts_with(c("M06_DIAG_VSDAT_", "M06_TYPE_VISIT_", "M06_HB_POC_LBORRES_", "M08_LBSTDAT_"))),
+         starts_with(c("M08_TYPE_VISIT_", "M08_CBC_HB_LBORRES_", "M09_DELIV_DSSTDAT_INF",
+                       "M19_TIMING_OHOCAT_VISIT", "M19_CBC_LBDAT_VISIT", "M19_CBC_HB_LBORRES_VISIT",
+                       "M19_HB_POC_LBTSTDAT_VISIT", "M19_HB_POC_LBORRES_VISIT"))) %>%
+  
+  mutate(MAT_ANEMIA_MEAS1 = case_when((if_any(num_range('M08_TYPE_VISIT_', 1:4), ~ !is.na(.x)) & 
+                                          if_any(num_range('M08_CBC_HB_LBORRES_', 1:4), ~ between(.x, 10, 10.9)))   ~ 1,
+                                     TRUE ~ 2)) %>% select(M08_TYPE_VISIT_1, M08_TYPE_VISIT_2, M08_TYPE_VISIT_3, M08_TYPE_VISIT_4,
+                                                           M08_CBC_HB_LBORRES_1, M08_CBC_HB_LBORRES_2, 
+                                                           M08_CBC_HB_LBORRES_3, M08_CBC_HB_LBORRES_4, MAT_ANEMIA_MEAS1)
+
+```
+
+
+```{r}
+#TODO Pull out these columns and see what they look like. Atm all are 1. 
+temp.df <- mat_inf_subset_df %>% 
+  select((starts_with(c("M06_DIAG_VSDAT_", "M06_TYPE_VISIT_", "M06_HB_POC_LBORRES_", "M08_LBSTDAT_"))),
+         starts_with(c("M08_TYPE_VISIT_", "M08_CBC_HB_LBORRES", "M09_DELIV_DSSTDAT_INF",
+                       "M19_TIMING_OHOCAT_VISIT", "M19_CBC_LBDAT_VISIT", "M19_CBC_HB_LBORRES_VISIT",
+                       "M19_HB_POC_LBTSTDAT_VISIT", "M19_HB_POC_LBORRES_VISIT"))) %>%
+  
+  mutate(MAT_ANEMIA_MEAS = case_when((if_any(num_range('M06_TYPE_VISIT_', 1:4), ~ !is.na(.x)) & 
+                                        if_any(num_range('M06_HB_POC_LBORRES_', 1:4), ~ between(.x, 10, 10.9))) |
+                                       
+                                       (if_any(num_range('M08_TYPE_VISIT_', 1:4), ~ !is.na(.x)) & 
+                                          if_any(num_range('M08_CBC_HB_LBORRES_', 1:4), ~ between(.x, 10, 10.9))) |
+                                       
+                                       (if_any(num_range('M19_TIMING_OHOCAT_VISIT_', 1:3), ~ .==1) &
+                                          (if_any(num_range('M19_HB_POC_LBORRES_', 1:4), ~ between(.x,10,10.9)) |
+                                             
+                                             if_any(num_range('M19_CBC_HB_LBORRES_', 1:4), ~ between(.x, 10, 10.9)))) ~ 1,
+                                     TRUE ~ 2)) %>% 
+  select(M06_TYPE_VISIT_1, M06_TYPE_VISIT_2, M06_TYPE_VISIT_3, M06_TYPE_VISIT_4, 
+         M06_HB_POC_LBORRES_1, M06_HB_POC_LBORRES_2,M06_HB_POC_LBORRES_3, M06_HB_POC_LBORRES_4, 
+         MAT_ANEMIA_MEAS)
+
+# Using library Purrr here
+# .x placeholder for each of the variable inside if_any. Can use just "." if it's not inside a function.
+# Lambda function used here = it's a little expression inside of something. It's not a function that's defined outside. 
+
+table(mat_inf_subset_df$M19_TIMING_OHOCAT_VISIT3, useNA = "always")
+
+```
+
+# THINGS/CODE I MIGHT NEED:
+
+```{r}
+# Make a vector of ANC forms:
+anc_vec <- c("M00", "M01", "M02", "M03", "M04", "M05", "M06", "M07", "M08", "M16", "M25", "M26")
+
+# Make a vector of the forms that
+anc_vec_data <- anc_vec[anc_vec %in% form_vec]
+
+## Merge enrollment forms with each of the other forms 
+anc_data <- list()
+for (i in anc_vec_data[-c(1:3)]) {
+  anc_data[[i]] <- full_join(all_out[[i]], enroll_bind, by = c("SITE", "MOMID", "PREGID")) %>% distinct()
+}
+
+## Make Vector of PNC forms  
+pnc_vec <- c("M05", "M06", "M07", "M08", "M12", "M18", "M25", "M26")
+
+pnc_vec_data <- pnc_vec[pnc_vec %in% form_vec]
+
+## merge enrollment forms with each of the other forms:
+pnc_data <- list()
+for (i in pnc_vec_data){
+  pnc_data[[i]] <- left_join(all_out[[i]], M09, by= c("SITE", "MOMID", "PREGID")) %>% distinct()
+}
+```
+
+
