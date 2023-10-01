@@ -2667,10 +2667,11 @@ merged_df <- merged_df %>%
                                            M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3>=10.0) |  # 1-hr at ANC28
                                         M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3 >=8.5))) ~ 1,
                                     
-                                    #  (is.na(M06_BGLUC_POC_MMOLL_LBORRES) &
+                                    # SHOW MISSING WHERE PRETEST GLUCOSE IS MISSING & 1-HR OGTT IS MISSING & 2-HR OGTT IS MISSING.
                                     is.na(M08_BGLUC_PRETEST_MMOLL_LBORRES_3) & is.na(M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3) &
                                       is.na(M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3) ~ as.numeric(NA),
                                     TRUE ~ as.numeric(0))) 
+
 table(GEST_DIAB_MEAS = merged_df$GEST_DIAB_MEAS, SITE = merged_df$SITE, useNA = "always")
 round(prop.table(table(GEST_DIAB_MEAS = merged_df$GEST_DIAB_MEAS, SITE = merged_df$SITE, useNA = "always"), margin=2)*100,2)
 ###############################################
@@ -2706,26 +2707,27 @@ mnh08
 #mnh08_df2 <- mnh08_df
 test.df <- mnh08_df3 %>% filter(M08_TYPE_VISIT==3 & M08_HBA1C_PRCNT<6.5 & ENROLLED_FF==1) %>%
   mutate(GEST_DIAB_MEAS = case_when((((is.na(M08_HBA1C_PRCNT_1) | M08_HBA1C_PRCNT_1<6.5) & 
-                                        ((M08_BGLUC_PRETEST_MMOLL_LBORRES_3>=5.1 | # confirm pre test (fasting) OGTT is high at ANC28
-                                           # when fasting OGTT is high, then 1-hr or 2-hr should be also high at ANC28
+                                        ((M08_BGLUC_PRETEST_MMOLL_LBORRES_3>=5.1 | # confirm pre test (fasting) OGTT is high at ANC28 OR
+                                           # when fasting OGTT is high, then 1-hr or 2-hr should be also high at ANC28 OR
                                            M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3>=10.0) |  # 1-hr at ANC28
                                         M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3 >=8.5))) ~ 1,
                                     
-                                    #  (is.na(M06_BGLUC_POC_MMOLL_LBORRES) &
+                                    # SHOW MISSING WHERE PRETEST GLUCOSE IS MISSING & 1-HR OGTT IS MISSING & 2-HR OGTT IS MISSING.
                                     is.na(M08_BGLUC_PRETEST_MMOLL_LBORRES_3) & is.na(M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3) &
                                       is.na(M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3) ~ as.numeric(NA),
                                     TRUE ~ as.numeric(0))) 
   
-   mutate(GEST_DIAB_MEAS = case_when((((!is.na(M08_HBA1C_PRCNT) & M08_HBA1C_PRCNT<6.5 & M08_HBA1C_PRCNT!=-5 ) & 
-                                        (M08_BGLUC_PRETEST_MMOLL_LBORRES>=5.1 | # confirm pre test (fasting) OGTT is high at ANC28
-                                         # when fasting OGTT is high, then 1-hr or 2-hr should be also high at ANC28
-                                         M08_BGLUC_ORAL_1HR_MMOLL_LBORRES>=10.0) |  # 1-hr at ANC28
-                                      M08_BGLUC_ORAL_2HR_MMOLL_LBORRES >=8.5)) ~ 1,
-                                    
-                                 #  (is.na(M06_BGLUC_POC_MMOLL_LBORRES) &
-                                       is.na(M08_BGLUC_PRETEST_MMOLL_LBORRES) & is.na(M08_BGLUC_ORAL_1HR_MMOLL_LBORRES) &
-                                        is.na(M08_BGLUC_ORAL_2HR_MMOLL_LBORRES) ~ as.numeric(NA),
-         TRUE ~ as.numeric(0))) # 2-hr
+# THIS IS WHEN I WAS LOOKING AT -5 AND -7 VALUES FOR MISSNG BEFORE CONVERTING TO NA.
+   # mutate(GEST_DIAB_MEAS = case_when((((!is.na(M08_HBA1C_PRCNT) & M08_HBA1C_PRCNT<6.5 & M08_HBA1C_PRCNT!=-5 ) & 
+   #                                      (M08_BGLUC_PRETEST_MMOLL_LBORRES>=5.1 | # confirm pre test (fasting) OGTT is high at ANC28
+   #                                       # when fasting OGTT is high, then 1-hr or 2-hr should be also high at ANC28
+   #                                       M08_BGLUC_ORAL_1HR_MMOLL_LBORRES>=10.0) |  # 1-hr at ANC28
+   #                                    M08_BGLUC_ORAL_2HR_MMOLL_LBORRES >=8.5)) ~ 1,
+   #                                  
+   #                               #  (is.na(M06_BGLUC_POC_MMOLL_LBORRES) &
+   #                                     is.na(M08_BGLUC_PRETEST_MMOLL_LBORRES) & is.na(M08_BGLUC_ORAL_1HR_MMOLL_LBORRES) &
+   #                                      is.na(M08_BGLUC_ORAL_2HR_MMOLL_LBORRES) ~ as.numeric(NA),
+   #       TRUE ~ as.numeric(0))) # 2-hr
 
 table(GEST_DIAB_MEAS = test.df$GEST_DIAB_MEAS, SITE = test.df$SITE, useNA = "always")
 round(prop.table(table(GEST_DIAB_MEAS = test.df$GEST_DIAB_MEAS, SITE = test.df$SITE, useNA = "always"), margin=2)*100,2)
