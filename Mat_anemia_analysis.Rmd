@@ -126,6 +126,9 @@ temp.df <- anemia_df %>%
 temp.df <- temp.df %>% 
   mutate(MISSING_BOTH_ANC1 =  case_when(is.na(M08_CBC_HB_LBORRES_1) & is.na(M06_HB_POC_LBORRES_1) ~ 1, 
                                         TRUE ~ as.numeric(0)))
+
+anemia_df <- anemia_df %>%
+  mutate(HIGH_HB_gt15 = case_when(MAT_ANEMIA_MEAS1=="high hb >=15g/dl" ~ 1, TRUE ~0))
 ```
 
 # VISIT 2
@@ -333,6 +336,7 @@ table(anemia_df$MAT_ANEMIA_MEAS8, useNA = "always", anemia_df$SITE)
 round(prop.table(table(anemia_df$MAT_ANEMIA_MEAS8, useNA = "always", anemia_df$SITE), margin = 2)*100, 2)
 ```
 
+# PNC 4
 ```{r}
   # VISIT 9 - PNC 4
 anemia_df <- anemia_df %>% 
@@ -348,6 +352,7 @@ table(anemia_df$MAT_ANEMIA_MEAS9, useNA = "always", anemia_df$SITE)
 round(prop.table(table(anemia_df$MAT_ANEMIA_MEAS9, useNA = "always", anemia_df$SITE), margin = 2)*100, 2)
 
 ```
+
 # ANY PNC ANEMIA (PNC0, PNC1, PNC4)
 ```{r}
 # ANEMIA MEASURED PNC ONLY # 
