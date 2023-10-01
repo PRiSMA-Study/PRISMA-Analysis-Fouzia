@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ---
-title: "<span style='font-size: 18px'> <span style='text-align: center'> PRISMA-Maternal-Outcomes (Issued: 2023-09-27)"
+title: "<span style='font-size: 18px'> <span style='text-align: center'> PRISMA-Maternal-Outcomes (Issued: `r Sys.Date()`)"
 output:
   html_document:
     df_print: paged
@@ -64,39 +64,38 @@ library(RColorBrewer)
 ```
 
 ```{r}
-
-df <- diabetes_df # the file that is generated in 'Mat_GDM_analysis.Rmd' -- run that first.
+# AMONG WOMEN WHO HAVE A VISIT 3 (ANC28)
+diabetes_df <- read.csv('data_out/Mat_diabetes_VISIT3.csv', header = TRUE)
+df <- diabetes_df # the file that is generated in 'Mat_GDM_analysis.Rmd' -- run that first but make sure to subset on VISIT 3.
 ```
 \newpage
 
 ### Gestational Diabetes 
-**Definition:**
+**Definition:** Diabetes first diagnosed during pregnancy (at ≥20 weeks’ gestation), characterized by insulin resistance and high blood sugar. 
+<br>
+Thresholds for 75g oral glucose tolerance test (OGTT) per the 2010 International Association Of Diabetes And Pregnancy Study Groups (IADPSG) guidelines:
+<br>
+Fasting Glucose >= 5.1 mmol/L
+<br>
+1-hr OGTT >= 10.0 mmol/L
+<br>
+2-hr OGTT >= 8.5 mmol/L
+
 <br>
 <br>
 
-*Denominator: Enrolled women with a delivery date.
+**Denominator:** Enrolled women who have an ANC-38 (VISIT 3).
 <br>
 <br>
 
-# ANC Clinical status question "Have you ever been diagnosed of diabetes" doesn't exist for Visit 5 (ANC36)
-Table 1: Anemia
+Table 1: Gestational Diabetes
 ```{r}
 
+# THESE ARE DIAGNOSED VARS (CHECK!)
 # M04_DIABETES_EVER_MHOCCUR_3, M04_DIABETES_EVER_MHOCCUR_4, M04_DIABETES_EVER_MHOCCUR_5,
 # M09_GEST_DIAB_MHOCCUR_6, M09_INDUCED_PROCCUR_6, M09_INDUCED_PRINDC_6,
 # M19_PRIMARY_MHTERM_13, M19_LD_COMPL_MHTERM_3_13,
-# 
-# MEASURED VARS:
-# M08_HBA1C_LBORRES_1,M06_BGLUC_POC_MMOLL_LBORRES_3,
-# M08_BGLUC_PRETEST_MMOLL_LBORRES_3, M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3, M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3
 
-
-# diabetes_df <- diabetes_df %>% 
-#   mutate(GEST_DIAB_DIAG = case_when((M04_DIABETES_EVER_MHOCCUR_3==0 | M04_DIABETES_EVER_MHOCCUR_4==0 | M04_DIABETES_EVER_MHOCCUR_5==0) &
-#                                       ((M09_GEST_DIAB_MHOCCUR_6==1 | # WAS MOTHER DIAGNOSED WITH GDM
-#                                       (M09_INDUCED_PROCCUR_6==1 & M09_INDUCED_PRINDC_6==8)) |
-#                                       (M19_PRIMARY_MHTERM_13==4 & M19_LD_COMPL_MHTERM_3_13)) ~ 1,
-#                                     TRUE ~ as.numeric(0)))
 
 
 diabetes_table <- df %>%
@@ -105,21 +104,13 @@ diabetes_table <- df %>%
   summarise(
     ########## MEASURED
     # confirm HbA1C at enrollment is high
-    "Enrollment HbA1c: M08_HBA1C_LBORRES_1, n (%)" =
+    "Missing Enrollment HbA1c: M08_HBA1C_LBORRES_1, n (%)" =
       paste0(sum(is.na(M08_HBA1C_LBORRES_1)),
              " (",
              format(round(sum(is.na(M08_HBA1C_LBORRES_1))/n()*100, 2),nsmall=2, digits=3),
              ")"),
     
-    # # At ANC28, POC diagnostics in fasting is >5.1
-    # "ANC28 POC fasting: M06_BGLUC_POC_MMOLL_LBORRES_3, n (%)" =
-    #   paste0(sum(is.na(M06_BGLUC_POC_MMOLL_LBORRES_3)),
-    #          " (",
-    #          format(round(sum(is.na(M06_BGLUC_POC_MMOLL_LBORRES_3))/n()*100, 2),nsmall=2, digits=3),
-    #          ")"),
-    
-    # confirm Pre-test (fasting) OGTT is high (-1)
-        "ANC28 Pretest fasting OGTT: M08_BGLUC_PRETEST_MMOLL_LBORRES_3, n (%)" =
+    "Missing ANC28 Pretest Fasting Glucose: M08_BGLUC_PRETEST_MMOLL_LBORRES_3, n (%)" =
       paste0(sum(is.na(M08_BGLUC_PRETEST_MMOLL_LBORRES_3)),
              " (",
              format(round(sum(is.na(M08_BGLUC_PRETEST_MMOLL_LBORRES_3))/n()*100, 2),nsmall=2, digits=3),
@@ -127,24 +118,38 @@ diabetes_table <- df %>%
     
     # when fasting OGTT is high, then 1-hr (_2) or 2-hr (-3) should be also high 
     # 1-hr (_2) test:
-            "ANC28 1-hr OGTT: M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3, n (%)" =
+    "Missing ANC28 1-hr OGTT: M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3, n (%)" =
       paste0(sum(is.na(M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3)),
              " (",
              format(round(sum(is.na(M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3))/n()*100, 2),nsmall=2, digits=3),
              ")"),
     
     # 2-hr (_3) test:
-               "ANC28 2-hr OGTT: M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3, n (%)" =
+    " Missing ANC28 2-hr OGTT: M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3, n (%)" =
       paste0(sum(is.na(M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3)),
              " (",
              format(round(sum(is.na(M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    # GDM CATEGORIES:
+    "GDM = Yes " = 
+      paste0(sum(GEST_DIAB_MEAS == 1),
+             " (",
+             format(round(sum(GEST_DIAB_MEAS == 1)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+    
+    "GDM = No " = 
+      paste0(sum(GEST_DIAB_MEAS == 0),
+             " (",
+             format(round(sum(GEST_DIAB_MEAS == 0)/n()*100,2), nsmall=2, digits=3),
              ")")) %>%
-  
+
   t() %>% as.data.frame() %>% 
   `colnames<-`(c(.[1,])) %>% 
   slice(-1)
   
-    
+
+
     # "Missing both at Visit 1 = NA, n (%)" =
     #   paste0(sum(is.na(M08_CBC_HB_LBORRES_1) & is.na(M06_HB_POC_LBORRES_1)),
     #          " (",
@@ -162,10 +167,12 @@ diabetes_table <- df %>%
 ```{r}
 diabetes_table  %>% 
   `rownames<-` (c(
-    "Enrollment HbA1c: M08_HBA1C_LBORRES_1, n (%)",
-    "ANC28 Pretest fasting OGTT: M08_BGLUC_PRETEST_MMOLL_LBORRES_3, n (%)",
-    "ANC28 1-hr OGTT: M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3, n (%)",
-    "ANC28 2-hr OGTT: M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3, n (%)")) %>%
+    "Missing Enrollment HbA1c: M08_HBA1C_LBORRES_1, n (%)",
+    "Missing ANC28 Pretest Fasting Glucose: M08_BGLUC_PRETEST_MMOLL_LBORRES_3, n (%)",
+    "Missing ANC28 1-hr OGTT: M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3, n (%)",
+    "Missing ANC28 2-hr OGTT: M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3, n (%)",
+    "Yes, n (%)", # Gestational Diabetes (from GEST_DIAB_MEAS)
+    "No, n (%)")) %>% # Gestational Diabetes (from GEST_DIAB_MEAS)
   
   
   mutate_all(funs(str_replace(., "NaN", "0"))) %>% 
@@ -174,14 +181,68 @@ diabetes_table  %>%
               full_width = T, html_font = "Cambria", position = "left",
               latex_options = c("repeat_header", "HOLD_position")) %>% 
   kable_styling(font_size = 14) %>%
-  row_spec(0, extra_css = "border-bottom: 0px white;") #
+  row_spec(0, extra_css = "border-bottom: 0px white;") %>%
+
+  pack_rows("Gestational Diabetes (Measured) Category, n (%)", 5, 6, label_row_css = "color: steelblue;") # WHAT DOES 5,6 HERE SAY? 
+
 
  #"Missing M08_CBC_HB_LBORRES_1 = NA, n (%)",#%>% 
  # pack_rows("PRISMA measured birthweight (categorical), n (%)", 5, 8, label_row_css = "color: steelblue;") %>% 
   # pack_rows("Any method measured birthweight (categorical), n (%)", 9, 12, label_row_css = "color: steelblue;") 
 ```
 
-# DIAGNOSED
+\newpage
+
+#### Figure 1a. Histogram of OGTT 1hr across sites
+```{r lbw fig1a}
+
+OGTT1hr_nomissing <- df %>% filter(!is.na(M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3))
+
+ggplot(data=OGTT1hr_nomissing,
+       aes(x=M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3)) + 
+  geom_histogram() + # binwidth = 10 +
+  facet_grid(vars(SITE), scales = "free") +
+  scale_x_continuous(breaks = seq(0,30,2)) + # RANGE FOR OGTT HERE ON X-AXIS IS 0-30 .
+  ggtitle("1-hr OGTT distribution , by Site") + 
+  ylab("Count") + 
+  xlab("1-hr OGTT (mmol/L)") + 
+  theme_bw() +
+  theme(strip.background=element_rect(fill="white")) + #color
+  theme(axis.text.x = element_text(vjust = 1, hjust=1), # angle = 60, 
+        legend.position="bottom",
+        legend.title = element_blank(),
+        panel.grid.minor = element_blank()) + 
+    geom_vline(mapping=aes(xintercept=0), linetype ="dashed", color = "red") + # ADDS VERTICAL DASHED LINE AT MIN THRESHOLD
+  geom_vline(mapping=aes(xintercept=10), linetype ="dashed", color = "red")  # ADDS VERTICAL DASHED LINE AT MAX THRESHOLD
+  
+```
+
+#### Figure 1B. Histogram of OGTT 2-hr across sites
+```{r lbw fig1a}
+
+OGTT2hr_nomissing <- df %>% filter(!is.na(M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3))
+
+ggplot(data=OGTT2hr_nomissing,
+       aes(x=M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3)) + 
+  geom_histogram() + #binwidth = 100
+  facet_grid(vars(SITE), scales = "free") +
+  scale_x_continuous(breaks = seq(0,30,2)) + # RANGE FOR OGTT HERE ON X-AXIS IS 0-30
+  ggtitle("2-hr OGTT distribution , by Site") + 
+  ylab("Count") + 
+  xlab("2-hr OGTT (mmol/L)") + 
+  theme_bw() +
+  theme(strip.background=element_rect(fill="white")) + #color
+  theme(axis.text.x = element_text(vjust = 1, hjust=1), # angle = 60, 
+        legend.position="bottom",
+        legend.title = element_blank(),
+        panel.grid.minor = element_blank()) + 
+    geom_vline(mapping=aes(xintercept=0), linetype ="dashed", color = "red") + # ADDS VERTICAL DASHED LINE AT MIN THRESHOLD
+  geom_vline(mapping=aes(xintercept=8.5), linetype ="dashed", color = "red")  # ADDS VERTICAL DASHED LINE AT MAX THRESHOLD
+  
+```
+
+\newpage
+Table 2: Gestational Diabetes Diagnosed
 ```{r}
 # diabetes_df <- diabetes_df %>% 
 #   mutate(GEST_DIAB_DIAG = case_when((M04_DIABETES_EVER_MHOCCUR_3==0 | M04_DIABETES_EVER_MHOCCUR_4==0 | M04_DIABETES_EVER_MHOCCUR_5==0) &
