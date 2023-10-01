@@ -2,6 +2,7 @@
 #* PRISMA Infant Outcomes
 #* Drafted: 21 September 2023, Stacie Loisate
 #* Last updated: 17 April 2023
+#* Updated by FF 09/25/2023
 #* 
 # 1. Low birth-weight 
 # 2. Pre-term birth
@@ -18,20 +19,20 @@ library(readxl)
 library(gmodels)
 library(kableExtra)
 library(lubridate)
-library(growthstandards) ## INTERGROWTH PACKAGE
+#library(growthstandards) ## INTERGROWTH PACKAGE
 
 
 # UPDATE EACH RUN # 
 # set upload date 
-UploadDate = "2023-09-01"
+#UploadDate = "2023-09-01"
 
 # set path to data
-path_to_data <- paste("Z:/Stacked Data/",UploadDate, sep = "")
+#path_to_data <- paste("Z:/Stacked Data/",UploadDate, sep = "")
 
 # set path to save 
-path_to_save <- "D:/Users/stacie.loisate/Box/PRISMA-Analysis/Infant-Constructed-Variables/"
-
-
+#path_to_save <- "D:/Users/stacie.loisate/Box/PRISMA-Analysis/Infant-Constructed-Variables/"
+path_to_data <-  'D:/Users/fouziafarooq/Documents/PRISMA_constructed-outcomes/data/2023-09-15/'# - for AWS data
+path_to_save <- "D:/Users/fouziafarooq/Documents/PRISMA_constructed-outcomes/data_out/" # for AWS on my D:
 # import forms 
 mnh01 <- read_csv(paste0(path_to_data,"/", "mnh01_merged.csv")) 
 mnh02 <- read_csv(paste0(path_to_data,"/", "mnh02_merged.csv")) 
