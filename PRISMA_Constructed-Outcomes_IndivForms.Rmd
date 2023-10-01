@@ -166,6 +166,19 @@ for (form_name in names(mnh_list)) {
   #summarise(n = n())
 ```
 
+Just looking at MNH08 b/c VISIT 3 gets dropped b/c of the filtering. 
+```{r}
+temp.df <-  mnh_list[['mnh08']]
+var_prefix <- "M08"
+
+temp.df1 <- temp.df %>% 
+   filter(MOMID!="") %>%
+      filter(!is.na(MOMID)) %>%
+      distinct (MOMID, PREGID, paste0(var_prefix, '_TYPE_VISIT'), .keep_all = TRUE) %>% #keeps a single row of duplicate rows based on MOMID, _TYPE_VISIT, and PREGID.
+      filter(get(paste0(var_prefix, '_TYPE_VISIT'))!=13) %>%
+  select(MOMID, PREGID, M08_TYPE_VISIT)
+```
+
  
 ```{r}
 # mnh_list[["mnh01"]]$SCRNID # how to access a variable in a particular form list. This works in dplyr also
