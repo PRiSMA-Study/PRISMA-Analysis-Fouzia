@@ -84,7 +84,7 @@ Fasting Glucose >= 5.1 mmol/L
 <br>
 <br>
 
-**Denominator:** Enrolled women who have an ANC-38 (VISIT 3).
+**Denominator:** Enrolled women who have an ANC-28 (VISIT 3).
 <br>
 <br>
 
@@ -104,10 +104,10 @@ diabetes_table <- df %>%
   summarise(
     ########## MEASURED
     # confirm HbA1C at enrollment is high
-    "Missing Enrollment HbA1c: M08_HBA1C_LBORRES_1, n (%)" =
-      paste0(sum(is.na(M08_HBA1C_LBORRES_1)),
+    "Missing Enrollment HbA1c: M08_HBA1C_PRCNT_1, n (%)" =
+      paste0(sum(is.na(M08_HBA1C_PRCNT_11)),
              " (",
-             format(round(sum(is.na(M08_HBA1C_LBORRES_1))/n()*100, 2),nsmall=2, digits=3),
+             format(round(sum(is.na(M08_HBA1C_PRCNT_1))/n()*100, 2),nsmall=2, digits=3),
              ")"),
     
     "Missing ANC28 Pretest Fasting Glucose: M08_BGLUC_PRETEST_MMOLL_LBORRES_3, n (%)" =
@@ -142,6 +142,89 @@ diabetes_table <- df %>%
       paste0(sum(GEST_DIAB_MEAS == 0, na.rm = TRUE),
              " (",
              format(round(sum(GEST_DIAB_MEAS == 0, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+    
+        "GDM = Missing " = 
+      paste0(sum(is.na(GEST_DIAB_MEAS)),
+             " (",
+             format(round(sum(is.na(GEST_DIAB_MEAS))/n()*100,2), nsmall=2, digits=3),
+             ")"),
+    
+    # Overt Diabetes: M08_HBA1C_PRCNT_1
+     "Overt Diabetes = Yes " =
+      paste0(sum(OVERT_DIA == 1, na.rm = TRUE),
+             " (",
+             format(round(sum(OVERT_DIA == 1, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+
+         "Overt Diabetes = No " =
+      paste0(sum(OVERT_DIA == 0, na.rm = TRUE),
+             " (",
+             format(round(sum(OVERT_DIA == 0, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+
+         "Overt Diabetes = Missing " =
+      paste0(sum(OVERT_DIA == 1, na.rm = TRUE),
+             " (",
+             format(round(sum(is.na(OVERT_DIA))/n()*100,2), nsmall=2, digits=3),
+             ")"),
+
+    # OGTT_PRE
+        "Fasting Glucose = Yes " =
+      paste0(sum(OGTT_PRE == 1, na.rm = TRUE),
+             " (",
+             format(round(sum(OGTT_PRE == 1, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+
+            "Fasting Glucose = No " =
+      paste0(sum(OGTT_PRE == 0, na.rm = TRUE),
+             " (",
+             format(round(sum(OGTT_PRE == 0, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+
+               "Fasting Glucose = Missing " =
+      paste0(sum(is.na(OGTT_PRE)),
+             " (",
+             format(round(sum(is.na(OGTT_PRE))/n()*100,2), nsmall=2, digits=3),
+             ")"),
+
+
+    # OGTT 1-hr
+        "OGTT 1-hr = Yes " =
+      paste0(sum(OGTT_1hr == 1, na.rm = TRUE),
+             " (",
+             format(round(sum(OGTT_1hr == 1, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+
+            "OGTT 1-hr = No " =
+      paste0(sum(OGTT_1hr == 0, na.rm = TRUE),
+             " (",
+             format(round(sum(OGTT_1hr == 0, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+
+               "OGTT 1-hr = Missing " =
+      paste0(sum(is.na(OGTT_1hr)),
+             " (",
+             format(round(sum(is.na(OGTT_1hr))/n()*100,2), nsmall=2, digits=3),
+             ")"),
+
+        # OGTT 2-hr
+        "OGTT 2-hr = Yes " =
+      paste0(sum(OGTT_2hr == 1, na.rm = TRUE),
+             " (",
+             format(round(sum(OGTT_2hr == 1, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+
+            "OGTT 2-hr = No " =
+      paste0(sum(OGTT_2hr == 0, na.rm = TRUE),
+             " (",
+             format(round(sum(OGTT_2hr == 0, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+
+               "OGTT 2-hr = Missing " =
+      paste0(sum(is.na(OGTT_2hr)),
+             " (",
+             format(round(sum(is.na(OGTT_2hr))/n()*100,2), nsmall=2, digits=3),
              ")")) %>%
 
   t() %>% as.data.frame() %>% 
@@ -172,7 +255,20 @@ diabetes_table  %>%
     "Missing ANC28 1-hr OGTT: M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3, n (%)",
     "Missing ANC28 2-hr OGTT: M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3, n (%)",
     "Yes, n (%)", # Gestational Diabetes (from GEST_DIAB_MEAS)
-    "No, n (%)")) %>% # Gestational Diabetes (from GEST_DIAB_MEAS)
+    "No, n (%)", # Gestational Diabetes (from GEST_DIAB_MEAS)
+    "Missing (Fasting, 1-hr OGTT and 2-hr OGTT), n (%)",
+    "HbA1c Yes, n (%)", # Hba1c / Overt Diabetes
+    "HbA1c No, n (%)",
+    "Missing (HbA1c), n(%)",
+    "Fasting Glucose Yes, n (%)", # Fasting Glucose
+    "Fasting Glucose No, n (%)",
+    "Missing (Fasting), n(%)",
+    "OGTT 1-hr Yes, n (%)", # OGTT 1-hr
+    "OGTT 1-hr No, n (%)",
+    "Missing (OGTT 1-hr), n(%)",
+    "OGTT 2-hr Yes, n (%)",# OGTT 2-hr
+    "OGTT 2-hr No, n (%)",
+    "Missing (OGTT 2-hr), n(%)")) %>%
   
   
   mutate_all(funs(str_replace(., "NaN", "0"))) %>% 
@@ -182,8 +278,13 @@ diabetes_table  %>%
               latex_options = c("repeat_header", "HOLD_position")) %>% 
   kable_styling(font_size = 14) %>%
   row_spec(0, extra_css = "border-bottom: 0px white;") %>%
-
-  pack_rows("Gestational Diabetes (Measured) Category, n (%)", 5, 6, label_row_css = "color: steelblue;") # WHAT DOES 5,6 HERE SAY? 
+  
+  pack_rows("Gestational Diabetes (Measured) Category, n (%)", 5, 7, label_row_css = "color: steelblue;") %>% # WHAT DOES 5,6 HERE SAY? 
+  pack_rows("Overt Diabetes (HbA1c)  Category, n (%)", 8, 10, label_row_css = "color: steelblue;") %>%
+  pack_rows("Fasting Glucose Category, n (%)", 11, 13, label_row_css = "color: steelblue;") %>%
+  pack_rows("OGTT 1-hr Category, n (%)", 14, 16, label_row_css = "color: steelblue;") %>%
+  pack_rows("OGTT 2-hr Category, n (%)", 17, 19, label_row_css = "color: steelblue;")
+  
 
 
  #"Missing M08_CBC_HB_LBORRES_1 = NA, n (%)",#%>% 
@@ -191,146 +292,145 @@ diabetes_table  %>%
   # pack_rows("Any method measured birthweight (categorical), n (%)", 9, 12, label_row_css = "color: steelblue;") 
 ```
 
-\newpage
+<!-- \newpage -->
 
-#### Figure 1a. Histogram of OGTT 1hr across sites
-```{r lbw fig1a}
+<!-- #### Figure 1a. Histogram of OGTT 1hr across sites -->
+<!-- ```{r lbw fig1a} -->
 
-OGTT1hr_nomissing <- df %>% filter(!is.na(M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3))
+<!-- OGTT1hr_nomissing <- df %>% filter(!is.na(M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3)) -->
 
-ggplot(data=OGTT1hr_nomissing,
-       aes(x=M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3)) + 
-  geom_histogram() + # binwidth = 10 +
-  facet_grid(vars(SITE), scales = "free") +
-  scale_x_continuous(breaks = seq(0,30,2)) + # RANGE FOR OGTT HERE ON X-AXIS IS 0-30 .
-  ggtitle("1-hr OGTT distribution , by Site") + 
-  ylab("Count") + 
-  xlab("1-hr OGTT (mmol/L)") + 
-  theme_bw() +
-  theme(strip.background=element_rect(fill="white")) + #color
-  theme(axis.text.x = element_text(vjust = 1, hjust=1), # angle = 60, 
-        legend.position="bottom",
-        legend.title = element_blank(),
-        panel.grid.minor = element_blank()) + 
-    geom_vline(mapping=aes(xintercept=0), linetype ="dashed", color = "red") + # ADDS VERTICAL DASHED LINE AT MIN THRESHOLD
-  geom_vline(mapping=aes(xintercept=10), linetype ="dashed", color = "red")  # ADDS VERTICAL DASHED LINE AT MAX THRESHOLD
-  
-```
+<!-- ggplot(data=OGTT1hr_nomissing, -->
+<!--        aes(x=M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3)) +  -->
+<!--   geom_histogram() + # binwidth = 10 + -->
+<!--   facet_grid(vars(SITE), scales = "free") + -->
+<!--   scale_x_continuous(breaks = seq(0,30,2)) + # RANGE FOR OGTT HERE ON X-AXIS IS 0-30 . -->
+<!--   ggtitle("1-hr OGTT distribution , by Site") +  -->
+<!--   ylab("Count") +  -->
+<!--   xlab("1-hr OGTT (mmol/L)") +  -->
+<!--   theme_bw() + -->
+<!--   theme(strip.background=element_rect(fill="white")) + #color -->
+<!--   theme(axis.text.x = element_text(vjust = 1, hjust=1), # angle = 60,  -->
+<!--         legend.position="bottom", -->
+<!--         legend.title = element_blank(), -->
+<!--         panel.grid.minor = element_blank()) +  -->
+<!--     geom_vline(mapping=aes(xintercept=0), linetype ="dashed", color = "red") + # ADDS VERTICAL DASHED LINE AT MIN THRESHOLD -->
+<!--   geom_vline(mapping=aes(xintercept=10), linetype ="dashed", color = "red")  # ADDS VERTICAL DASHED LINE AT MAX THRESHOLD -->
 
-#### Figure 1B. Histogram of OGTT 2-hr across sites
-```{r lbw fig1a}
+<!-- ``` -->
 
-OGTT2hr_nomissing <- df %>% filter(!is.na(M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3))
+<!-- #### Figure 1B. Histogram of OGTT 2-hr across sites -->
+<!-- ```{r lbw fig1a} -->
 
-ggplot(data=OGTT2hr_nomissing,
-       aes(x=M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3)) + 
-  geom_histogram() + #binwidth = 100
-  facet_grid(vars(SITE), scales = "free") +
-  scale_x_continuous(breaks = seq(0,30,2)) + # RANGE FOR OGTT HERE ON X-AXIS IS 0-30
-  ggtitle("2-hr OGTT distribution , by Site") + 
-  ylab("Count") + 
-  xlab("2-hr OGTT (mmol/L)") + 
-  theme_bw() +
-  theme(strip.background=element_rect(fill="white")) + #color
-  theme(axis.text.x = element_text(vjust = 1, hjust=1), # angle = 60, 
-        legend.position="bottom",
-        legend.title = element_blank(),
-        panel.grid.minor = element_blank()) + 
-    geom_vline(mapping=aes(xintercept=0), linetype ="dashed", color = "red") + # ADDS VERTICAL DASHED LINE AT MIN THRESHOLD
-  geom_vline(mapping=aes(xintercept=8.5), linetype ="dashed", color = "red")  # ADDS VERTICAL DASHED LINE AT MAX THRESHOLD
-  
-```
+<!-- OGTT2hr_nomissing <- df %>% filter(!is.na(M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3)) -->
 
-\newpage
-Table 2: Gestational Diabetes Diagnosed
-```{r}
-# diabetes_df <- diabetes_df %>% 
-#   mutate(GEST_DIAB_DIAG = case_when((M04_DIABETES_EVER_MHOCCUR_3==0 | M04_DIABETES_EVER_MHOCCUR_4==0 | M04_DIABETES_EVER_MHOCCUR_5==0) &
-#                                       ((M09_GEST_DIAB_MHOCCUR_6==1 | # WAS MOTHER DIAGNOSED WITH GDM
-#                                       (M09_INDUCED_PROCCUR_6==1 & M09_INDUCED_PRINDC_6==8)) |
-#                                       (M19_PRIMARY_MHTERM_13==4 & M19_LD_COMPL_MHTERM_3_13)) ~ 1,
-#                                     TRUE ~ as.numeric(0)))
+<!-- ggplot(data=OGTT2hr_nomissing, -->
+<!--        aes(x=M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3)) +  -->
+<!--   geom_histogram() + #binwidth = 100 -->
+<!--   facet_grid(vars(SITE), scales = "free") + -->
+<!--   scale_x_continuous(breaks = seq(0,30,2)) + # RANGE FOR OGTT HERE ON X-AXIS IS 0-30 -->
+<!--   ggtitle("2-hr OGTT distribution , by Site") +  -->
+<!--   ylab("Count") +  -->
+<!--   xlab("2-hr OGTT (mmol/L)") +  -->
+<!--   theme_bw() + -->
+<!--   theme(strip.background=element_rect(fill="white")) + #color -->
+<!--   theme(axis.text.x = element_text(vjust = 1, hjust=1), # angle = 60,  -->
+<!--         legend.position="bottom", -->
+<!--         legend.title = element_blank(), -->
+<!--         panel.grid.minor = element_blank()) +  -->
+<!--     geom_vline(mapping=aes(xintercept=0), linetype ="dashed", color = "red") + # ADDS VERTICAL DASHED LINE AT MIN THRESHOLD -->
+<!--   geom_vline(mapping=aes(xintercept=8.5), linetype ="dashed", color = "red")  # ADDS VERTICAL DASHED LINE AT MAX THRESHOLD -->
+
+<!-- ``` -->
+
+<!-- \newpage -->
+<!-- Table 2: Gestational Diabetes Diagnosed -->
+<!-- ```{r} -->
+<!-- # diabetes_df <- diabetes_df %>%  -->
+<!-- #   mutate(GEST_DIAB_DIAG = case_when((M04_DIABETES_EVER_MHOCCUR_3==0 | M04_DIABETES_EVER_MHOCCUR_4==0 | M04_DIABETES_EVER_MHOCCUR_5==0) & -->
+<!-- #                                       ((M09_GEST_DIAB_MHOCCUR_6==1 | # WAS MOTHER DIAGNOSED WITH GDM -->
+<!-- #                                       (M09_INDUCED_PROCCUR_6==1 & M09_INDUCED_PRINDC_6==8)) | -->
+<!-- #                                       (M19_PRIMARY_MHTERM_13==4 & M19_LD_COMPL_MHTERM_3_13)) ~ 1, -->
+<!-- #                                     TRUE ~ as.numeric(0))) -->
 
 
-diabetes_table <- df %>%
-  rowwise() %>%
-  group_by(SITE) %>%
-  summarise(
-    ########## DIAGNOSED 
-    # 
-    "ANC28 - Diagnosed with Diabetes in the past?: M04_DIABETES_EVER_MHOCCUR_3, n (%)" =
-      paste0(sum(is.na(M04_DIABETES_EVER_MHOCCUR_3)),
-             " (",
-             format(round(sum(is.na(M04_DIABETES_EVER_MHOCCUR_3))/n()*100, 2),nsmall=2, digits=3),
-             ")"),
-    
-    "ANC32 - Diagnosed with Diabetes in the past?: M04_DIABETES_EVER_MHOCCUR_4, n (%)" =
-      paste0(sum(is.na(M04_DIABETES_EVER_MHOCCUR_4)),
-             " (",
-             format(round(sum(is.na(M04_DIABETES_EVER_MHOCCUR_4))/n()*100, 2),nsmall=2, digits=3),
-             ")"),
-    
-    "ANC36 - Diagnosed with Diabetes in the past?: M04_DIABETES_EVER_MHOCCUR_5, n (%)" =
-      paste0(sum(is.na(M04_DIABETES_EVER_MHOCCUR_5)),
-             " (",
-             format(round(sum(is.na(M04_DIABETES_EVER_MHOCCUR_5))/n()*100, 2),nsmall=2, digits=3),
-             ")"),
-    
-    "L&D Induced: M09_INDUCED_PROCCUR_6, n (%)" =
-      paste0(sum(is.na(M09_INDUCED_PROCCUR_6)),
-             " (",
-             format(round(sum(is.na(M09_INDUCED_PROCCUR_6))/n()*100, 2),nsmall=2, digits=3),
-             ")"),
-    
-    
-    "L&D Induced: M09_INDUCED_PRINDC_6, n (%)" =
-      paste0(sum(is.na(M09_INDUCED_PRINDC_6)),
-             " (",
-             format(round(sum(is.na(M09_INDUCED_PRINDC_6))/n()*100, 2),nsmall=2, digits=3),
-             ")"),
-    
-    
-    "Hospitalization: M19_PRIMARY_MHTERM_13, n (%)" =
-      paste0(sum(is.na(M19_PRIMARY_MHTERM_13)),
-             " (",
-             format(round(sum(is.na(M19_PRIMARY_MHTERM_13))/n()*100, 2),nsmall=2, digits=3),
-             ")"),
-    
-    "Hospitalization: M19_LD_COMPL_MHTERM_3_13, n (%)" =
-      paste0(sum(is.na(M19_LD_COMPL_MHTERM_3_13)),
-             " (",
-             format(round(sum(is.na(M19_LD_COMPL_MHTERM_3_13))/n()*100, 2),nsmall=2, digits=3),
-             ")"))%>%
-  
-  t() %>% as.data.frame() %>% 
-  `colnames<-`(c(.[1,])) %>% 
-  slice(-1)
-    
-```
+<!-- diabetes_table <- df %>% -->
+<!--   rowwise() %>% -->
+<!--   group_by(SITE) %>% -->
+<!--   summarise( -->
+<!--     ########## DIAGNOSED  -->
+<!--     #  -->
+<!--     "ANC28 - Diagnosed with Diabetes in the past?: M04_DIABETES_EVER_MHOCCUR_3, n (%)" = -->
+<!--       paste0(sum(is.na(M04_DIABETES_EVER_MHOCCUR_3)), -->
+<!--              " (", -->
+<!--              format(round(sum(is.na(M04_DIABETES_EVER_MHOCCUR_3))/n()*100, 2),nsmall=2, digits=3), -->
+<!--              ")"), -->
 
-```{r}
-diabetes_table  %>% 
-  `rownames<-` (c(
-    "ANC28 - Diagnosed with Diabetes in the past?: M04_DIABETES_EVER_MHOCCUR_3, n (%)",
-    "ANC32 - Diagnosed with Diabetes in the past?: M04_DIABETES_EVER_MHOCCUR_4, n (%)",
-    "ANC36 - Diagnosed with Diabetes in the past?: M04_DIABETES_EVER_MHOCCUR_5, n (%)",
-    "L&D Induced: M09_INDUCED_PROCCUR_6, n (%)",
-    "L&D Induced: M09_INDUCED_PRINDC_6, n (%)",
-    "Hospitalization: M19_PRIMARY_MHTERM_13, n (%)",
-    "Hospitalization: M19_LD_COMPL_MHTERM_3_13, n (%)")) %>%
-  
-  
-  mutate_all(funs(str_replace(., "NaN", "0"))) %>% 
-  kbl(caption = "", booktabs = TRUE) %>%
-  kable_paper(bootstrap_options = "striped", 
-              full_width = T, html_font = "Cambria", position = "left",
-              latex_options = c("repeat_header", "HOLD_position")) %>% 
-  kable_styling(font_size = 14) %>%
-  row_spec(0, extra_css = "border-bottom: 0px white;") #
+<!--     "ANC32 - Diagnosed with Diabetes in the past?: M04_DIABETES_EVER_MHOCCUR_4, n (%)" = -->
+<!--       paste0(sum(is.na(M04_DIABETES_EVER_MHOCCUR_4)), -->
+<!--              " (", -->
+<!--              format(round(sum(is.na(M04_DIABETES_EVER_MHOCCUR_4))/n()*100, 2),nsmall=2, digits=3), -->
+<!--              ")"), -->
 
- #"Missing M08_CBC_HB_LBORRES_1 = NA, n (%)",#%>% 
- # pack_rows("PRISMA measured birthweight (categorical), n (%)", 5, 8, label_row_css = "color: steelblue;") %>% 
-  # pack_rows("Any method measured birthweight (categorical), n (%)", 9, 12, label_row_css = "color: steelblue;") 
-```
+<!--     "ANC36 - Diagnosed with Diabetes in the past?: M04_DIABETES_EVER_MHOCCUR_5, n (%)" = -->
+<!--       paste0(sum(is.na(M04_DIABETES_EVER_MHOCCUR_5)), -->
+<!--              " (", -->
+<!--              format(round(sum(is.na(M04_DIABETES_EVER_MHOCCUR_5))/n()*100, 2),nsmall=2, digits=3), -->
+<!--              ")"), -->
 
-    
+<!--     "L&D Induced: M09_INDUCED_PROCCUR_6, n (%)" = -->
+<!--       paste0(sum(is.na(M09_INDUCED_PROCCUR_6)), -->
+<!--              " (", -->
+<!--              format(round(sum(is.na(M09_INDUCED_PROCCUR_6))/n()*100, 2),nsmall=2, digits=3), -->
+<!--              ")"), -->
+
+
+<!--     "L&D Induced: M09_INDUCED_PRINDC_6, n (%)" = -->
+<!--       paste0(sum(is.na(M09_INDUCED_PRINDC_6)), -->
+<!--              " (", -->
+<!--              format(round(sum(is.na(M09_INDUCED_PRINDC_6))/n()*100, 2),nsmall=2, digits=3), -->
+<!--              ")"), -->
+
+
+<!--     "Hospitalization: M19_PRIMARY_MHTERM_13, n (%)" = -->
+<!--       paste0(sum(is.na(M19_PRIMARY_MHTERM_13)), -->
+<!--              " (", -->
+<!--              format(round(sum(is.na(M19_PRIMARY_MHTERM_13))/n()*100, 2),nsmall=2, digits=3), -->
+<!--              ")"), -->
+
+<!--     "Hospitalization: M19_LD_COMPL_MHTERM_3_13, n (%)" = -->
+<!--       paste0(sum(is.na(M19_LD_COMPL_MHTERM_3_13)), -->
+<!--              " (", -->
+<!--              format(round(sum(is.na(M19_LD_COMPL_MHTERM_3_13))/n()*100, 2),nsmall=2, digits=3), -->
+<!--              ")"))%>% -->
+
+<!--   t() %>% as.data.frame() %>%  -->
+<!--   `colnames<-`(c(.[1,])) %>%  -->
+<!--   slice(-1) -->
+
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- diabetes_table  %>%  -->
+<!--   `rownames<-` (c( -->
+<!--     "ANC28 - Diagnosed with Diabetes in the past?: M04_DIABETES_EVER_MHOCCUR_3, n (%)", -->
+<!--     "ANC32 - Diagnosed with Diabetes in the past?: M04_DIABETES_EVER_MHOCCUR_4, n (%)", -->
+<!--     "ANC36 - Diagnosed with Diabetes in the past?: M04_DIABETES_EVER_MHOCCUR_5, n (%)", -->
+<!--     "L&D Induced: M09_INDUCED_PROCCUR_6, n (%)", -->
+<!--     "L&D Induced: M09_INDUCED_PRINDC_6, n (%)", -->
+<!--     "Hospitalization: M19_PRIMARY_MHTERM_13, n (%)", -->
+<!--     "Hospitalization: M19_LD_COMPL_MHTERM_3_13, n (%)")) %>% -->
+
+
+<!--   mutate_all(funs(str_replace(., "NaN", "0"))) %>%  -->
+<!--   kbl(caption = "", booktabs = TRUE) %>% -->
+<!--   kable_paper(bootstrap_options = "striped",  -->
+<!--               full_width = T, html_font = "Cambria", position = "left", -->
+<!--               latex_options = c("repeat_header", "HOLD_position")) %>%  -->
+<!--   kable_styling(font_size = 14) %>% -->
+<!--   row_spec(0, extra_css = "border-bottom: 0px white;") # -->
+
+<!--  #"Missing M08_CBC_HB_LBORRES_1 = NA, n (%)",#%>%  -->
+<!--  # pack_rows("PRISMA measured birthweight (categorical), n (%)", 5, 8, label_row_css = "color: steelblue;") %>%  -->
+<!--   # pack_rows("Any method measured birthweight (categorical), n (%)", 9, 12, label_row_css = "color: steelblue;")  -->
+<!-- ``` -->
+
