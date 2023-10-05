@@ -1,0 +1,679 @@
+---
+title: "Mat_cHTN_gHTN_tables"
+author: "Fouzia Farooq"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+---
+title: "<span style='font-size: 18px'> <span style='text-align: center'> PRISMA-Maternal-Outcomes (Issued: `r Sys.Date()`)"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: 4
+  word_document:
+    toc: yes
+    toc_depth: '4'
+  pdf_document:
+    toc: yes
+    toc_depth: '4'
+    df_print: kable
+always_allow_html: true
+
+# knit: (function(inputFile, encoding) { 
+#       out_dir <- 'output';
+#       rmarkdown::render(inputFile,
+#                         encoding=encoding, 
+#                         output_file=file.path(dirname(inputFile), out_dir, 'PRISMA-Maternal-Outcomes-Report')) })
+---
+
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+
+
+##### **Includes data from synapse last updated:** {.unlisted .unnumbered}
+#####  2023-09-15 {.unlisted .unnumbered}
+
+
+```{css, echo=FALSE}
+.table caption {
+  color: black;
+  font-weight: bold;
+}
+```
+
+
+```{r, data setup, include = FALSE}
+
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+```{r}
+library(knitr)
+library(tidyverse)
+library(reshape2)
+library(lubridate)
+library(kableExtra)
+library(emo)
+library(naniar)
+library(dplyr)
+library(RColorBrewer)
+```
+
+```{r}
+# AMONG WOMEN WHO HAVE DELIVERED
+htn_df <- read.csv('data_out/mat_htn_tables.csv', header = TRUE)
+df <- htn_df # the file that is generated in 'Mat_gHTN_analysis.Rmd' -- run that first but make sure to subset on VISIT 3.
+
+chtn_diag_df <- read.csv('data_out/chtn_diag_df.csv', header=TRUE)
+```
+\newpage
+
+### Chronic Hypertension
+**Definition:** Blood pressure ≥140/90 mm Hg before pregnancy or <20th weeks' gestation at one time point OR
+<br>
+Use of antihypertensive medication before pregnancy (<20 weeks' gestation) OR 
+<br>
+History of hypertension OR 
+<br>
+Taking antihypertensive medications
+
+<br>
+
+**Denominator:** Enrolled women who have a completed pregnancy
+<br>
+<br>
+<br>
+ 
+
+**Table 1. Prevalence of Chronic Hypertension**
+```{r}
+
+temp.df <- df %>% select(MOMID, SITE, DELIVERED_FF, M06_BP_SYS_VSORRES_1_2, M06_BP_SYS_VSORRES_2_2, M06_BP_SYS_VSORRES_3_2,
+                             M06_BP_DIA_VSORRES_1_2, M06_BP_DIA_VSORRES_2_2, M06_BP_DIA_VSORRES_3_2, meanSBP_ANC20, meanDBP_ANC20) %>% 
+  filter(SITE=="Pakistan")
+
+chtn_table <- df %>%
+  rowwise() %>%
+  group_by(SITE) %>%
+  summarise(
+    # SBP at enrollment (ANC LT20)
+    "Missing SBP Enrollment, n (%)" =
+      paste0(sum(is.na(meanSBP_ANC_LT20)),
+             " (",
+             format(round(sum(is.na(meanSBP_ANC_LT20))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    # DBP at enrollment (ANC LT20)
+    "Missing DBP Enrollment, n (%)" =
+      paste0(sum(is.na(meanDBP_ANC_LT20)),
+             " (",
+             format(round(sum(is.na(meanDBP_ANC_LT20))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    # OVERALL 
+    # CHRONIC HYPERTENSION CATEGORIES:
+    "cHTN = Yes " = 
+      paste0(sum(CHRON_HYPER == 1, na.rm = TRUE),
+             " (",
+             format(round(sum(CHRON_HYPER == 1, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+    
+    "cHTN = No " = 
+      paste0(sum(CHRON_HYPER == 0, na.rm = TRUE),
+             " (",
+             format(round(sum(CHRON_HYPER == 0, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+    
+    "cHTN = Missing " = 
+      paste0(sum(is.na(CHRON_HYPER)),
+             " (",
+             format(round(sum(is.na(CHRON_HYPER))/n()*100,2), nsmall=2, digits=3),
+             ")"),
+    
+    # CHRON_HYPER_MEAS
+    "cHTN Measured = Yes " = 
+      paste0(sum(CHRON_HYPER_MEAS == 1, na.rm = TRUE),
+             " (",
+             format(round(sum(CHRON_HYPER_MEAS == 1, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+    
+    "cHTN Measured = No " = 
+      paste0(sum(CHRON_HYPER_MEAS == 0, na.rm = TRUE),
+             " (",
+             format(round(sum(CHRON_HYPER_MEAS == 0, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+    
+    "cHTN Measured = Missing " = 
+      paste0(sum(is.na(CHRON_HYPER_MEAS)),
+             " (",
+             format(round(sum(is.na(CHRON_HYPER_MEAS))/n()*100,2), nsmall=2, digits=3),
+             ")"),
+           # CHRON_HYPER_DIAG
+    "cHTN Clinical Diagnosis = Yes " =
+      paste0(sum(CHRON_HYPER_DIAG == 1, na.rm = TRUE),
+             " (",
+             format(round(sum(CHRON_HYPER_DIAG == 1, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+
+    "cHTN Clinical Diagnosis = No " =
+      paste0(sum(CHRON_HYPER_DIAG == 0, na.rm = TRUE),
+             " (",
+             format(round(sum(CHRON_HYPER_DIAG == 0, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+
+    "cHTN Clinical Diagnosis = Missing " =
+      paste0(sum(is.na(CHRON_HYPER_DIAG)),
+             " (",
+             format(round(sum(is.na(CHRON_HYPER_DIAG))/n()*100,2), nsmall=2, digits=3),
+             ")")) %>%
+
+  t() %>% as.data.frame() %>%
+  `colnames<-`(c(.[1,])) %>%
+  slice(-1)
+
+```
+
+```{r}
+
+  chtn_table2 <- chtn_diag_df %>%
+  rowwise() %>%
+  group_by(SITE) %>%
+  summarise(
+    # CHRON_HYPER_TREAT
+    "cHTN Treatment = Yes " =
+      paste0(sum(CHRON_HYPER_TREAT == 1, na.rm = TRUE),
+             " (",
+             format(round(sum(CHRON_HYPER_TREAT == 1, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+
+    "cHTN Treatment = No " =
+      paste0(sum(CHRON_HYPER_TREAT == 0, na.rm = TRUE),
+             " (",
+             format(round(sum(CHRON_HYPER_TREAT == 0, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+
+    "cHTN Treatment = Missing " =
+      paste0(sum(is.na(CHRON_HYPER_TREAT)),
+             " (",
+             format(round(sum(is.na(CHRON_HYPER_TREAT))/n()*100,2), nsmall=2, digits=3),
+             ")")) %>%
+
+  t() %>% as.data.frame() %>%
+  `colnames<-`(c(.[1,])) %>%
+  slice(-1)
+    
+
+chtn_table2$Ghana <- NA
+chtn_table2$Pakistan <- NA
+```
+
+```{r}
+chtn_table3 <- rbind(chtn_table, chtn_table2)
+```
+
+
+```{r}
+chtn_table3  %>% 
+  `rownames<-` (c(
+    "Missing SBP Enrollment, n (%)",
+    "Missing DBP Enrollment, n (%)",
+    "Yes, n (%)", # CHRON_HYPER DIAG + MEASURED + TREAT
+    "No, n (%)", # 
+    "Missing (Measured & Treatment & Clinical Diagnosis), n (%)",
+    " Measured Yes, n (%)", # MEASURED
+    "Measured No, n (%)",
+    "Measured Missing, n (%)",
+    "Diagnosed Yes, n (%)", # diagnosed
+    "Diagnosed No, n (%)",
+    "Diagnosed Missing, n (%)",
+    "Treatment Yes, n (%)", # TREATMENT
+    "Treatment No, n (%)",
+    "Treatment Missing, n (%)")) %>%
+
+  
+  mutate_all(funs(str_replace(., "NaN", "0"))) %>% 
+  kbl(caption = "", booktabs = TRUE) %>%
+  kable_paper(bootstrap_options = "striped", 
+              full_width = T, html_font = "Cambria", position = "left",
+              latex_options = c("repeat_header", "HOLD_position")) %>% 
+  kable_styling(font_size = 14) %>%
+  row_spec(0, extra_css = "border-bottom: 0px white;") %>%
+  
+  pack_rows("Missing SBP and DBP variables (average of 3 measurements), n (%)", 1, 2, label_row_css = "color: steelblue;") %>%
+  pack_rows("Chronic Hypertension, n (%)", 3, 5, label_row_css = "color: steelblue;") %>% # WHAT DOES 5,6 HERE SAY? 
+  pack_rows("Measured Chronic Hypertension at Enrollment, n (%)", 6, 8, label_row_css = "color: steelblue;") %>%
+  pack_rows("Clinical Diagnosis at Enrollment, n (%)", 9, 11, label_row_css = "color: steelblue;") %>%
+  pack_rows("On Treatment for Chronic Hypertension at Enrollment*, n (%)", 12, 14, label_row_css = "color: steelblue;")
+  
+  
+```
+***Note:** Category: "On Treatment for Chronic Hypertension" is among those who are diagnosed with chronic hypertension
+<br>
+<br>
+<br>
+\newpage
+
+### Gestational Hypertension
+**Definition:** A systolic blood pressure (SBP) ≥140 mm Hg or diastolic blood pressure (DBP) ≥90 mm Hg on two occasions at least 1 hour apart after 20 weeks' gestation among participants without chronic hypertension (cHTN) OR 
+<br>
+SBP≥140 mmHg or DBP≥90 mmHg at one occasion after 20 weeks' gestation AND treatment with medication among participants without cHTN OR 
+<br> 
+SBP≥160 mmHg or DBP≥90 mmHg at one occasion after 20 weeks' gestation among participants without cHTN
+
+<br>
+
+**Denominator:** Enrolled women have a completed pregnancy
+<br>
+<br>
+<br>
+
+**Table 2a. Missingness of Blood Pressure and Protein Measures**
+```{r}
+missing_ghtn_table <- df %>%
+  rowwise() %>%
+  group_by(SITE) %>%
+  summarise(
+     # SBP AT ANC20
+    "Missing SBP ANC20**, n (%)" =
+      paste0(sum(is.na(meanSBP_ANC20)),
+             " (",
+             format(round(sum(is.na(meanSBP_ANC20))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    # DBP AT ANC20
+    "Missing DBP ANC20**, n (%)" =
+      paste0(sum(is.na(meanDBP_ANC20)),
+             " (",
+             format(round(sum(is.na(meanDBP_ANC20))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    # SBP AT ANC28
+    "Missing SBP ANC28, n (%)" =
+      paste0(sum(is.na(meanSBP_ANC28)),
+             " (",
+             format(round(sum(is.na(meanSBP_ANC28))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    # DBP AT ANC28
+    "Missing DBP ANC28, n (%)" =
+      paste0(sum(is.na(meanDBP_ANC28)),
+             " (",
+             format(round(sum(is.na(meanDBP_ANC28))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    # SBP AT ANC32
+    "Missing SBP ANC32, n (%)" =
+      paste0(sum(is.na(meanSBP_ANC32)),
+             " (",
+             format(round(sum(is.na(meanSBP_ANC32))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    # DBP AT ANC32
+    "Missing DBP ANC32, n (%)" =
+      paste0(sum(is.na(meanDBP_ANC32)),
+             " (",
+             format(round(sum(is.na(meanDBP_ANC32))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    # SBP AT ANC36
+    "Missing SBP ANC36, n (%)" =
+      paste0(sum(is.na(meanSBP_ANC36)),
+             " (",
+             format(round(sum(is.na(meanSBP_ANC36))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    # DBP AT ANC36
+    "Missing DBP ANC36, n (%)" =
+      paste0(sum(is.na(meanDBP_ANC36)),
+             " (",
+             format(round(sum(is.na(meanDBP_ANC36))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    # SBP AT IPC
+    "Missing SBP IPC, n (%)" =
+      paste0(sum(is.na(meanSBP_IPC)),
+             " (",
+             format(round(sum(is.na(meanSBP_IPC))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    # DBP AT IPC
+    "Missing DBP IPC, n (%)" =
+      paste0(sum(is.na(meanDBP_IPC)),
+             " (",
+             format(round(sum(is.na(meanDBP_IPC))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    # PROTEINURIA ANC20
+    "Missing Proteinuria ANC20, n (%)" =
+      paste0(sum(is.na(M08_UA_PROT_LBORRES_2)),
+             " (",
+             format(round(sum(is.na(M08_UA_PROT_LBORRES_2))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    # PROTEINURIA ANC28
+    "Missing Proteinuria ANC28, n (%)" =
+      paste0(sum(is.na(M08_UA_PROT_LBORRES_3)),
+             " (",
+             format(round(sum(is.na(M08_UA_PROT_LBORRES_3))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    # PROTEINURIA ANC32
+    "Missing Proteinuria ANC32, n (%)" =
+      paste0(sum(is.na(M08_UA_PROT_LBORRES_4)),
+             " (",
+             format(round(sum(is.na(M08_UA_PROT_LBORRES_4))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    # PROTEINURIA ANC36
+    "Missing Proteinuria ANC36, n (%)" =
+      paste0(sum(is.na(M08_UA_PROT_LBORRES_5)),
+             " (",
+             format(round(sum(is.na(M08_UA_PROT_LBORRES_5))/n()*100, 2),nsmall=2, digits=3),
+             ")"),
+    
+    #   # PROTEINURIA ANC Hospitalization
+    # "Missing Proteinuria ANC Hospitalization, n (%)" =
+    #   paste0(sum(is.na(M08_UA_PROT_LBORRES_13)),
+    #          " (",
+    #          format(round(sum(is.na(M08_UA_PROT_LBORRES_13))/n()*100, 2),nsmall=2, digits=3),
+    #          ")"),
+    
+        # PROTEINURIA IPC
+    "Missing Proteinuria IPC, n (%)" =
+      paste0(sum(is.na(M08_UA_PROT_LBORRES_6)),
+             " (",
+             format(round(sum(is.na(M08_UA_PROT_LBORRES_6))/n()*100, 2),nsmall=2, digits=3),
+             ")")) %>%
+    
+  t() %>% as.data.frame() %>% 
+  `colnames<-`(c(.[1,])) %>% 
+  slice(-1)
+    
+
+        # AT HOSPITALIZATION ALL ARE MISSING - DON'T SHOW.
+    # # SBP AT ANC HOSP
+    # "Missing SBP ANC Hospitalization, n (%)" =
+    #   paste0(sum(is.na(meanSBP_Hosp_ANC)),
+    #          " (",
+    #          format(round(sum(is.na(meanSBP_Hosp_ANC))/n()*100, 2),nsmall=2, digits=3),
+    #          ")"),
+    # 
+    # # DBP AT ANC HOSP
+    # "Missing DBP ANC Hospitalization, n (%)" =
+    #   paste0(sum(is.na(meanDBP_Hosp_ANC)),
+    #          " (",
+    #          format(round(sum(is.na(meanDBP_Hosp_ANC))/n()*100, 2),nsmall=2, digits=3),
+    #          ")"),
+    
+```
+
+```{r}
+missing_ghtn_table  %>% 
+  `rownames<-` (c(
+    "Missing SBP ANC20, n (%)",
+    "Missing DBP ANC20, n (%)",
+    "Missing SBP ANC28, n (%)",
+    "Missing DBP ANC28, n (%)",
+    "Missing SBP ANC32, n (%)",
+    "Missing DBP ANC32, n (%)",
+    "Missing SBP ANC36, n (%)",
+    "Missing DBP ANC36, n (%)",
+    "Missing SBP IPC, n (%)",
+    "Missing DBP IPC, n (%)",
+    "Missing Proteinuria ANC20, n (%)",
+    "Missing Proteinuria ANC28, n (%)",
+    "Missing Proteinuria ANC32, n (%)",
+    "Missing Proteinuria ANC36, n (%)",
+    #"Missing Proteinuria ANC Hospitalization, n (%)",
+    "Missing Proteinuria IPC, n (%)")) %>%
+  
+  
+  mutate_all(funs(str_replace(., "NaN", "0"))) %>% 
+  kbl(caption = "", booktabs = TRUE) %>%
+  kable_paper(bootstrap_options = "striped", 
+              full_width = T, html_font = "Cambria", position = "left",
+              latex_options = c("repeat_header", "HOLD_position")) %>% 
+  kable_styling(font_size = 14) %>%
+  row_spec(0, extra_css = "border-bottom: 0px white;") %>%
+  
+  pack_rows("Missing SBP and DBP variables (average of 3 measurements), n (%)", 1, 10, label_row_css = "color: steelblue;") %>%
+  pack_rows("Missing Proteinuria labs, n (%)", 11, 15, label_row_css = "color: steelblue;")
+
+```
+**Note:** **ANC20 BP not required if enrolled at weeks 18/19.
+<br>
+<br>
+<br>
+\newpage
+
+**Table 2b. Overall Prevalence of Gestational Hypertension (gHTN) with and without Proteinuria**
+```{r}
+ghtn_table <- df %>%
+  rowwise() %>%
+  group_by(SITE) %>%
+  summarise(
+     
+    
+ # OVERALL 
+    # GESTATIONAL HYPERTENSION CATEGORIES:
+    "gHTN = Yes " = 
+      paste0(sum(GEST_HYPER == 1, na.rm = TRUE),
+             " (",
+             format(round(sum(GEST_HYPER == 1, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+    
+    "gHTN = No " = 
+      paste0(sum(GEST_HYPER == 0, na.rm = TRUE),
+             " (",
+             format(round(sum(GEST_HYPER == 0, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+    
+        "gHTN = Missing " = 
+      paste0(sum(is.na(GEST_HYPER)),
+             " (",
+             format(round(sum(is.na(GEST_HYPER))/n()*100,2), nsmall=2, digits=3),
+             ")"),
+ 
+     # GESTATIONAL HYPERTENSION WITHOUT PROTEINURIA CATEGORIES:
+    "gHTN W/O Proteinuria = Yes " = 
+      paste0(sum(GEST_HYPER_WO_PROTEINURIA == 1, na.rm = TRUE),
+             " (",
+             format(round(sum(GEST_HYPER_WO_PROTEINURIA == 1, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+    
+    "gHTN w/o Proteinuria = No " = 
+      paste0(sum(GEST_HYPER_WO_PROTEINURIA == 0, na.rm = TRUE),
+             " (",
+             format(round(sum(GEST_HYPER_WO_PROTEINURIA == 0, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+    
+        "gHTN w/o Proteinuria = Missing " = 
+      paste0(sum(is.na(GEST_HYPER_WO_PROTEINURIA)),
+             " (",
+             format(round(sum(is.na(GEST_HYPER_WO_PROTEINURIA))/n()*100,2), nsmall=2, digits=3),
+             ")")) %>%
+ 
+  t() %>% as.data.frame() %>% 
+  `colnames<-`(c(.[1,])) %>% 
+  slice(-1)
+    
+```
+ 
+ 
+```{r}
+ghtn_table  %>% 
+  `rownames<-` (c(
+    "gHTN = Yes", # OERALL gHTN
+    "gHTN = No",
+    "gHTN = Missing",
+    "gHTN w/o Proteinuria = Yes",
+    "gHTN w/o Proteinuria = No",
+    "gHTN w/o Proteinuria = Missing")) %>%
+  
+   mutate_all(funs(str_replace(., "NaN", "0"))) %>% 
+  kbl(caption = "", booktabs = TRUE) %>%
+  kable_paper(bootstrap_options = "striped", 
+              full_width = T, html_font = "Cambria", position = "left",
+              latex_options = c("repeat_header", "HOLD_position")) %>% 
+  kable_styling(font_size = 14) %>%
+  row_spec(0, extra_css = "border-bottom: 0px white;") %>%
+  
+  pack_rows("Gestational Hypertension including Proteinuria, n (%)", 1, 3, label_row_css = "color: steelblue;") %>%
+  pack_rows("Gestational Hypertension excluding Proteinuria, n (%)", 4, 6, label_row_css = "color: steelblue;")
+ 
+```
+ <br>
+ <br>
+ <br>
+ \newpage
+ 
+**Table 2c. Prevalence of Each Component Contributing to Gestational Hypertension**
+```{r}   
+
+vars_ghtn_table <- df %>%
+  rowwise() %>%
+  group_by(SITE) %>%
+  summarise(
+        # gHNT MEASURED 2+  CATEGORIES:
+    #Measured gHTN at 2 visits after 20 weeks gestation, at ANC hosp. and at L&D
+    " gHTN (Measured 2+) = Yes " = 
+      paste0(sum(GEST_HYPER_MEAS_ANY2 == 1, na.rm = TRUE),
+             " (",
+             format(round(sum(GEST_HYPER_MEAS_ANY2 == 1, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+    
+    "gHTN (Measured 2+) = No " = 
+      paste0(sum(GEST_HYPER_MEAS_ANY2 == 0, na.rm = TRUE),
+             " (",
+             format(round(sum(GEST_HYPER_MEAS_ANY2 == 0, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+    
+        "gHTN (Measured 2+) = Missing " = 
+      paste0(sum(is.na(GEST_HYPER_MEAS_ANY2)),
+             " (",
+             format(round(sum(is.na(GEST_HYPER_MEAS_ANY2))/n()*100,2), nsmall=2, digits=3),
+             ")"),
+
+        # gHNT MEASURED 1 CATEGORIES:
+    #Measured gHTN at 1 visit after 20 weeks gestation, at ANC hosp. and at L&D
+    " gHTN (Measured 1+) = Yes " = 
+      paste0(sum(GEST_HYPER_MEAS_ANY1 == 1, na.rm = TRUE),
+             " (",
+             format(round(sum(GEST_HYPER_MEAS_ANY1 == 1, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+    
+    "gHTN (Measured 1+) = No " = 
+      paste0(sum(GEST_HYPER_MEAS_ANY1 == 0, na.rm = TRUE),
+             " (",
+             format(round(sum(GEST_HYPER_MEAS_ANY1 == 0, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+    
+        "gHTN (Measured 1+) = Missing " = 
+      paste0(sum(is.na(GEST_HYPER_MEAS_ANY1)),
+             " (",
+             format(round(sum(is.na(GEST_HYPER_MEAS_ANY1))/n()*100,2), nsmall=2, digits=3),
+             ")"),
+    
+            # gHTN TREATED CATEGORIES:
+    #Treatment assessed after 20 weeks gestation, at ANC hosp. and at L&D
+   
+     "gHTN (Treatment) = Yes " = 
+      paste0(sum(GEST_HYPER_TREAT == 1, na.rm = TRUE),
+             " (",
+             format(round(sum(GEST_HYPER_TREAT == 1, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+    
+    "gHTN (Treatment) = No " = 
+      paste0(sum(GEST_HYPER_TREAT == 0, na.rm = TRUE),
+             " (",
+             format(round(sum(GEST_HYPER_TREAT == 0, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+    
+        "gHTN (Treatment) = Missing " = 
+      paste0(sum(is.na(GEST_HYPER_TREAT)),
+             " (",
+             format(round(sum(is.na(GEST_HYPER_TREAT))/n()*100,2), nsmall=2, digits=3),
+             ")"),
+    
+                # gHTN MEASURED 1 + TREATED CATEGORIES:
+    #Treatment assessed after 20 weeks gestation, at ANC hosp. and at L&D
+    "gHTN (Measured 1 + Treatment) = Yes " = 
+      paste0(sum(GEST_HYPER_MEAS1_TREAT == 1, na.rm = TRUE),
+             " (",
+             format(round(sum(GEST_HYPER_MEAS1_TREAT == 1, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+    
+    "gHTN (Measured 1 + Treatment) = No " = 
+      paste0(sum(GEST_HYPER_MEAS1_TREAT == 0, na.rm = TRUE),
+             " (",
+             format(round(sum(GEST_HYPER_MEAS1_TREAT == 0, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+    
+        "gHTN (Measured 1 + Treatment) = Missing " = 
+      paste0(sum(is.na(GEST_HYPER_MEAS1_TREAT)),
+             " (",
+             format(round(sum(is.na(GEST_HYPER_MEAS1_TREAT))/n()*100,2), nsmall=2, digits=3),
+             ")"),
+ "Proteinuria = Yes " = 
+   paste0(sum(PROTEINURIA_ANC_IPC == 1, na.rm = TRUE),
+             " (",
+             format(round(sum(PROTEINURIA_ANC_IPC == 1, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+  "Proteinuria = No " = 
+   paste0(sum(PROTEINURIA_ANC_IPC == 0, na.rm = TRUE),
+             " (",
+             format(round(sum(PROTEINURIA_ANC_IPC == 0, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")"),
+  "Proteinuria = Missing " = 
+   paste0(sum(is.na(PROTEINURIA_ANC_IPC), na.rm = TRUE),
+             " (",
+             format(round(sum(is.na(PROTEINURIA_ANC_IPC), na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             ")")) %>%
+ 
+  t() %>% as.data.frame() %>% 
+  `colnames<-`(c(.[1,])) %>% 
+  slice(-1)
+    
+```
+
+
+```{r}
+vars_ghtn_table  %>% 
+  `rownames<-` (c(
+    "gHTN (Measured 2+) = Yes n (%)",
+    "gHTN (Measured 2+) = No n (%)",
+    "gHTN (Measured 2+) = Missing n (%)",
+    "gHTN (Measured 1+) = Yes n (%)",
+    "gHTN (Measured 1+) = No n (%)",
+    "gHTN (Measured 1+) = Missing n (%)",
+    "gHTN (Treatment) = Yes n (%)",
+    "gHTN (Treatment) = No n (%)",
+    "gHTN (Treatment) = Missing n (%)",
+    "gHTN (Measured 1 + & Treatment) = Yes n (%)",
+    "gHTN (Measured 1 + & Treatment) = No n (%)",
+    "gHTN (Measured 1 + & Treatment) = Missing n (%)",
+    "Proteinuria = Yes n (%)",
+    "Proteinuria = No n (%)",
+    "Proteinuria = Missing n (%)")) %>%
+    
+  mutate_all(funs(str_replace(., "NaN", "0"))) %>% 
+  kbl(caption = "", booktabs = TRUE) %>%
+  kable_paper(bootstrap_options = "striped", 
+              full_width = T, html_font = "Cambria", position = "left",
+              latex_options = c("repeat_header", "HOLD_position")) %>% 
+  kable_styling(font_size = 14) %>%
+  row_spec(0, extra_css = "border-bottom: 0px white;") %>%
+
+  pack_rows("Measured gestational hypertension  (Measured 2+), n (%)", 1, 3, label_row_css = "color: steelblue;") %>%
+  pack_rows("Measured gestational hypertension  (Measured 1+), n (%)", 4, 6, label_row_css = "color: steelblue;") %>%
+  pack_rows("Measured gestational hypertension  (Treatment), n (%)", 7, 9, label_row_css = "color: steelblue;") %>%
+  pack_rows("Measured gestational hypertension  (Measured 1+ & Treatment), n (%)", 10, 12, label_row_css = "color: steelblue;") %>%
+  pack_rows("Proteinuria, n (%)", 13, 14, label_row_css = "color: steelblue;")
+
+```
+
+    
