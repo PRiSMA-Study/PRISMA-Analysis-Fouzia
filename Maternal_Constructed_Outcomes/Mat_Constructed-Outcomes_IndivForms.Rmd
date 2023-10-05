@@ -10,7 +10,7 @@ output:
 README: 
 File: Test-data-PRISMA_Constructed-Outcomes_IndivForms.Rmd (not Test2-data...Rmd) has NAs, in this file, I have converted all NAs to 0s like Emily requested. 
 
-This file is created from PRISMA_Constructed-Outcomes_IndivForms.Rmd.  I will use test data from Kenya only here. 
+This file is created from PRISMA_Constructed-Outcomes_IndivForms(v1) and (v2).Rmd.  This is the active file as of 10/04/2023 
 
 Constructed variables: 
 https://docs.google.com/spreadsheets/d/1dfOWoZNm0RipnIRIucHt3kAFiPl3nISD3U2jA3btKXo/edit#gid=252197818
@@ -98,8 +98,9 @@ if(recreate_mnh_list == TRUE){
 toc <- Sys.time()
 print(toc - tic)
 
-mnh_list <- readRDS(paste0("MNH_list_", basename(path_to_data), ".RDS"))  #read in the RDS objects with all the MNH files as a massive list.
+# mnh_list <- readRDS(paste0("MNH_list_", basename(path_to_data), ".RDS"))  #read in the RDS objects with all the MNH files as a massive list.
 
+mnh_list <- readRDS(file = '../MNH_list_2023-09-15.RDS')
 ```
 
 For SAS files from **Test data**.
@@ -124,7 +125,7 @@ For SAS files from **Test data**.
 
 ```
 
-***Hard code TYPE_VISIT for M00=1, M02=1, M03=1,  M09=6, M10=6, M11=6, M17=6, M18=12***
+### Hard code TYPE_VISIT for M00=1, M02=1, M03=1, M09=6, M10=6, M11=6, M17=6, M18=12 ***
 ```{r echo=FALSE}
 if("mnh00" %in% names(mnh_list)){
   mnh_list[["mnh00"]] <- mnh_list[["mnh00"]] %>% 
@@ -197,9 +198,7 @@ if("mnh19" %in% names(mnh_list)){
 }
 
 ```
-
-
-Create a SITE variable for Test data only on Mac - can let it run in AWS.***FOR TEST DATA ONLY***
+# Create a SITE variable for Test data only on Mac - can let it run in AWS.***FOR TEST DATA ONLY***
 ```{r echo=FALSE}
 # for(form_name in names(mnh_list)) { 
 #   if(!('SITE' %in% names(form_name))) {
@@ -208,14 +207,14 @@ Create a SITE variable for Test data only on Mac - can let it run in AWS.***FOR 
 # }
 ```
 
-Change wrong values for MNH01 TYPE_VISIT (value was 36 but SL mentioned it probably is week 36 so visit 5)
+# Change wrong values for MNH01 TYPE_VISIT (value was 36 but SL mentioned it probably is week 36 so visit 5)
 ```{r echo=FALSE}
    
 # mnh_list[["mnh01"]] <- mnh_list[["mnh01"]] %>% 
  # mutate(M01_TYPE_VISIT = ifelse(M01_TYPE_VISIT == 36, 5, M01_TYPE_VISIT))
 ```
 
-ONLY FOR TEST KENYA DATA:
+# ONLY FOR TEST KENYA DATA:
 MNH01 doesn't have MOMID and PREGID in Kenya data. Merge it in from MNH02. 
 Keep an eye on SITE variable. 
 ```{r echo=FALSE}
@@ -236,7 +235,7 @@ Keep an eye on SITE variable.
 
 ```
 
-Adding a prefix of M_XX: *Just for Test Kenya data on mac*
+# Adding a prefix of M_XX: *Just for Test Kenya data on mac*
 Using modify() from Purrr library and a lambda function.
 ```{r echo=FALSE}
 #############################################################################################################################################
@@ -255,6 +254,7 @@ Using modify() from Purrr library and a lambda function.
 # }
 ```
 
+# CLEANING UP EMPTY ROWS
 ```{r echo=FALSE}
 
 mnh_list[["mnh00"]] <- mnh_list[["mnh00"]] %>%
@@ -319,6 +319,7 @@ mnh_list[["mnh26"]] <- mnh_list[["mnh26"]] %>%
   distinct (MOMID, PREGID, SITE, M26_TYPE_VISIT, .keep_all = TRUE)
 ```
 
+# ADD TYPE_VISIT AS A SUFFIX
 ```{r echo=FALSE}
 mnh_list_wide <- list()
 
@@ -349,7 +350,7 @@ for (form_name in names(mnh_list)) {
 ```
 
 
-CONVERT LISTS INTO DATAFRAMES. 
+# CONVERT LISTS INTO DATAFRAMES. 
 ```{r echo=FALSE}
 for(form_name in names(mnh_list)){
 assign(paste0(form_name, "_df"), mnh_list_wide[[form_name]]) # assign is the opposite of get()
@@ -566,25 +567,25 @@ for(i in 0:26) {
 # ---- 66:66, Refused to answer
 # ---- 99:99, Don't know
 ```{r echo=FALSE}
-CONVERT_NA <- TRUE
+CONVERT_NA <- FALSE
 if(CONVERT_NA ==TRUE){
+  tic <- Sys.time()
+  merged_df <- merged_df %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
+    mutate_all(function(d) {
+      if_else(d=="1907-07-07", NA, d)
+    })
   
-  # merged_df <- merged_df %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
-  #   mutate_all(function(d) {
-  #     if_else(d=="1907-07-07", NA, d) 
-  #   })
+  merged_df <- merged_df %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
+    mutate_all(function(d) {
+      if_else(d==-7, NA, d)
+    })
   
-  # merged_df <- merged_df %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
-  #   mutate_all(function(d) {
-  #     if_else(d==-7, NA, d) 
-  #   })
+  merged_df <- merged_df %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
+    mutate_all(function(d) {
+      if_else(d==77, NA, d)
+    })
   
-  # merged_df <- merged_df %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
-  #   mutate_all(function(d) {
-  #     if_else(d==77, NA, d) 
-  #   })
-  
-  # -5 IS MISSING FOR CONTINOUS
+  # -5 IS MISSING FOR CONTINUOUS
   merged_df <- merged_df %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
     mutate_all(function(d) {
       if_else(d==-5, NA, d) 
@@ -602,212 +603,11 @@ if(CONVERT_NA ==TRUE){
       if_else(d=='55:55', NA, d)
     })
   
+  toc <- Sys.time()
 }
+time_diff <- toc-tic
+time_diff
 ```
-
-*RUN CODE ABOVE*
-
-***Fetal/Infant outcomes***
-1. GA_BOE: use US_GA_DAYS_AGE_FTS1,2,3,4 and US_GA_WKS_AGE_FTS1,2,3,4 to calculate the biggest fetus.  Use the biggest fetus to do the calculations for GA_DIFF_WKS and GA_DIFF_DAYS.  In the constructed outcomes sheets, it is not listed correctly (b/c only asking to use first fetus)
-2. Use the biggest infant using US and GA_LMP_WEEKS_SCORRES and GA_LMP_DAYS to calc. variable GA_DIFF_WKS and GA_DIFF_DAYS 
-```{r echo=FALSE}
-# STEP 1:
-temp.df <- merged_df %>% select(PREGID, MOMID, SITE,
-                                    M01_US_GA_WKS_AGE_FTS1_1, M01_US_GA_DAYS_AGE_FTS1_1, 
-                                    M01_US_GA_WKS_AGE_FTS2_1, M01_US_GA_DAYS_AGE_FTS2_1,
-                                    M01_US_GA_WKS_AGE_FTS3_1, M01_US_GA_DAYS_AGE_FTS3_1,
-                                    M01_US_GA_WKS_AGE_FTS4_1, M01_US_GA_DAYS_AGE_FTS4_1, 
-                                    M01_GA_LMP_WEEKS_SCORRES_1, M01_GA_LMP_DAYS_SCORRES_1)
-  
-merged_df <- merged_df %>%  
-  rowwise() %>% mutate(biggest_M01_US_GA_DAYS_FTS = max(((M01_US_GA_WKS_AGE_FTS1_1*7) +
-                                                           M01_US_GA_DAYS_AGE_FTS1_1),
-                                                        ((M01_US_GA_WKS_AGE_FTS2_1*7) +
-                                                           M01_US_GA_DAYS_AGE_FTS2_1),
-                                                        ((M01_US_GA_WKS_AGE_FTS3_1*7) +
-                                                           M01_US_GA_DAYS_AGE_FTS3_1),
-                                                        ((M01_US_GA_WKS_AGE_FTS4_1*7) +
-                                                           M01_US_GA_DAYS_AGE_FTS4_1), na.rm = TRUE)) %>%
-  mutate(biggest_M01_US_GA_DAYS_FTS = if_else(biggest_M01_US_GA_DAYS_FTS<0, NA, biggest_M01_US_GA_DAYS_FTS)) # <0 covers '-Inf' cases and where it's only -7.
-
-# temp.df2 <- temp.df %>% select(M01_GA_LMP_WEEKS_SCORRES_1, M01_GA_LMP_DAYS_SCORRES_1, 
-# M01_GA_LMP_DAYS_CALC_1, M01_GA_LMP_DAYS_CALC_1)
-# STEP 2: 
-merged_df <- merged_df %>% 
-  rowwise() %>%
-  mutate(M01_GA_LMP_DAYS_CALC_1 = (M01_GA_LMP_WEEKS_SCORRES_1*7)+ M01_GA_LMP_DAYS_SCORRES_1) %>%
-  mutate(M01_GA_LMP_DAYS_CALC_1 = if_else(M01_GA_LMP_DAYS_CALC_1<0, NA, M01_GA_LMP_DAYS_CALC_1))
-
-# STEP 3: 
-merged_df<- merged_df %>%
-  dplyr::mutate(GA_DIFF_WKS = (M01_GA_LMP_DAYS_CALC_1 - biggest_M01_US_GA_DAYS_FTS) %/% 7, # Floor of the number of weeks used here. 
-                GA_DIFF_DAYS = M01_GA_LMP_DAYS_CALC_1 - biggest_M01_US_GA_DAYS_FTS)
-
-# table(merged_df$GA_DIFF_WKS)
-# table(merged_df$GA_DIFF_WKS, merged_df$GA_DIFF_DAYS, useNA = "always")
-```
-
-If the GA by LMP is less than 9 weeks 0 days:
-- If discrepancy between LMP and US ≤5 days = GA by LMP
-- If LMP unknown or discrepancy between LMP and US ≥5 days = GA by US
-
-If the GA by LMP is between 9 weeks 0 days and 15 weeks 6 days:
-- If discrepancy between LMP and US ≤7 days → BOE = GA by LMP
-- If LMP is unknown OR discrepancy between LMP and US ≥7 days = GA by US
-
-If GA by LMP is greater than 16 weeks 0 days:
-- If discrepancy between LMP and US ≤10 days = GA by LMP
-- If LMP is unknown or discrepancy between LMP and US ≥10 days = GA by US
-
-```{r echo=FALSE}
-merged_df <- merged_df %>%
-  mutate(GA_BOE = case_when(M01_GA_LMP_DAYS_CALC_1 %/% 7 < 9 ~ 
-                              if_else(abs(GA_DIFF_DAYS) <= 5, 
-                                      M01_GA_LMP_DAYS_CALC_1, 
-                                      biggest_M01_US_GA_DAYS_FTS),
-                            M01_GA_LMP_DAYS_CALC_1 %/% 7 < 16 ~
-                              if_else(abs(GA_DIFF_DAYS) <=7, 
-                                      M01_GA_LMP_DAYS_CALC_1, biggest_M01_US_GA_DAYS_FTS),
-                             M01_GA_LMP_DAYS_CALC_1 %/% 7 >= 16 ~
-                              if_else(abs(GA_DIFF_DAYS) <=10,
-                                      M01_GA_LMP_DAYS_CALC_1, biggest_M01_US_GA_DAYS_FTS),
-                            TRUE ~ biggest_M01_US_GA_DAYS_FTS)) %>% 
-  mutate(GA_BOE_WKS = GA_BOE %/% 7,
-         GA_BOE_DAYS = GA_BOE %% 7)
-
-merged_df <- merged_df %>% 
-  mutate(diff_GA = abs(M01_GA_LMP_DAYS_CALC_1 - biggest_M01_US_GA_DAYS_FTS))
-
-# table(diff_LMP_US = temp.df$diff_GA, temp.df$SITE, useNA = "always")
-
-table(SITE = merged_df$SITE, GA_BOE = merged_df$GA_BOE_WKS, useNA = "always") #SITE taken out
-
-table(SITE = merged_df$SITE, merged_df$M01_GA_LMP_DAYS_CALC_1, useNA = "always") #SITE taken out
-```
-
-
-####################
-#MATERNAL OUTCOMES:
-####################
-
-***PRIMARY: Pregnancy-related death - PREG_DEATH***
-"Death from any cause during pregnancy and childbirth or within 42 days of termination of pregnancy, irrespective of the duration and site of the pregnancy.
-
-M09_DELIV_DSSTDAT_INF1,2,3,4
-M10_MAT_DSTERM
-M23_CLOSE_DSDECOD
-M23_DTHDAT
-
-label as 1=Alive, 2=Died, 9=Unknown
-
-CLOSE_DSDECOD==1 | 2 (1 = Alive, 2 = Alive), then PREG_DEATH=0
-CLOSE_DSDECOD==3 (3=Dead) then PREG_DEATH=1
-CLOSE_DSDECOD==4 | 5 | 6 then PREG_DEATH=9 b/c 4,5, 6 is lost to follow up.
-
-M10_MAT_DSTERM = 1 (stable)
-M10_MAT_DSTERM = 2 (Complication requiring higher level of care)
-M10_MAT_DSTERM = 3 (Died after admission for labor and delivery)
-
-```{r echo=FALSE}
-##################################################################################
-#TODO 
-# NOTES: 
-# - TURN ALL NA TO 0
-# - THIS VARIABLE IS GOOD TO GO OTHERWISE - 09/19/2023
-##################################################################################
-
-# temp.df <- merged_df %>% select(MOMID, PREGID, M09_DELIV_DSSTDAT_INF1_6,M09_DELIV_DSSTDAT_INF2_6,
-  # M09_DELIV_DSSTDAT_INF3_6, M09_DELIV_DSSTDAT_INF4_6, M10_MAT_DSTERM_6, M23_CLOSE_DSDECOD, M23_DTHDAT)
-
-#temp.df$M23_DTHDAT[1] <- '2023-06-12'
-# temp.df$M23_DTHDAT[2] <- '2023-08-05'
-
-merged_df <- merged_df %>% 
-  mutate(var_w_deliverydate = any(!is.na(c(M09_DELIV_DSSTDAT_INF1_6, #'any' is checking if anything in these columns by row dplyr is doing the by-row part is NA.
-  M09_DELIV_DSSTDAT_INF2_6,
-  M09_DELIV_DSSTDAT_INF3_6,
-  M09_DELIV_DSSTDAT_INF4_6))))
-
-# JUST CREATING DAYS DIFF HERE FIRST
-merged_df <- merged_df %>% 
-  mutate(PREG_DEATH_DIFF_DAYS = as.numeric(as.Date(M23_DTHDAT, na.rm = TRUE) - as.Date(max(M09_DELIV_DSSTDAT_INF1_6,
-                                                                          M09_DELIV_DSSTDAT_INF2_6, 
-                                                                          M09_DELIV_DSSTDAT_INF3_6,
-                                                                          M09_DELIV_DSSTDAT_INF4_6, 
-                                                                          na.rm = TRUE))))
-
-
-
-merged_df <- merged_df %>% 
-  #rowwise() %>%
-  mutate(PREG_DEATH = if_else((!is.na(M23_CLOSE_DSDECOD) & M23_CLOSE_DSDECOD == 3) | 
-                                !is.na(M23_DTHDAT) | 
-                                (!is.na(M10_MAT_DSTERM_6) & M10_MAT_DSTERM_6==3), 
-                              if_else(var_w_deliverydate,
-                                      PREG_DEATH_DIFF_DAYS < as.difftime(43, units = "days"),
-                                      1), 
-                              0)) %>% 
-  mutate(PREG_DEATH = if_else((!is.na(M23_CLOSE_DSDECOD) & M23_CLOSE_DSDECOD==4) | (!is.na(M23_CLOSE_DSDECOD) & M23_CLOSE_DSDECOD==5), 9, PREG_DEATH))
-
-  temp.df <- merged_df %>% select(MOMID, PREGID, PREG_DEATH, PREG_DEATH_DIFF_DAYS, 
-                                      M09_DELIV_DSSTDAT_INF1_6,
-                                      M09_DELIV_DSSTDAT_INF2_6,
-                                      M09_DELIV_DSSTDAT_INF3_6, 
-                                      M09_DELIV_DSSTDAT_INF4_6, 
-                                      M10_MAT_DSTERM_6, M23_CLOSE_DSDECOD, M23_DTHDAT)
-  
-table(PREG_DEATH=merged_df$PREG_DEATH, SITE = merged_df$SITE, useNA = "always") # data is mostly 2=Alive or 4 = loss to follow up or NA. 
-round(prop.table(table(PREG_DEATH=merged_df$PREG_DEATH, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 3)
-
-```
-
-***SECONDARY: LATE PREGNANCY-RELATED DEATH: LATE_PREG_DEATH***
-Death from any cause related to or aggravated by pregnancy or its management, irrespective of the duration and site of the pregnancy, from 42 days postpartum up to one year.
-
-MNH09	DELIV_DSSTDAT_INF1
-MNH10	MAT_DSTERM
-MNH23	CLOSE_DSDECOD
-MNH23	DTHDAT
-
-```{r}
-##################################################################################
-#TODO 
-# NOTES: 
-# - NEED TO FIX THIS - HAVE TO CALCULATE BETWEEN 42 DAYS AND 1 YEAR. 
-##################################################################################
-
-# temp.df <- merged_df %>% select(MOMID, PREGID, M09_DELIV_DSSTDAT_INF1_6,M09_DELIV_DSSTDAT_INF2_6,
-  # M09_DELIV_DSSTDAT_INF3_6, M09_DELIV_DSSTDAT_INF4_6, M10_MAT_DSTERM_6, M23_CLOSE_DSDECOD, M23_DTHDAT)
-
-# temp.df$M23_DTHDAT[1] <- '2023-07-12'
-# temp.df$M23_DTHDAT[2] <- '2023-08-05'
-
-merged_df <- merged_df %>% 
-  mutate(var_w_deliverydate = any(!is.na(c(M09_DELIV_DSSTDAT_INF1_6, #'any' is checking if anything in these columns by row dplyr is doing the by-row part is NA.
-  M09_DELIV_DSSTDAT_INF2_6,
-  M09_DELIV_DSSTDAT_INF3_6,
-  M09_DELIV_DSSTDAT_INF4_6))))
-
-# JUST CREATING DAYS DIFF HERE FIRST
-merged_df <- merged_df %>% 
-  mutate(PREG_DEATH_DIFF_DAYS = as.numeric(as.Date(M23_DTHDAT, na.rm = TRUE) - as.Date(max(M09_DELIV_DSSTDAT_INF1_6,
-                                                                          M09_DELIV_DSSTDAT_INF2_6, 
-                                                                          M09_DELIV_DSSTDAT_INF3_6,
-                                                                          M09_DELIV_DSSTDAT_INF4_6, 
-                                                                          na.rm = TRUE))))
-
-merged_df <- merged_df %>% 
-  #rowwise() %>%
-  mutate(LATE_PREG_DEATH = if_else(M23_CLOSE_DSDECOD == 3 | !is.na(M23_DTHDAT) | M10_MAT_DSTERM_6==3, 
-                              if_else(var_w_deliverydate,
-                                      between(as.numeric(PREG_DEATH_DIFF_DAYS), 43, 365),
-                                      1), 
-                              0)) %>% 
-  mutate(LATE_PREG_DEATH = if_else((!is.na(M23_CLOSE_DSDECOD) & M23_CLOSE_DSDECOD==4) | (!is.na(M23_CLOSE_DSDECOD) & M23_CLOSE_DSDECOD==5), 9, LATE_PREG_DEATH))
-
-round(prop.table(table(LATE_PREG_DEATH=merged_df$LATE_PREG_DEATH, SITE = merged_df$SITE, useNA = "always"))*100, 3) # data is molsty 2=Alive or 4 = loss to follow up or NA. 
-```
-
 
 # ADD VARIABLES THAT DON'T EXIST HERE
 ```{r echo=FALSE}
@@ -815,6 +615,7 @@ round(prop.table(table(LATE_PREG_DEATH=merged_df$LATE_PREG_DEATH, SITE = merged_
 # ANC VISITS # 
 ##############
 
+tic <- Sys.time()
 # # Visit 3 doesn't have M08_CBC_HB_LBORRES_3:
 # merged_df$M08_CBC_HB_LBORRES_3 <- ifelse("M08_CBC_HB_LBORRES_3" %in% names(merged_df),
 #                                              merged_df$M08_CBC_HB_LBORRES_3, NA)
@@ -1198,7 +999,237 @@ merged_df$M19_HDP_HTN_MHOCCUR_10_13 <- ifelse("M19_HDP_HTN_MHOCCUR_10_13" %in% n
 
 merged_df$M19_HDP_HTN_MHOCCUR_88_13 <- ifelse("M19_HDP_HTN_MHOCCUR_88_13" %in% names(merged_df),
                                             merged_df$M19_HDP_HTN_MHOCCUR_88_13, NA)
+
+toc <- Sys.time()
+time_diff <- toc - tic
+time_diff
 ```
+
+
+# WOMEN WHO DELIVERED!
+```{r}
+merged_df <- merged_df %>%
+  mutate(DELIVERED_FF = case_when((!is.na(M09_DELIV_DSSTDAT_INF1_6)) | M09_DELIV_DSSTDAT_INF1_6!="1907-07-07" |
+                                  (!is.na(M09_DELIV_DSSTDAT_INF2_6)) | M09_DELIV_DSSTDAT_INF2_6!="1907-07-07" |
+                                     (!is.na(M09_DELIV_DSSTDAT_INF3_6)) | M09_DELIV_DSSTDAT_INF3_6!="1907-07-07" | 
+                                        (!is.na(M09_DELIV_DSSTDAT_INF4_6)) | M09_DELIV_DSSTDAT_INF4_6!="1907-07-07" ~ 1,
+                                  TRUE ~ as.numeric(0)))
+
+table(merged_df$DELIVERED_FF, merged_df$SITE, useNA = "always")
+round(prop.table(table(merged_df$DELIVERED_FF, merged_df$SITE, useNA = "always"), margin=2)*100, 2)
+```
+
+#######################
+####RUN CODE ABOVE*
+######################
+
+***Fetal/Infant outcomes***
+1. GA_BOE: use US_GA_DAYS_AGE_FTS1,2,3,4 and US_GA_WKS_AGE_FTS1,2,3,4 to calculate the biggest fetus.  Use the biggest fetus to do the calculations for GA_DIFF_WKS and GA_DIFF_DAYS.  In the constructed outcomes sheets, it is not listed correctly (b/c only asking to use first fetus)
+2. Use the biggest infant using US and GA_LMP_WEEKS_SCORRES and GA_LMP_DAYS to calc. variable GA_DIFF_WKS and GA_DIFF_DAYS 
+```{r echo=FALSE}
+# STEP 1:
+temp.df <- merged_df %>% select(PREGID, MOMID, SITE,
+                                    M01_US_GA_WKS_AGE_FTS1_1, M01_US_GA_DAYS_AGE_FTS1_1, 
+                                    M01_US_GA_WKS_AGE_FTS2_1, M01_US_GA_DAYS_AGE_FTS2_1,
+                                    M01_US_GA_WKS_AGE_FTS3_1, M01_US_GA_DAYS_AGE_FTS3_1,
+                                    M01_US_GA_WKS_AGE_FTS4_1, M01_US_GA_DAYS_AGE_FTS4_1, 
+                                    M01_GA_LMP_WEEKS_SCORRES_1, M01_GA_LMP_DAYS_SCORRES_1)
+  
+merged_df <- merged_df %>%  
+  rowwise() %>% mutate(biggest_M01_US_GA_DAYS_FTS = max(((M01_US_GA_WKS_AGE_FTS1_1*7) +
+                                                           M01_US_GA_DAYS_AGE_FTS1_1),
+                                                        ((M01_US_GA_WKS_AGE_FTS2_1*7) +
+                                                           M01_US_GA_DAYS_AGE_FTS2_1),
+                                                        ((M01_US_GA_WKS_AGE_FTS3_1*7) +
+                                                           M01_US_GA_DAYS_AGE_FTS3_1),
+                                                        ((M01_US_GA_WKS_AGE_FTS4_1*7) +
+                                                           M01_US_GA_DAYS_AGE_FTS4_1), na.rm = TRUE)) %>%
+  mutate(biggest_M01_US_GA_DAYS_FTS = if_else(biggest_M01_US_GA_DAYS_FTS<0, NA, biggest_M01_US_GA_DAYS_FTS)) # <0 covers '-Inf' cases and where it's only -7.
+
+# temp.df2 <- temp.df %>% select(M01_GA_LMP_WEEKS_SCORRES_1, M01_GA_LMP_DAYS_SCORRES_1, 
+# M01_GA_LMP_DAYS_CALC_1, M01_GA_LMP_DAYS_CALC_1)
+# STEP 2: 
+merged_df <- merged_df %>% 
+  rowwise() %>%
+  mutate(M01_GA_LMP_DAYS_CALC_1 = (M01_GA_LMP_WEEKS_SCORRES_1*7)+ M01_GA_LMP_DAYS_SCORRES_1) %>%
+  mutate(M01_GA_LMP_DAYS_CALC_1 = if_else(M01_GA_LMP_DAYS_CALC_1<0, NA, M01_GA_LMP_DAYS_CALC_1))
+
+# STEP 3: 
+merged_df<- merged_df %>%
+  dplyr::mutate(GA_DIFF_WKS = (M01_GA_LMP_DAYS_CALC_1 - biggest_M01_US_GA_DAYS_FTS) %/% 7, # Floor of the number of weeks used here. 
+                GA_DIFF_DAYS = M01_GA_LMP_DAYS_CALC_1 - biggest_M01_US_GA_DAYS_FTS)
+
+# table(merged_df$GA_DIFF_WKS)
+# table(merged_df$GA_DIFF_WKS, merged_df$GA_DIFF_DAYS, useNA = "always")
+```
+
+If the GA by LMP is less than 9 weeks 0 days:
+- If discrepancy between LMP and US ≤5 days = GA by LMP
+- If LMP unknown or discrepancy between LMP and US ≥5 days = GA by US
+
+If the GA by LMP is between 9 weeks 0 days and 15 weeks 6 days:
+- If discrepancy between LMP and US ≤7 days → BOE = GA by LMP
+- If LMP is unknown OR discrepancy between LMP and US ≥7 days = GA by US
+
+If GA by LMP is greater than 16 weeks 0 days:
+- If discrepancy between LMP and US ≤10 days = GA by LMP
+- If LMP is unknown or discrepancy between LMP and US ≥10 days = GA by US
+
+```{r echo=FALSE}
+merged_df <- merged_df %>%
+  mutate(GA_BOE = case_when(M01_GA_LMP_DAYS_CALC_1 %/% 7 < 9 ~ 
+                              if_else(abs(GA_DIFF_DAYS) <= 5, 
+                                      M01_GA_LMP_DAYS_CALC_1, 
+                                      biggest_M01_US_GA_DAYS_FTS),
+                            M01_GA_LMP_DAYS_CALC_1 %/% 7 < 16 ~
+                              if_else(abs(GA_DIFF_DAYS) <=7, 
+                                      M01_GA_LMP_DAYS_CALC_1, biggest_M01_US_GA_DAYS_FTS),
+                             M01_GA_LMP_DAYS_CALC_1 %/% 7 >= 16 ~
+                              if_else(abs(GA_DIFF_DAYS) <=10,
+                                      M01_GA_LMP_DAYS_CALC_1, biggest_M01_US_GA_DAYS_FTS),
+                            TRUE ~ biggest_M01_US_GA_DAYS_FTS)) %>% 
+  mutate(GA_BOE_WKS = GA_BOE %/% 7,
+         GA_BOE_DAYS = GA_BOE %% 7)
+
+merged_df <- merged_df %>% 
+  mutate(diff_GA = abs(M01_GA_LMP_DAYS_CALC_1 - biggest_M01_US_GA_DAYS_FTS))
+
+# table(diff_LMP_US = temp.df$diff_GA, temp.df$SITE, useNA = "always")
+
+table(SITE = merged_df$SITE, GA_BOE = merged_df$GA_BOE_WKS, useNA = "always") #SITE taken out
+
+table(SITE = merged_df$SITE, merged_df$M01_GA_LMP_DAYS_CALC_1, useNA = "always") #SITE taken out
+```
+
+
+```{r}
+protein_df <- merged_df %>% select(MOMID, SITE, ENROLLED_FF, DELIVERED_FF, M08_LBSTDAT_3, M08_UA_PROT_LBORRES_3) %>%
+  filter(SITE=="Kenya", DELIVERED_FF==1)
+```
+
+####################
+#MATERNAL OUTCOMES:
+####################
+
+***PRIMARY: Pregnancy-related death - PREG_DEATH***
+"Death from any cause during pregnancy and childbirth or within 42 days of termination of pregnancy, irrespective of the duration and site of the pregnancy.
+
+M09_DELIV_DSSTDAT_INF1,2,3,4
+M10_MAT_DSTERM
+M23_CLOSE_DSDECOD
+M23_DTHDAT
+
+label as 1=Alive, 2=Died, 9=Unknown
+
+CLOSE_DSDECOD==1 | 2 (1 = Alive, 2 = Alive), then PREG_DEATH=0
+CLOSE_DSDECOD==3 (3=Dead) then PREG_DEATH=1
+CLOSE_DSDECOD==4 | 5 | 6 then PREG_DEATH=9 b/c 4,5, 6 is lost to follow up.
+
+M10_MAT_DSTERM = 1 (stable)
+M10_MAT_DSTERM = 2 (Complication requiring higher level of care)
+M10_MAT_DSTERM = 3 (Died after admission for labor and delivery)
+
+```{r echo=FALSE}
+##################################################################################
+#TODO 
+# NOTES: 
+# - TURN ALL NA TO 0
+# - THIS VARIABLE IS GOOD TO GO OTHERWISE - 09/19/2023
+##################################################################################
+
+# temp.df <- merged_df %>% select(MOMID, PREGID, M09_DELIV_DSSTDAT_INF1_6,M09_DELIV_DSSTDAT_INF2_6,
+  # M09_DELIV_DSSTDAT_INF3_6, M09_DELIV_DSSTDAT_INF4_6, M10_MAT_DSTERM_6, M23_CLOSE_DSDECOD, M23_DTHDAT)
+
+#temp.df$M23_DTHDAT[1] <- '2023-06-12'
+# temp.df$M23_DTHDAT[2] <- '2023-08-05'
+
+merged_df <- merged_df %>% 
+  mutate(var_w_deliverydate = any(!is.na(c(M09_DELIV_DSSTDAT_INF1_6, #'any' is checking if anything in these columns by row dplyr is doing the by-row part is NA.
+  M09_DELIV_DSSTDAT_INF2_6,
+  M09_DELIV_DSSTDAT_INF3_6,
+  M09_DELIV_DSSTDAT_INF4_6))))
+
+# JUST CREATING DAYS DIFF HERE FIRST
+merged_df <- merged_df %>% 
+  mutate(PREG_DEATH_DIFF_DAYS = as.numeric(as.Date(M23_DTHDAT, na.rm = TRUE) - as.Date(max(M09_DELIV_DSSTDAT_INF1_6,
+                                                                          M09_DELIV_DSSTDAT_INF2_6, 
+                                                                          M09_DELIV_DSSTDAT_INF3_6,
+                                                                          M09_DELIV_DSSTDAT_INF4_6, 
+                                                                          na.rm = TRUE))))
+
+
+
+merged_df <- merged_df %>% 
+  #rowwise() %>%
+  mutate(PREG_DEATH = if_else((!is.na(M23_CLOSE_DSDECOD) & M23_CLOSE_DSDECOD == 3) | 
+                                !is.na(M23_DTHDAT) | 
+                                (!is.na(M10_MAT_DSTERM_6) & M10_MAT_DSTERM_6==3), 
+                              if_else(var_w_deliverydate,
+                                      PREG_DEATH_DIFF_DAYS < as.difftime(43, units = "days"),
+                                      1), 
+                              0)) %>% 
+  mutate(PREG_DEATH = if_else((!is.na(M23_CLOSE_DSDECOD) & M23_CLOSE_DSDECOD==4) | (!is.na(M23_CLOSE_DSDECOD) & M23_CLOSE_DSDECOD==5), 9, PREG_DEATH))
+
+  temp.df <- merged_df %>% select(MOMID, PREGID, PREG_DEATH, PREG_DEATH_DIFF_DAYS, 
+                                      M09_DELIV_DSSTDAT_INF1_6,
+                                      M09_DELIV_DSSTDAT_INF2_6,
+                                      M09_DELIV_DSSTDAT_INF3_6, 
+                                      M09_DELIV_DSSTDAT_INF4_6, 
+                                      M10_MAT_DSTERM_6, M23_CLOSE_DSDECOD, M23_DTHDAT)
+  
+table(PREG_DEATH=merged_df$PREG_DEATH, SITE = merged_df$SITE, useNA = "always") # data is mostly 2=Alive or 4 = loss to follow up or NA. 
+round(prop.table(table(PREG_DEATH=merged_df$PREG_DEATH, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 3)
+
+```
+
+***SECONDARY: LATE PREGNANCY-RELATED DEATH: LATE_PREG_DEATH***
+Death from any cause related to or aggravated by pregnancy or its management, irrespective of the duration and site of the pregnancy, from 42 days postpartum up to one year.
+
+MNH09	DELIV_DSSTDAT_INF1
+MNH10	MAT_DSTERM
+MNH23	CLOSE_DSDECOD
+MNH23	DTHDAT
+
+```{r}
+##################################################################################
+#TODO 
+# NOTES: 
+# - NEED TO FIX THIS - HAVE TO CALCULATE BETWEEN 42 DAYS AND 1 YEAR. 
+##################################################################################
+
+# temp.df <- merged_df %>% select(MOMID, PREGID, M09_DELIV_DSSTDAT_INF1_6,M09_DELIV_DSSTDAT_INF2_6,
+  # M09_DELIV_DSSTDAT_INF3_6, M09_DELIV_DSSTDAT_INF4_6, M10_MAT_DSTERM_6, M23_CLOSE_DSDECOD, M23_DTHDAT)
+
+# temp.df$M23_DTHDAT[1] <- '2023-07-12'
+# temp.df$M23_DTHDAT[2] <- '2023-08-05'
+
+merged_df <- merged_df %>% 
+  mutate(var_w_deliverydate = any(!is.na(c(M09_DELIV_DSSTDAT_INF1_6, #'any' is checking if anything in these columns by row dplyr is doing the by-row part is NA.
+  M09_DELIV_DSSTDAT_INF2_6,
+  M09_DELIV_DSSTDAT_INF3_6,
+  M09_DELIV_DSSTDAT_INF4_6))))
+
+# JUST CREATING DAYS DIFF HERE FIRST
+merged_df <- merged_df %>% 
+  mutate(PREG_DEATH_DIFF_DAYS = as.numeric(as.Date(M23_DTHDAT, na.rm = TRUE) - as.Date(max(M09_DELIV_DSSTDAT_INF1_6,
+                                                                          M09_DELIV_DSSTDAT_INF2_6, 
+                                                                          M09_DELIV_DSSTDAT_INF3_6,
+                                                                          M09_DELIV_DSSTDAT_INF4_6, 
+                                                                          na.rm = TRUE))))
+
+merged_df <- merged_df %>% 
+  #rowwise() %>%
+  mutate(LATE_PREG_DEATH = if_else(M23_CLOSE_DSDECOD == 3 | !is.na(M23_DTHDAT) | M10_MAT_DSTERM_6==3, 
+                              if_else(var_w_deliverydate,
+                                      between(as.numeric(PREG_DEATH_DIFF_DAYS), 43, 365),
+                                      1), 
+                              0)) %>% 
+  mutate(LATE_PREG_DEATH = if_else((!is.na(M23_CLOSE_DSDECOD) & M23_CLOSE_DSDECOD==4) | (!is.na(M23_CLOSE_DSDECOD) & M23_CLOSE_DSDECOD==5), 9, LATE_PREG_DEATH))
+
+round(prop.table(table(LATE_PREG_DEATH=merged_df$LATE_PREG_DEATH, SITE = merged_df$SITE, useNA = "always"))*100, 3) # data is molsty 2=Alive or 4 = loss to follow up or NA. 
+```
+
+
 
 # Maternal Anemia*
 Definition: Low hemoglobin levels and/or diagnosis of anemia in pregnancy, at labor and delivery, and through 6 months postpartum. 
@@ -1658,13 +1689,9 @@ table(merged_df$MAT_ANEMIA_MEAS_ANY, merged_df$SITE, useNA = "always")
 round(prop.table(table(merged_df$MAT_ANEMIA_MEAS_ANY, merged_df$SITE, useNA = "always"), margin=2)*100, 3)
 ```
 
-# WOMEN WHO DELIVERED!
+
 # ----- MAT_ANEMIA_MEAS_ANY
 ```{r}
-merged_df <- merged_df %>%
-  mutate(DELIVERED_FF = case_when((!is.na(M09_DELIV_DSSTDAT_INF1_6) | M09_DELIV_DSSTDAT_INF1_6!="1907-07-07") ~ 1,
-                                  TRUE ~ as.numeric(0)))
-
 
 anemia_df <- merged_df %>% 
   select(MOMID, PREGID, SITE, M09_DELIV_DSSTDAT_INF1_6, DELIVERED_FF, starts_with(c("M08_CBC_HB_LBORRES_", "M06_HB_POC_LBORRES_", "MAT_ANEMIA_MEAS")))
@@ -1716,7 +1743,7 @@ missing_df.freq <- anemia_df2 %>% group_by(SITE) %>% summarise(format(round(sum(
 # missing_df.freq <- anemia_df2 %>% group_by(SITE) %>% summarise(format(round(sum(M06_HB_POC_LBORRES_ %in% c(-7))/n()*100, 2), nsmall = 2, digits = 3))
 
 
-write.csv(anemia_df2, paste0('data_out/', "mat_anemia" ,".csv"), row.names=FALSE)
+# write.csv(anemia_df2, paste0('data_out/', "mat_anemia" ,".csv"), row.names=FALSE)
 ```
 
 ***MATERNAL DEATH***
@@ -2049,19 +2076,91 @@ table(LATE_MAT_DEATH = merged_df$LATE_MAT_DEATH, SITE = merged_df$SITE, useNA = 
 #TODO Convert M23 info for closeout response and date into an OR not AND.
 ```
 
+# GESTATIONAL PROTEINURIA - PROTEINURIA***
+24 hour urine collection >300 mg protein OR single voided urine protein/creatinine ratio ≥0.3 OR Dipstick of 1+ or 2+.
+Measured ANC20,28,32,36
+IPC
+ANC Hospitalizations.
+```{r echo=FALSE}
+mnh08_df <- mnh_list[["mnh08"]]
+with(mnh08_df %>% filter(SITE=="Kenya"), table(M08_UA_PROT_LBORRES, M08_TYPE_VISIT, useNA = "always"))
+
+# merged_df <- merged_df %>% 
+#   mutate(PROTEINURIA2 = case_when((c('2', '3') %in% c(M08_UA_PROT_LBORRES_2, M08_UA_PROT_LBORRES_3, M08_UA_PROT_LBORRES_4, 
+#                                                 M08_UA_PROT_LBORRES_5, M08_UA_PROT_LBORRES_6, M08_UA_PROT_LBORRES_7,
+#                                                 M08_UA_PROT_LBORRES_8, M08_UA_PROT_LBORRES_9, M08_UA_PROT_LBORRES_10,
+#                                                 M08_UA_PROT_LBORRES_13, M08_UA_PROT_LBORRES_14)) ~ 1,
+#                                  TRUE ~ as.numeric(0)))
+merged_df <- merged_df %>% 
+  mutate(PROTEINURIA_ANC_IPC = ifelse((!is.na(M08_UA_PROT_LBORRES_2) & (M08_UA_PROT_LBORRES_2 == 1 | M08_UA_PROT_LBORRES_2==2)) | 
+                                (!is.na(M08_UA_PROT_LBORRES_3) & (M08_UA_PROT_LBORRES_3 == 1 | M08_UA_PROT_LBORRES_3==2)) |
+                                (!is.na(M08_UA_PROT_LBORRES_4) & (M08_UA_PROT_LBORRES_4 == 1 | M08_UA_PROT_LBORRES_4==2)) |
+                                (!is.na(M08_UA_PROT_LBORRES_5) & (M08_UA_PROT_LBORRES_5 == 1 | M08_UA_PROT_LBORRES_5==2)) |
+                                (!is.na(M08_UA_PROT_LBORRES_6) & (M08_UA_PROT_LBORRES_6 == 1 | M08_UA_PROT_LBORRES_6==2)) | 
+                                (!is.na(M08_UA_PROT_LBORRES_13) & (M08_UA_PROT_LBORRES_13 == 1 | M08_UA_PROT_LBORRES_13==2)), 
+         1, 0))
+
+temp.df <- merged_df %>% 
+  select(MOMID, PREGID, PROTEINURIA_ANC_IPC, M08_UA_PROT_LBORRES_2,
+         M08_UA_PROT_LBORRES_3,M08_UA_PROT_LBORRES_4,
+         M08_UA_PROT_LBORRES_5,M08_UA_PROT_LBORRES_6,
+         M08_UA_PROT_LBORRES_7,M08_UA_PROT_LBORRES_8,
+         M08_UA_PROT_LBORRES_9, M08_UA_PROT_LBORRES_10, 
+         M08_UA_PROT_LBORRES_13, M08_UA_PROT_LBORRES_14)
+
+table(PROTEINURIA_ANC_IPC = merged_df$PROTEINURIA_ANC_IPC, SITE = merged_df$SITE, useNA = "always")
+round(prop.table(table(PROTEINURIA_ANC_IPC = merged_df$PROTEINURIA_ANC_IPC, SITE = merged_df$SITE, useNA = "always"), margin=2)*100,2)
+```
+
+# PROTEINURIA AT PNC & HOSP.
+PNC0,1,4,6
+```{r}
+merged_df <- merged_df %>% 
+  mutate(PROTEINURIA_PNC = ifelse((!is.na(M08_UA_PROT_LBORRES_7) & 
+                                         (M08_UA_PROT_LBORRES_7 == 2 | M08_UA_PROT_LBORRES_7==3)) |
+                                        (!is.na(M08_UA_PROT_LBORRES_8) & 
+                                           (M08_UA_PROT_LBORRES_8 == 2 | M08_UA_PROT_LBORRES_8==3)) |
+                                        (!is.na(M08_UA_PROT_LBORRES_9) & 
+                                           (M08_UA_PROT_LBORRES_9 == 2 | M08_UA_PROT_LBORRES_9==3)) |
+                                        (!is.na(M08_UA_PROT_LBORRES_10) & 
+                                           (M08_UA_PROT_LBORRES_10 == 2 | M08_UA_PROT_LBORRES_10==3)) |
+                                        (!is.na(M08_UA_PROT_LBORRES_14) & 
+                                           (M08_UA_PROT_LBORRES_14 == 2 | M08_UA_PROT_LBORRES_14==3)), # HOSP.
+                                      1,0))
+
+table(PROTEINURIA_PNC = merged_df$PROTEINURIA_PNC, SITE = merged_df$SITE, useNA = "always")
+round(prop.table(table(PROTEINURIA_PNC = merged_df$PROTEINURIA_PNC, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 2)
+```
+
+############################
+#### WRITE OUT CSV FOR HTN
+###########################
+```{r}
+htn_df <- merged_df %>% 
+  select(MOMID, PREGID, SITE, DELIVERED_FF, M04_ANC_OBSSTDAT_1, # Date ANC1 from MNH04
+         M04_HPD_MHTERM_2, # Chronic hypertension or gHTN or PE or Don't know.  
+         M19_BP_SYS_VSORRES_13, M19_BP_DIA_VSORRES_13, M19_BP_SYS_VSORRES_14, M19_BP_DIA_VSORRES_14,
+         M04_HTN_EVER_MHOCCUR_1, M04_HTN_MHSTDAT_1, # CHRONIC HYPERTENSION
+         starts_with(c("M06_BP_SYS_VSORRES_", "M06_BP_DIA_VSORRES_", "M04_HTN_CMTRT_", 
+                       "M04_HPD_OECTRT_", 
+                       "M09_HDP_HTN_PROCCUR_", # L&D Medication
+                       # ANC HOSP _13
+                       "M19_HDP_HTN_MHOCCUR_",
+                       # PROTEINURIA
+                       "M08_UA_PROT_LBORRES",
+                       "M08_LBSTDAT_")))  # M08_LBSTDAT_ GIVES DATE OF THE VISIT
+
+write.csv(htn_df, '../data_out/mat_htn.csv')
+```
+
 # MEAN BLOOD PRESSURE MEASUREMENTS
 ```{r}
-temp.df <- merged_df %>% 
-  select(MOMID, PREGID, SITE,
-         M19_BP_SYS_VSORRES_13, M19_BP_DIA_VSORRES_13,
-         starts_with(c("M06_BP_SYS_VSORRES_", "M06_BP_DIA_VSORRES_", "M04_HTN_CMTRT_"))) 
-
-
 # <20 weeks (ENROLLMENT)
 merged_df <- merged_df %>% 
   rowwise() %>% 
   mutate(meanSBP_ANC_LT20 = mean(c(M06_BP_SYS_VSORRES_1_1, M06_BP_SYS_VSORRES_2_1, M06_BP_SYS_VSORRES_3_1), na.rm = TRUE), # ANC
          meanDBP_ANC_LT20 = mean(c(M06_BP_DIA_VSORRES_1_1, M06_BP_DIA_VSORRES_2_1, M06_BP_DIA_VSORRES_3_1), na.rm = TRUE)) # ANC
+
 # OTHER VISITS
 merged_df <- merged_df %>% 
   rowwise() %>% 
@@ -2106,26 +2205,67 @@ merged_df <- merged_df %>%
 ```
 
 
-# CHRONIC HYPERTENSION - CHRON_HYPER***
+# CHRONIC HYPERTENSION 
+
+# CHRON_HYPER_MEAS
 Clinical diagnosis of chronic hypertension AND/OR systolic blood pressure ≥140 mm Hg AND/OR diastolic blood pressure ≥90 mm Hg before 20 weeks’ gestation.
 ENROLLMENT
 
 ```{r echo=FALSE}
-
+merged_df <- merged_df %>% 
+  mutate(CHRON_HYPER_MEAS = case_when((meanSBP_ANC_LT20 >=140 | meanDBP_ANC_LT20 >=90)  ~ 1, 
+                                     TRUE  ~ as.numeric(0)))
+table(merged_df$CHRON_HYPER_MEAS, SITE = merged_df$SITE, useNA = "always")
+round(prop.table(table(merged_df$CHRON_HYPER_MEAS, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 2)
 
 merged_df <- merged_df %>% 
-  mutate(CHRON_HYPER = case_when((meanSBP_ANC_LT20 >=140 | meanDBP_ANC_LT20 >=90)  ~ 1, 
+  mutate(CHRON_HYPER_MEAS_NA = case_when((meanSBP_ANC_LT20 >=140 | meanDBP_ANC_LT20 >=90)  ~ 1, 
+                                    (is.na(meanSBP_ANC_LT20) & is.na(meanDBP_ANC_LT20)) ~ as.numeric(NA),
                                      TRUE  ~ as.numeric(0)))
+
+table(merged_df$CHRON_HYPER_MEAS_NA, SITE = merged_df$SITE, useNA = "always")
+round(prop.table(table(merged_df$CHRON_HYPER_MEAS_NA, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 2)
+
+```
+
+# CHRONIC HYPERTENSION MEDICATION USE/TREATMENT
+```{r}
+merged_df <- merged_df %>%
+  mutate(CHRON_HYPER_TREAT = case_when((M04_HTN_CMTRT_3_1==1 | M04_HTN_CMTRT_4_1==1 | M04_HTN_CMTRT_5_1==1 |
+                                         M04_HTN_CMTRT_6_1==1 | M04_HTN_CMTRT_7_1==1 | M04_HTN_CMTRT_8_1==1 |
+                                         M04_HTN_CMTRT_9_1==1 | M04_HTN_CMTRT_88_1==1) ~ 1,
+                                       TRUE ~ as.numeric(0)))
+
+table(merged_df$CHRON_HYPER_TREAT, SITE = merged_df$SITE, useNA = "always")
+round(prop.table(table(merged_df$CHRON_HYPER_TREAT, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 2)
+```
+
+# CHRONIC HYPERTENSION DIAGNOSIS
+```{r}
+merged_df <- merged_df %>%
+  mutate(CHRON_HYPER_DIAG = case_when(M04_HTN_EVER_MHOCCUR_1==1 | (!is.na(M04_HTN_MHSTDAT_1)) ~ 1,
+                                      TRUE ~ as.numeric(0)))
+
+table(merged_df$CHRON_HYPER_DIAG, SITE = merged_df$SITE, useNA = "always")
+round(prop.table(table(merged_df$CHRON_HYPER_DIAG, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 2)
+
+```
+# CHRONIC HYPERTENSION MEASURED + TREATMENT + DIAG (FINAL)
+```{r}
+
+merged_df <- merged_df %>% 
+  mutate(CHRON_HYPER = case_when((CHRON_HYPER_MEAS ==1 | CHRON_HYPER_TREAT==1 | 
+                                               CHRON_HYPER_DIAG==1) ~ 1,
+                                            TRUE ~ as.numeric(0)))
+
 table(merged_df$CHRON_HYPER, SITE = merged_df$SITE, useNA = "always")
 round(prop.table(table(merged_df$CHRON_HYPER, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 2)
 ```
-
 
 # GESTATIONAL HYPERTENSION (gHTN) - GEST_HYPER_MEAS***
 
 # NEED TO REVISE GESTATIONAL HYPERTENSION TO INCLUDE MEDICATION USE
 # A systolic blood pressure >140 mm Hg on two occasions at least 1 hour apart or diastolic blood pressure >90 mm Hg on two occasions at least 1 hour apart or severe gestational hypertension in pregnancy (not at time of delivery) defined as systolic blood pressure > 160 mmHg or a diastolic blood pressure >110 mmHg on two occasions at least 1 minute apart after 20 weeks gestation or severe gestational hypertension at the time of delivery defined as one systolic blood pressure > 160 mmHg or a diastolic blood pressure >110 mmHg among participants WITHOUT chronic hypertension.
-
 
 "ANC
 Wk 20, 28, 32, 36 (VISITS 2-4),
@@ -2146,8 +2286,6 @@ MNH01	US_GA_WKS_AGE_FTS1	1st fetus: GA by ultrasound at TODAY’s visit:  weeks
 		
 Medications include magnesium sulfate, hydralazine, methyldopa (aldomet), atenolol, nifedipine, betamethasone, labetalol, and dexamethasone. 
 
-# SEVERE GESTATIONAL HYPERTENSION - SEVERE_GEST_HYPER_MEAS***
-In pregnancy defined as systolic blood pressure ≥160 mmHg or a diastolic blood pressure ≥110 mmHg on two occasions at least 1 minute apart after 20 weeks gestation OR at the time of delivery defined as one systolic blood pressure ≥160 mmHg or a diastolic blood pressure ≥110 mmHg among participants without chronic hypertension.
 ```{r echo=FALSE}
 ###################################################################################################
 #TODO 
@@ -2155,14 +2293,16 @@ In pregnancy defined as systolic blood pressure ≥160 mmHg or a diastolic blood
 ########## NEEDS A LOT OF ATTENTION###########
 # - AMONG PARTICIPANTS WITHOUT cHTN.
 # LOOKING AT TWO TIMEPOINTS TO DETERMINE IF gHTN (TP DO NOT HAVE TO BE CONSECUTIVE
-# ADD UNSCHEDULED VISITS - CURRENTLY, I ONLY HAVE ONE.
-# - Currently coded without medication prescribed variables M04_HTN_CMTRT_ #
-      # b/c most of these are 0 or NA even when gHTN ==1. 
+# ADD UNSCHEDULED VISITS - CURRENTLY, I ONLY HAVE ONE UNSCHEDULED VISIT.
+# - CREATED A GEST_HYPER_MEAS_TREAT VAR THAT HAS BOTH MEDICATION AND BP DATA.
 
-
+#TODO Will have to recreate this variable using gestational age at some point (b/c women who are at GA 18 or 19 can still come in for ANC20 visit (VISIT 2) so to truly count this as 20week GA at least for gHTN - I need to look at GA (10/02/2023)
+      
 # DISCUSSION POINTS 09/21/2023 
 # Create separate categories for DIAGNOSED, MEASURED and TREATED. 
 # - Make a classic case of gHTN also where either BP high OR medication use. 
+
+# WHY DIDN'T WE INCLUDE LACK OF PROTEINURIA IN gHTN?
 ###################################################################################################
 
 # FUNCTION FOR gHTN and SEVERE gHTN
@@ -2173,11 +2313,16 @@ is_severe_ghtn <- function(sbp, dbp, sbp_threshold = 160, dbp_threshold = 110) {
 is_ghtn <- function(sbp, dbp, sbp_threshold = 140, dbp_threshold = 90) {
   return (sbp >= sbp_threshold | dbp >= dbp_threshold)
 }
+```
+
+# gHTN MEASURED ANY 2 TIMEPOINTS during ANC AND L&D
+```{r}
 
  # WHENY ANY TWO TIMEPOINT SBP OR DBP ARE ABOVE THE THRESHOLD (DO NOT HAVE TO BE CONSECUTIVE)
+# AND 'NO' CHRONIC HYPERTENSION! 
 merged_df <- merged_df %>%
   rowwise() %>%
-  mutate(GEST_HYPER_MEAS = ifelse(((sum(is_ghtn(meanSBP_ANC20, meanDBP_ANC20),
+  mutate(GEST_HYPER_MEAS_ANY2 = ifelse(((sum(is_ghtn(meanSBP_ANC20, meanDBP_ANC20),
                                        is_ghtn(meanSBP_ANC28, meanDBP_ANC28),
                                        is_ghtn(meanSBP_ANC32, meanDBP_ANC32),
                                        is_ghtn(meanSBP_ANC36, meanDBP_ANC36),
@@ -2185,66 +2330,133 @@ merged_df <- merged_df %>%
                                        is_ghtn(meanSBP_Hosp_ANC, meanDBP_Hosp_ANC), na.rm = TRUE) >=2) & 
                                     CHRON_HYPER==0), 1, 0))
 
-table(merged_df$GEST_HYPER_MEAS, merged_df$SITE, useNA = "always")
-round(prop.table(table(merged_df$GEST_HYPER_MEAS, merged_df$SITE, useNA = "always"), margin=2)*100,2)
+table(merged_df$GEST_HYPER_MEAS_ANY2, merged_df$SITE, useNA = "always")
+round(prop.table(table(merged_df$GEST_HYPER_MEAS_ANY2, merged_df$SITE, useNA = "always"), margin=2)*100,2)
+```
 
-##################################
-# SEVERE GESTATIONAL HYPERTENSION:
-##################################
+# gHTN MEASURED @ ANY 1 TIMEPOINT during ANC AND L&D
+```{r}
+# AND NO CHRONIC HTN.
+merged_df <- merged_df %>%
+  rowwise() %>%
+  mutate(GEST_HYPER_MEAS_ANY1 = ifelse(((sum(is_ghtn(meanSBP_ANC20, meanDBP_ANC20),
+                                       is_ghtn(meanSBP_ANC28, meanDBP_ANC28),
+                                       is_ghtn(meanSBP_ANC32, meanDBP_ANC32),
+                                       is_ghtn(meanSBP_ANC36, meanDBP_ANC36),
+                                       is_ghtn(meanSBP_IPC, meanDBP_IPC),
+                                       is_ghtn(meanSBP_Hosp_ANC, meanDBP_Hosp_ANC), na.rm = TRUE) >=1) & # just need one TP to be high and then add in the medication piece next (it will be 1 TP high AND Medication use)
+                                    CHRON_HYPER==0), 1, 0))
 
-merged_df <- merged_df %>% 
-  mutate(SEVERE_GEST_HYPER_MEAS = ifelse(((sum(is_severe_ghtn(meanSBP_ANC20, meanDBP_ANC20),
-                                         is_severe_ghtn(meanSBP_ANC28, meanDBP_ANC28),
-                                         is_severe_ghtn(meanSBP_ANC32, meanDBP_ANC32),
-                                         is_severe_ghtn(meanSBP_ANC36, meanDBP_ANC36),
-                                         is_severe_ghtn(meanSBP_IPC, meanDBP_IPC),
-                                         is_severe_ghtn(meanSBP_Hosp_ANC, meanDBP_Hosp_ANC), na.rm = TRUE) >=2) &
-                                      CHRON_HYPER==0), 1, 0))
-           
-table(SEVERE_GEST_HYPER_MEAS = merged_df$SEVERE_GEST_HYPER_MEAS, merged_df$SITE, useNA = "always")
-round(prop.table(table(SEVERE_GEST_HYPER_MEAS = merged_df$SEVERE_GEST_HYPER_MEAS, SITE = merged_df$SITE, useNA = "always"), margin=2)*100,2)           
-           
- 
+table(merged_df$GEST_HYPER_MEAS_ANY1, merged_df$SITE, useNA = "always")
+round(prop.table(table(merged_df$GEST_HYPER_MEAS_ANY1, merged_df$SITE, useNA = "always"), margin=2)*100,2)
+```
+
+
+# TREATMENT FOR GESTATIONAL HTN (INCL. AT L&D)
+```{r}
 ######################################
 # GESTATIONAL HYPERTENSION TREATMENT #
 #TODO QUERY CHECK: HDP_HTN_MHOCCUR_4 - 10 and 88 in M19 should be 1,0 variables but they don't exist.
 ######################################
-merged_df <- merged_df %>%                      # VISIT 20
-  mutate(GEST_HYPER_TREAT = case_when((1 %in% c(M04_HPD_OECTRT_3_2, M04_HPD_OECTRT_4_2, M04_HPD_OECTRT_5_2, # ANC
-                                      M04_HPD_OECTRT_6_2, M04_HPD_OECTRT_7_2, M04_HPD_OECTRT_8_2,
-                                      M04_HPD_OECTRT_9_2, M04_HPD_OECTRT_10_2, M04_HPD_OECTRT_88_2,
-                                      
-                                      # VISIT 28
-                                      M04_HPD_OECTRT_3_3, M04_HPD_OECTRT_4_3, M04_HPD_OECTRT_5_3, # ANC
-                                      M04_HPD_OECTRT_6_3, M04_HPD_OECTRT_7_3, M04_HPD_OECTRT_8_3,
-                                      M04_HPD_OECTRT_9_3, M04_HPD_OECTRT_10_3, M04_HPD_OECTRT_88_3,
-                                      
-                                      # VISIT 32
-                                      M04_HPD_OECTRT_3_4, M04_HPD_OECTRT_4_4, M04_HPD_OECTRT_5_4, # ANC
-                                      M04_HPD_OECTRT_6_4, M04_HPD_OECTRT_7_4, M04_HPD_OECTRT_8_4,
-                                      M04_HPD_OECTRT_9_4, M04_HPD_OECTRT_10_4, M04_HPD_OECTRT_88_4,
-                                      
-                                      # VISIT 36
-                                      M04_HPD_OECTRT_3_5, M04_HPD_OECTRT_4_5, M04_HPD_OECTRT_5_5, # ANC
-                                      M04_HPD_OECTRT_6_5, M04_HPD_OECTRT_7_5, M04_HPD_OECTRT_8_5,
-                                      M04_HPD_OECTRT_9_5, M04_HPD_OECTRT_10_5, M04_HPD_OECTRT_88_5,
-                                      
-                                      # IPC
-                                       M09_HDP_HTN_PROCCUR_3_6, M09_HDP_HTN_PROCCUR_4_6, M09_HDP_HTN_PROCCUR_5_6,
-                                      M09_HDP_HTN_PROCCUR_6_6, M09_HDP_HTN_PROCCUR_7_6, M09_HDP_HTN_PROCCUR_8_6,
-                                      M09_HDP_HTN_PROCCUR_9_6, M09_HDP_HTN_PROCCUR_10_6, M09_HDP_HTN_PROCCUR_88_6,
-                                      
-                                      # ANC HOSP _13
-                                      M19_HDP_HTN_MHOCCUR_3_13, M19_HDP_HTN_MHOCCUR_4_13, M19_HDP_HTN_MHOCCUR_5_13, 
-                                      M19_HDP_HTN_MHOCCUR_6_13, M19_HDP_HTN_MHOCCUR_7_13, M19_HDP_HTN_MHOCCUR_8_13, 
-                                      M19_HDP_HTN_MHOCCUR_9_13, M19_HDP_HTN_MHOCCUR_10_13, M19_HDP_HTN_MHOCCUR_88_13)) ~ 1,
+
+# AND NO CHRONIC HYPERTENSION AT THAT VISIT FROM FROM CLINICAL DIAGNOSIS
+merged_df <- merged_df %>%                      
+  mutate(GEST_HYPER_TREAT = case_when((M04_HPD_MHTERM_2!=3 & # When it is not cHTN
+                                         # VISIT 20
+                                         (1 %in% c(M04_HPD_OECTRT_3_2, M04_HPD_OECTRT_4_2, M04_HPD_OECTRT_5_2, # ANC
+                                                   M04_HPD_OECTRT_6_2, M04_HPD_OECTRT_7_2, M04_HPD_OECTRT_8_2,
+                                                   M04_HPD_OECTRT_9_2, M04_HPD_OECTRT_10_2, M04_HPD_OECTRT_88_2,
+                                                   
+                                                   # VISIT 28
+                                                   M04_HPD_OECTRT_3_3, M04_HPD_OECTRT_4_3, M04_HPD_OECTRT_5_3, # ANC
+                                                   M04_HPD_OECTRT_6_3, M04_HPD_OECTRT_7_3, M04_HPD_OECTRT_8_3,
+                                                   M04_HPD_OECTRT_9_3, M04_HPD_OECTRT_10_3, M04_HPD_OECTRT_88_3,
+                                                   
+                                                   # VISIT 32
+                                                   M04_HPD_OECTRT_3_4, M04_HPD_OECTRT_4_4, M04_HPD_OECTRT_5_4, # ANC
+                                                   M04_HPD_OECTRT_6_4, M04_HPD_OECTRT_7_4, M04_HPD_OECTRT_8_4,
+                                                   M04_HPD_OECTRT_9_4, M04_HPD_OECTRT_10_4, M04_HPD_OECTRT_88_4,
+                                                   
+                                                   # VISIT 36
+                                                   M04_HPD_OECTRT_3_5, M04_HPD_OECTRT_4_5, M04_HPD_OECTRT_5_5, # ANC
+                                                   M04_HPD_OECTRT_6_5, M04_HPD_OECTRT_7_5, M04_HPD_OECTRT_8_5,
+                                                   M04_HPD_OECTRT_9_5, M04_HPD_OECTRT_10_5, M04_HPD_OECTRT_88_5,
+                                                   
+                                                   # ANC HOSP _13
+                                                   M19_HDP_HTN_MHOCCUR_3_13, M19_HDP_HTN_MHOCCUR_4_13, M19_HDP_HTN_MHOCCUR_5_13, 
+                                                   M19_HDP_HTN_MHOCCUR_6_13, M19_HDP_HTN_MHOCCUR_7_13, M19_HDP_HTN_MHOCCUR_8_13, 
+                                                   M19_HDP_HTN_MHOCCUR_9_13, M19_HDP_HTN_MHOCCUR_10_13, M19_HDP_HTN_MHOCCUR_88_13,
+                                                   
+                                                   # L&D
+                                                   M09_HDP_HTN_PROCCUR_3_6, M09_HDP_HTN_PROCCUR_4_6, M09_HDP_HTN_PROCCUR_5_6,
+                                                   M09_HDP_HTN_PROCCUR_6_6, M09_HDP_HTN_PROCCUR_7_6, M09_HDP_HTN_PROCCUR_8_6,
+                                                   M09_HDP_HTN_PROCCUR_9_6, M09_HDP_HTN_PROCCUR_10_6, M09_HDP_HTN_PROCCUR_88_6))) ~ 1,
                                       TRUE ~ as.numeric(0)))
 
 table(GEST_HYPER_TREAT = merged_df$GEST_HYPER_TREAT, merged_df$SITE, useNA = "always")
 round(prop.table(table(GEST_HYPER_TREAT = merged_df$GEST_HYPER_TREAT, SITE = merged_df$SITE, useNA = "always"), margin=2)*100,2)  
 
 # temp.df <- merged_df %>% select(MOMID, PREGID, GEST_HYPER_MEAS, starts_with("M04_HTN_CMTRT_")) # I DON'T NEED THIS CHRONIC HTN MEDICATION TREATMENT DATA. 
+```
 
+
+# GESTATIONAL HYPERTENSION MEASURED ONCE AND TREATMENT AT ANC AND L&D
+```{r}
+# THIS INCLUDES NO CHRONIC HYPERTENSION IN THESE INDICATOR VARIABLES THAT ARE INCLUDED IN THIS.
+merged_df <- merged_df %>%
+  mutate(GEST_HYPER_MEAS1_TREAT = case_when((GEST_HYPER_MEAS_ANY1==1 & GEST_HYPER_TREAT==1) ~ 1,
+                                            TRUE ~ as.numeric(0)))
+
+table(GEST_HYPER_MEAS1_TREAT = merged_df$GEST_HYPER_MEAS1_TREAT, merged_df$SITE, useNA = "always")
+round(prop.table(table(GEST_HYPER_MEAS1_TREAT = merged_df$GEST_HYPER_MEAS1_TREAT, SITE = merged_df$SITE, useNA = "always"), margin=2)*100,2) 
+
+```
+
+
+# SEVERE GESTATIONAL HYPERTENSION - SEVERE_GEST_HYPER_MEAS*** AT ANC & L&D
+In pregnancy defined as systolic blood pressure ≥160 mmHg or a diastolic blood pressure ≥110 mmHg on two occasions at least 1 minute apart after 20 weeks gestation OR at the time of delivery defined as one systolic blood pressure ≥160 mmHg or a diastolic blood pressure ≥110 mmHg among participants without chronic hypertension.
+```{r}
+##################################
+# SEVERE GESTATIONAL HYPERTENSION:
+##################################
+# THIS INCLUDES NO CHRONIC HYPERTENSION.
+
+# if BP >160/110 just at one occasion - then severe HTN
+merged_df <- merged_df %>% 
+  mutate(SEVERE_GEST_HYPER_MEAS = ifelse(((sum(is_severe_ghtn(meanSBP_ANC20, meanDBP_ANC20),
+                                         is_severe_ghtn(meanSBP_ANC28, meanDBP_ANC28),
+                                         is_severe_ghtn(meanSBP_ANC32, meanDBP_ANC32),
+                                         is_severe_ghtn(meanSBP_ANC36, meanDBP_ANC36),
+                                         is_severe_ghtn(meanSBP_IPC, meanDBP_IPC),
+                                         is_severe_ghtn(meanSBP_Hosp_ANC, meanDBP_Hosp_ANC), na.rm = TRUE) >=1) &
+                                      CHRON_HYPER==0), 1, 0))
+           
+table(SEVERE_GEST_HYPER_MEAS = merged_df$SEVERE_GEST_HYPER_MEAS, merged_df$SITE, useNA = "always")
+round(prop.table(table(SEVERE_GEST_HYPER_MEAS = merged_df$SEVERE_GEST_HYPER_MEAS, SITE = merged_df$SITE, useNA = "always"), margin=2)*100,2)           
+```
+
+# GESTAITONAL HYPERTENSION MEASURED 2+ OR (1 MEASURED & TREATMENT) OR SEVERE gHTN - WITH PROTEIN URIA (FINAL)
+```{r}
+# INCLUDES 'NO CHRONIC HYPERTENSION' COMPONENT HERE.
+merged_df <- merged_df %>%
+  mutate(GEST_HYPER = case_when((GEST_HYPER_MEAS1_TREAT==1 | GEST_HYPER_MEAS_ANY2 ==1 | 
+                                  SEVERE_GEST_HYPER_MEAS ==1) ~ 1,
+                                all(is.na(c(GEST_HYPER_MEAS1_TREAT, GEST_HYPER_MEAS_ANY2, SEVERE_GEST_HYPER_MEAS))) ~ as.numeric(NA), 
+                                TRUE ~ as.numeric(0)))
+
+table(GEST_HYPER = merged_df$GEST_HYPER, merged_df$SITE, useNA = "always")
+round(prop.table(table(GEST_HYPER = merged_df$GEST_HYPER, SITE = merged_df$SITE, useNA = "always"), margin=2)*100,2) 
+```
+
+# GESTATIONAL HYPERTENSION MEASURED 2+ OR (1 MEASURED & TREATMENT) OR SEVERE gHTN - "WITHOUT" PROTEIN URIA (FINAL)
+PROTEINURIA_ANC_IPC
+```{r}
+merged_df <- merged_df %>%
+  mutate(GEST_HYPER_WO_PROTEINURIA = case_when(GEST_HYPER==1 & (PROTEINURIA_ANC_IPC==0 | is.na(PROTEINURIA_ANC_IPC)) ~ 1,
+                                                                TRUE ~ as.numeric(0)))
+
+table(GEST_HYPER_WO_PROTEINURIA = merged_df$GEST_HYPER_WO_PROTEINURIA, merged_df$SITE, useNA = "always")
+round(prop.table(table(GEST_HYPER_WO_PROTEINURIA = merged_df$GEST_HYPER_WO_PROTEINURIA, SITE = merged_df$SITE, useNA = "always"), margin=2)*100,2)
 ```
 
 # POSTPARTUM HYPERTENSION - HYPER_PNC***
@@ -2273,7 +2485,7 @@ table(HYPER_PNC_MEAS = merged_df$HYPER_PNC_MEAS, SITE = merged_df$SITE, useNA = 
 round(prop.table(table(HYPER_PNC_MEAS = merged_df$HYPER_PNC_MEAS, SITE = merged_df$SITE, useNA = "always"), margin=2)*100,2)
 ```
 
-# SECONDARY: GESTATIONAL HYPERTENSION - GEST_HYPER_DIAG***
+# GESTATIONAL HYPERTENSION - GEST_HYPER_DIAG***
 Gestational hypertension (diagnosed)
 
 ```{r}
@@ -2316,38 +2528,6 @@ table(SEVERE_GEST_HYPER_DIAG = merged_df$SEVERE_GEST_HYPER_DIAG, SITE = merged_d
 round(prop.table(table(SEVERE_GEST_HYPER_DIAG = merged_df$SEVERE_GEST_HYPER_DIAG, SITE = merged_df$SITE, useNA = "always"), margin=2)*100,2)
 ```
 
-# GESTATIONAL PROTEINURIA - PROTEINURIA***
-24 hour urine collection >300 mg protein OR single voided urine protein/creatinine ratio ≥0.3 OR Dipstick of 1+ or 2+.
-Measured ANC20,28,32,36
-IPC
-PNC0,1,4,6
-Hospitalizations.
-```{r echo=FALSE}
-# merged_df <- merged_df %>% 
-#   mutate(PROTEINURIA2 = case_when((c('2', '3') %in% c(M08_UA_PROT_LBORRES_2, M08_UA_PROT_LBORRES_3, M08_UA_PROT_LBORRES_4, 
-#                                                 M08_UA_PROT_LBORRES_5, M08_UA_PROT_LBORRES_6, M08_UA_PROT_LBORRES_7,
-#                                                 M08_UA_PROT_LBORRES_8, M08_UA_PROT_LBORRES_9, M08_UA_PROT_LBORRES_10,
-#                                                 M08_UA_PROT_LBORRES_13, M08_UA_PROT_LBORRES_14)) ~ 1,
-#                                  TRUE ~ as.numeric(0)))
-merged_df <- merged_df %>% 
-  mutate(PROTEINURIA = ifelse((!is.na(M08_UA_PROT_LBORRES_2) & (M08_UA_PROT_LBORRES_2 == 2 | M08_UA_PROT_LBORRES_2==3)) | 
-                                (!is.na(M08_UA_PROT_LBORRES_3) & (M08_UA_PROT_LBORRES_3 == 2 | M08_UA_PROT_LBORRES_3==3)) |
-                                (!is.na(M08_UA_PROT_LBORRES_4) & (M08_UA_PROT_LBORRES_4 == 2 | M08_UA_PROT_LBORRES_4==3)) |
-                                (!is.na(M08_UA_PROT_LBORRES_5) & (M08_UA_PROT_LBORRES_5 == 2 | M08_UA_PROT_LBORRES_5==3)) |
-                                (!is.na(M08_UA_PROT_LBORRES_6) & (M08_UA_PROT_LBORRES_6 == 2 | M08_UA_PROT_LBORRES_6==3)) |
-                                (!is.na(M08_UA_PROT_LBORRES_7) & (M08_UA_PROT_LBORRES_7 == 2 | M08_UA_PROT_LBORRES_7==3)) |
-                                (!is.na(M08_UA_PROT_LBORRES_8) & (M08_UA_PROT_LBORRES_8 == 2 | M08_UA_PROT_LBORRES_8==3)) |
-                                (!is.na(M08_UA_PROT_LBORRES_9) & (M08_UA_PROT_LBORRES_9 == 2 | M08_UA_PROT_LBORRES_9==3)) |
-                                (!is.na(M08_UA_PROT_LBORRES_10) & (M08_UA_PROT_LBORRES_10 == 2 | M08_UA_PROT_LBORRES_10==3)) |
-                                (!is.na(M08_UA_PROT_LBORRES_13) & (M08_UA_PROT_LBORRES_13 == 2 | M08_UA_PROT_LBORRES_13==3)) |
-                                (!is.na(M08_UA_PROT_LBORRES_14) & (M08_UA_PROT_LBORRES_14 == 2 | M08_UA_PROT_LBORRES_14==3)), 1, 0))
-
-temp.df <- merged_df %>% 
-  select(MOMID, PREGID, PROTEINURIA, M08_UA_PROT_LBORRES_2, M08_UA_PROT_LBORRES_3,M08_UA_PROT_LBORRES_4,M08_UA_PROT_LBORRES_5,M08_UA_PROT_LBORRES_6,
-         M08_UA_PROT_LBORRES_7,M08_UA_PROT_LBORRES_8,M08_UA_PROT_LBORRES_9, M08_UA_PROT_LBORRES_10, M08_UA_PROT_LBORRES_13, M08_UA_PROT_LBORRES_14)
-
-table(PROTEINURIA = merged_df$PROTEINURIA)
-```
 
 # MISSING INFO.
 ```{r}
@@ -2439,14 +2619,14 @@ temp.df <- merged_df %>%
 # NOTES: 
 # - SEVERE gHTN IS MEASURED AT SEVERAL TP BEYOND 20 WEEK GESTATION BUT OTHER FEATURES SUCH AS:
 # --------HEMOLYSIS, LIVER, PLATELET, AND KIDNEY AR ONLY DONE AT WEEK 32. 
-#TODO - NEED TO FIX GESTATIONAL HYPERTENSION VARIBLE TO INCLUDE ANY 2 TP AND TO INLCUDE MEDICATION USE.
+# FIX CREAT 1.1 THRESHOLD.  1.1 is in mg/dL.  This data is in mmol
 ##################################################################################
 merged_df <- merged_df %>%
   mutate(MAT_PE_SEV_MEAS = case_when((SEVERE_GEST_HYPER_MEAS==1 |
                                            (MAT_HEMOLYSIS ==1 | # HEMOGLOBIN <7 & BILI HIGH
                                               M08_AST_UL_LBORRES_4 >= 90 | M08_ALT_UL_LBORRES_4 >= 120 | # HEPATIC ABNORMALITY: AST AND ALT 2X THE UPPER NORMAL RANGE
                                               (M08_CBC_PLATE_LBORRES_4 >=0 & M08_CBC_PLATE_LBORRES_4 < 100)) | # LOW PLATELET
-                                           M08_CREAT_UMOLL_LBORRES_4 > 1.1) ~ 1, # KIDNEY FUNCTION 
+                                           M08_CREAT_UMOLL_LBORRES_4 > 97.26) ~ 1, # 1.1mg/dl or 97.26umol/dl KIDNEY FUNCTION 
                                          TRUE ~ as.numeric(0)))
 
 table(MAT_PE_SEV_MEAS = merged_df$MAT_PE_SEV_MEAS, SITE = merged_df$SITE, useNA = "always" )
@@ -2470,7 +2650,7 @@ table(MAT_PE_CHRONIC_HTN_MEAS = merged_df$MAT_PE_CHRONIC_HTN_MEAS, SITE = merged
 round(prop.table(table(MAT_PE_CHRONIC_HTN_MEAS = merged_df$MAT_PE_CHRONIC_HTN_MEAS, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 2)
 ```
 
-# PREECLAMPSIA (PE) WITH cHTN (FINAL)
+# PREECLAMPSIA (PE) WITHOUT cHTN (FINAL)
 ```{r}
 ##################################################################################
 #TODO 
@@ -2629,32 +2809,9 @@ Look at:
 #TODO 
 # NOTES: 
 # 1. NEED TO ADD ADDITIONAL CONDITIONS FOR DIAGNOSED # 
-# 2. ALL OF MEASURED variables are NA - FASTING OGTT, HbA1c# 
-
 ##################################################################################
 
-# This is DIAGNOSED at enrollment, ANC28, 32, 36 through MNH04.
-temp.df <- merged_df %>% select(M04_DIABETES_EVER_MHOCCUR_2, 
-                                    M04_DIABETES_EVER_MHOCCUR_3, M04_DIABETES_EVER_MHOCCUR_4,
-                                    M09_GEST_DIAB_MHOCCUR_6, M09_INDUCED_PROCCUR_6,
-                                    M19_PRIMARY_MHTERM_13, M19_LD_COMPL_MHTERM_3_13)
 
-temp.df <- merged_df %>% select(MOMID, PREGID, SITE, M06_BGLUC_POC_MMOLL_LBORRES_2, 
-                                    M08_BGLUC_PRETEST_MMOLL_LBORRES_1, M08_BGLUC_PRETEST_MMOLL_LBORRES_2, M08_BGLUC_PRETEST_MMOLL_LBORRES_3,
-                                    M08_HBA1C_LBORRES_1)
-tapply(merged_df$M08_HBA1C_LBORRES_1, merged_df$SITE, summary)
-# %>% group_by(SITE) %>% summary(M08_HBA1C_LBORRES_1)
-
-# HAVE YOU EVER BEEN DIAGNOSED WITH DIABETES (PRE-EXISITING OR CHRONIC) NEED FROM VISITS 3,4,5.
-# SIDE 75 SAYS THIS SHOULD BE VISITS 3-5
-merged_df <- merged_df %>% 
-  mutate(GEST_DIAB_DIAG= case_when((M04_DIABETES_EVER_MHOCCUR_3==0 | M04_DIABETES_EVER_MHOCCUR_4==0 | M04_DIABETES_EVER_MHOCCUR_5==0) &
-                                      ((M09_GEST_DIAB_MHOCCUR_6==1 | # WAS MOTHER DIAGNOSED WITH DIABETES
-                                      (M09_INDUCED_PROCCUR_6==1 & M09_INDUCED_PRINDC_6==8)) |
-                                      (M19_PRIMARY_MHTERM_13==4 & M19_LD_COMPL_MHTERM_3_13)) ~ 1,
-                                    TRUE ~ as.numeric(0)))
-
-table(GEST_DIAB_DIAG = merged_df$GEST_DIAB_DIAG, SITE = merged_df$SITE, useNA = "always")
 
 ###############################################
 # THIS BELOW MAY NOT BE CORRECT - USE THE ONE IN MAT_GDM_ANALYSIS.Rmd file.
@@ -2674,7 +2831,7 @@ merged_df <- merged_df %>%
 
 table(GEST_DIAB_MEAS = merged_df$GEST_DIAB_MEAS, SITE = merged_df$SITE, useNA = "always")
 round(prop.table(table(GEST_DIAB_MEAS = merged_df$GEST_DIAB_MEAS, SITE = merged_df$SITE, useNA = "always"), margin=2)*100,2)
-###############################################
+
 
 # WOMEN WHO HAVE DON'T HAVE OVERT DIABETES
 merged_df <- merged_df %>%
@@ -2689,6 +2846,32 @@ temp.merged <- merged_df %>% filter(SITE=="Pakistan") %>% filter(ENROLLED_FF==1)
 
 temp.merged <- merged_df %>% filter(SITE=="Pakistan") %>% distinct(MOMID)
 
+```
+
+```{r}
+##############
+# DIAGNOSED # 
+#############
+# This is DIAGNOSED at enrollment, ANC28, 32, 36 through MNH04.
+temp.df <- merged_df %>% select(M04_DIABETES_EVER_MHOCCUR_2, 
+                                    M04_DIABETES_EVER_MHOCCUR_3, M04_DIABETES_EVER_MHOCCUR_4,
+                                    M09_GEST_DIAB_MHOCCUR_6, M09_INDUCED_PROCCUR_6,
+                                    M19_PRIMARY_MHTERM_13, M19_LD_COMPL_MHTERM_3_13)
+
+
+tapply(merged_df$M08_HBA1C_PRCNT_1, merged_df$SITE, summary)
+# %>% group_by(SITE) %>% summary(M08_HBA1C_PRCNT_1)
+
+# HAVE YOU EVER BEEN DIAGNOSED WITH DIABETES (PRE-EXISITING OR CHRONIC) NEED FROM VISITS 3,4,5.
+# SIDE 75 SAYS THIS SHOULD BE VISITS 3-5
+merged_df <- merged_df %>% 
+  mutate(GEST_DIAB_DIAG= case_when((M04_DIABETES_EVER_MHOCCUR_3==0 | M04_DIABETES_EVER_MHOCCUR_4==0 | M04_DIABETES_EVER_MHOCCUR_5==0) &
+                                      ((M09_GEST_DIAB_MHOCCUR_6==1 | # WAS MOTHER DIAGNOSED WITH DIABETES
+                                      (M09_INDUCED_PROCCUR_6==1 & M09_INDUCED_PRINDC_6==8)) |
+                                      (M19_PRIMARY_MHTERM_13==4 & M19_LD_COMPL_MHTERM_3_13)) ~ 1,
+                                    TRUE ~ as.numeric(0)))
+
+table(GEST_DIAB_DIAG = merged_df$GEST_DIAB_DIAG, SITE = merged_df$SITE, useNA = "always")
 ```
 
 # INVESTIGATING GDM
@@ -2786,7 +2969,10 @@ ANC Hospitalization
 ##################################################################################
 
 temp.df <- merged_df %>% 
-  select(MOMID, PREGID, M04_APH_CEOCCUR_3, M04_APH_CEOCCUR_4, M04_APH_CEOCCUR_5, M09_APH_CEOCCUR_6, M19_VAG_BLEED_CEOCCUR_13, M19_LD_COMPL_MHTERM_4_13) 
+  select(MOMID, PREGID, 
+         M04_APH_CEOCCUR_3, M04_APH_CEOCCUR_4, 
+         M04_APH_CEOCCUR_5, M09_APH_CEOCCUR_6, 
+         M19_VAG_BLEED_CEOCCUR_13, M19_LD_COMPL_MHTERM_4_13) 
 
 merged_df <- merged_df %>% 
   mutate(MAT_APH = ifelse(!is.na(M04_APH_CEOCCUR_3) & M04_APH_CEOCCUR_3==1 |
