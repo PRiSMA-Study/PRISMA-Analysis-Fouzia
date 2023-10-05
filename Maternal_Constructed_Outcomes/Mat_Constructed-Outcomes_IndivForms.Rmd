@@ -198,6 +198,7 @@ if("mnh19" %in% names(mnh_list)){
 }
 
 ```
+
 # Create a SITE variable for Test data only on Mac - can let it run in AWS.***FOR TEST DATA ONLY***
 ```{r echo=FALSE}
 # for(form_name in names(mnh_list)) { 
@@ -1019,6 +1020,167 @@ table(merged_df$DELIVERED_FF, merged_df$SITE, useNA = "always")
 round(prop.table(table(merged_df$DELIVERED_FF, merged_df$SITE, useNA = "always"), margin=2)*100, 2)
 ```
 
+# CREATE VECTOR OF ENROLLED IDs.
+```{r}
+merged_df <- merged_df %>% 
+  mutate(ENROLL = ifelse(M02_AGE_IEORRES_1 == 1 & 
+                           M02_PC_IEORRES_1 == 1 & 
+                           M02_CATCHMENT_IEORRES_1 == 1 & 
+                           M02_CATCH_REMAIN_IEORRES_1 == 1 & 
+                           M02_CONSENT_IEORRES_1 == 1, 1, 0)) %>%
+  filter(ENROLL == 1)
+
+enrolled_ids_vec <- as.vector(merged_df$PREGID)
+## if a participant is missing an enrollment form then they will be EXCLULDED from the following analyses
+```
+
+
+# CREATE BOE AND EDD_BOE
+```{r}
+merged_df <- merged_df %>%
+  mutate(M01_US_OHOSTDAT_1 = ymd(M01_US_OHOSTDAT_1))
+
+mnh01_constructed_df <- mnh01_df %>%
+  # only want participants who are enrolled
+  filter(PREGID %in% enrolled_ids_vec) %>% 
+  
+  ## only want the first ultrasound visit -- take the earliest date for each participant
+  # group_by(SITE, MOMID, PREGID) %>%
+  # arrange(M01_US_OHOSTDAT) %>%
+  # slice(1) %>%
+  # filter(M01_TYPE_VISIT == 1) %>% 
+  # select a subset of variables
+  
+  select(SITE, MOMID,PREGID, M01_US_OHOSTDAT_1,
+         M01_US_GA_WKS_AGE_FTS1_1, M01_US_GA_WKS_AGE_FTS2_1,
+         M01_US_GA_WKS_AGE_FTS3_1, M01_US_GA_WKS_AGE_FTS4_1,
+         M01_US_GA_DAYS_AGE_FTS1_1, M01_US_GA_DAYS_AGE_FTS2_1,
+         M01_US_GA_DAYS_AGE_FTS3_1, M01_US_GA_DAYS_AGE_FTS4_1,
+         M01_GA_LMP_WEEKS_SCORRES_1, M01_GA_LMP_DAYS_SCORRES_1) %>%
+  
+  mutate(M01_US_OHOSTDAT_1 = ymd(M01_US_OHOSTDAT_1)) %>%
+  
+  # filter out any ultrasound visit dates that are 07-07-1907
+  filter(M01_US_OHOSTDAT_1 != ymd("1907-07-07")) %>%   
+  # calculate us ga in days with reported ga in wks + days. if ga is -7 or -5, replace with NA
+  mutate(GA_US_DAYS_FTS1_1 =  ifelse(M01_US_GA_WKS_AGE_FTS1_1!= -7 & M01_US_GA_DAYS_AGE_FTS1_1 != -7 & M01_US_GA_WKS_AGE_FTS1_1 != -5 & M01_US_GA_DAYS_AGE_FTS1_1 != -5,  (M01_US_GA_WKS_AGE_FTS1_1 * 7 + M01_US_GA_DAYS_AGE_FTS1_1), NA), 
+         GA_US_DAYS_FTS2_1 =  ifelse(M01_US_GA_WKS_AGE_FTS2_1!= -7 & M01_US_GA_DAYS_AGE_FTS2_1 != -7 & M01_US_GA_WKS_AGE_FTS2_1 != -5 & M01_US_GA_WKS_AGE_FTS2_1 != -5,  (M01_US_GA_WKS_AGE_FTS2_1 * 7 + M01_US_GA_DAYS_AGE_FTS2_1), NA),
+         GA_US_DAYS_FTS3_1 =  ifelse(M01_US_GA_WKS_AGE_FTS3_1!= -7 & M01_US_GA_DAYS_AGE_FTS3_1 != -7 & M01_US_GA_WKS_AGE_FTS3_1 != -5 & M01_US_GA_WKS_AGE_FTS3_1 != -5,  (M01_US_GA_WKS_AGE_FTS3_1 * 7 + M01_US_GA_DAYS_AGE_FTS3_1), NA),
+         GA_US_DAYS_FTS4_1 =  ifelse(M01_US_GA_WKS_AGE_FTS4_1!= -7 & M01_US_GA_DAYS_AGE_FTS4_1 != -7 & M01_US_GA_WKS_AGE_FTS4_1 != -5 & M01_US_GA_WKS_AGE_FTS4_1 != -5,  (M01_US_GA_WKS_AGE_FTS4_1 * 7 + M01_US_GA_DAYS_AGE_FTS4_1), NA)) %>% 
+  #  pull the largest GA for multiple fetuses + convert to weeks
+  mutate(US_GA_DAYS = pmax(GA_US_DAYS_FTS1_1, GA_US_DAYS_FTS2_1, GA_US_DAYS_FTS3_1, GA_US_DAYS_FTS4_1, na.rm = TRUE)) %>% ## where GA_US_DAYS_FTSx is the reported GA by ultrasound (added together M01_US_GA_WKS_AGE_FTSx and M01_US_GA_DAYS_AGE_FTSx to get a single estimate in days)
+  mutate(US_GA_WKS = floor(US_GA_DAYS/7)) %>% 
+  #  convert ga by LMP to days and wks
+  mutate(LMP_GA_DAYS =  ifelse(M01_GA_LMP_WEEKS_SCORRES_1 != -7 & M01_GA_LMP_DAYS_SCORRES_1 != -7,  (M01_GA_LMP_WEEKS_SCORRES_1 * 7 + M01_GA_LMP_DAYS_SCORRES_1), NA)) %>% 
+  mutate(LMP_GA_WKS = floor(LMP_GA_DAYS/7)) %>%
+  ## generate indicator variable for missing US 
+  mutate(MISSING_BOTH_US_LMP = ifelse((US_GA_WKS < 0 & LMP_GA_WKS < 0) | 
+                                        (is.na(US_GA_WKS) & is.na(LMP_GA_WKS)), 1, 0)) %>% 
+  #  calculate the difference in days between reported LMP and reported US
+  mutate(GA_DIFF_DAYS = LMP_GA_DAYS-US_GA_DAYS) %>%
+  #  obtain best obstetric estimate in weeks
+  mutate(BOE_GA_WKS = case_when(LMP_GA_WKS %/% 7 < 9 ~
+                                  if_else(abs(GA_DIFF_DAYS) <= 5,
+                                          LMP_GA_WKS,
+                                          US_GA_WKS),
+                                LMP_GA_WKS %/% 7 < 16 ~
+                                  if_else(abs(GA_DIFF_DAYS) <=7,
+                                          LMP_GA_WKS, US_GA_WKS),
+                                LMP_GA_WKS %/% 7 >= 16 ~
+                                  if_else(abs(GA_DIFF_DAYS) <=10,
+                                          LMP_GA_WKS, US_GA_WKS),
+                                TRUE ~ US_GA_WKS)) %>%
+  mutate(BOE_GA_DAYS = BOE_GA_WKS*7) %>%
+  # generate indicator variable if LMP or US was used (where 1 = US and 2 = LMP)
+  mutate(BOE_METHOD = ifelse(BOE_GA_WKS == US_GA_WKS, 1, 
+                             ifelse(BOE_GA_WKS == LMP_GA_WKS, 2, 55))) %>%
+  # generate EDD_BOE based on BOE 
+  # "zero out" GA and obtain the estimated "date of conception" 
+  mutate(EST_CONCEP_DATE = M01_US_OHOSTDAT_1 - BOE_GA_DAYS) %>% 
+  # add 280 days to EST_CONCEP_DATE to generate EDD based on BOE 
+  mutate(EDD_BOE = EST_CONCEP_DATE + 280)
+
+mnh01_constructed_df2 <- mnh01_constructed_df %>%
+  select(MOMID, PREGID, SITE, 
+         GA_US_DAYS_FTS1_1, GA_US_DAYS_FTS2_1, GA_US_DAYS_FTS3_1, GA_US_DAYS_FTS4_1,
+         US_GA_DAYS, US_GA_WKS, LMP_GA_DAYS, LMP_GA_WKS, MISSING_BOTH_US_LMP, GA_DIFF_DAYS, 
+         BOE_GA_WKS, BOE_GA_DAYS, BOE_METHOD, US_GA_DAYS,
+         EST_CONCEP_DATE, EDD_BOE)
+```
+
+# MERGED EST CONCEPTION DATE, EDD_BOE, BOE_GA vars here with merged_df
+```{r}
+merged_df <- left_join(merged_df, mnh01_constructed_df2, 
+                       by = c("MOMID", "SITE", "PREGID"))
+```
+
+# GA AT ENROLLMENT
+```{r}
+# EXTRACT GA AT ENROLLMENT:
+# CREATE MERGED FILE FIRST. 
+merged_df <- merged_df %>%
+  rowwise() %>%
+  mutate(DIFFDAYS = as.numeric(difftime(M02_SCRN_OBSSTDAT_1, M01_US_OHOSTDAT_1, units = "days"))) %>% # EXTRAC THE DIFFERENCE IN NUM OF DAYS B/W SCREENING US AND ENROLLMENT VISIT
+  mutate(DIFFDAYS = ifelse(DIFFDAYS < 0,0,DIFFDAYS)) %>% #IF THE DIFF IS NEG, REPLACE WITH 0 (JUST USE DATE OF ULTRASOUND SCREENING)
+   mutate(GA_ENROLL_WKS = floor(as.numeric((DIFFDAYS + US_GA_DAYS)/7)), #TODO Stacie had this as GA_US_DAYS_1
+         GA_ENROLL_DAYS = floor(as.numeric(DIFFDAYS + US_GA_DAYS))) #TODO Stacie had this as GA_US_DAYS_1
+
+#TODO STACIE SAID SHE USED GA_US_DAYS IN THE MONITORING REPORT AND IN MATERNAL_WIDE FILE HAS US_GA_DAYS - SAME THING
+
+  # mutate(GA_ENROLL_WKS = floor(as.numeric((DIFFDAYS + GA_US_DAYS_1)/7)), #TODO Stacie had this as GA_US_DAYS_1
+  #        GA_ENROLL_DAYS = floor(as.numeric(DIFFDAYS + GA_US_DAYS_1))) #TODO Stacie had this as GA_US_DAYS_1
+
+```
+
+#TODO STOPPED HERE
+# MNH09 to create var: DOB
+```{r}
+## For each participant, extract the minimum delivery time and minimum delivery date 
+  
+mnh09_subset_df <- mnh09_df %>% select(SITE, MOMID, PREGID, M09_INFANTS_FAORRES_6, 
+                             M09_DELIV_DSSTDAT_INF1_6, M09_DELIV_DSSTDAT_INF2_6, 
+                             M09_DELIV_DSSTDAT_INF3_6, M09_DELIV_DSSTDAT_INF4_6,
+                             M09_DELIV_DSSTTIM_INF1_6, M09_DELIV_DSSTTIM_INF2_6, 
+                             M09_DELIV_DSSTTIM_INF3_6, M09_DELIV_DSSTTIM_INF4_6)
+
+ # replace default value date with NA 
+mnh09_subset_df <- mnh09_subset_df %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
+    mutate_all(function(d) {
+      if_else(d=="1907-07-07", NA, d)
+    })
+
+# replace default value time with NA 
+mnh09_subset_df <- mnh09_subset_df %>% 
+    mutate_all(function(d) {
+      if_else(d=="77:77", NA, d)
+    })
+
+mnh09_subset_df <- mnh09_subset_df %>%
+  # concatenate date and time of birth 
+  mutate(DELIVERY_DATETIME_INF1_6 = paste(M09_DELIV_DSSTDAT_INF1_6, M09_DELIV_DSSTTIM_INF1_6),
+         DELIVERY_DATETIME_INF2_6 = paste(M09_DELIV_DSSTDAT_INF2_6, M09_DELIV_DSSTTIM_INF2_6),
+         DELIVERY_DATETIME_INF3_6 = paste(M09_DELIV_DSSTDAT_INF3_6, M09_DELIV_DSSTTIM_INF3_6),
+         DELIVERY_DATETIME_INF4_6 = paste(M09_DELIV_DSSTDAT_INF4_6, M09_DELIV_DSSTTIM_INF4_6)) %>% 
+  # assign time field type for time of birth
+  mutate(DELIVERY_DATETIME_INF1_6 = as.POSIXct(DELIVERY_DATETIME_INF1_6, format= "%Y-%m-%d %H:%M"),
+         DELIVERY_DATETIME_INF2_6 = as.POSIXct(DELIVERY_DATETIME_INF2_6, format= "%Y-%m-%d %H:%M"),
+         DELIVERY_DATETIME_INF3_6 = as.POSIXct(DELIVERY_DATETIME_INF3_6, format= "%Y-%m-%d %H:%M"),
+         DELIVERY_DATETIME_INF4_6 = as.POSIXct(DELIVERY_DATETIME_INF4_6, format= "%Y-%m-%d %H:%M")) %>%
+  # assign minimum dob and time of birth
+  mutate(DOB = 
+           pmin(DELIVERY_DATETIME_INF1_6, DELIVERY_DATETIME_INF2_6, 
+                DELIVERY_DATETIME_INF3_6, DELIVERY_DATETIME_INF4_6, na.rm = TRUE)) %>% 
+  select(SITE, MOMID, PREGID, DOB)
+
+# MERGE WITH MERGED_DF
+merged_df <- left_join(merged_df, mnh09_subset_df, by = c("MOMID", "PREGID", "SITE"))
+```
+
+```{r}
+
+```
+
+
 #######################
 ####RUN CODE ABOVE*
 ######################
@@ -1061,21 +1223,21 @@ merged_df<- merged_df %>%
 
 # table(merged_df$GA_DIFF_WKS)
 # table(merged_df$GA_DIFF_WKS, merged_df$GA_DIFF_DAYS, useNA = "always")
-```
 
-If the GA by LMP is less than 9 weeks 0 days:
-- If discrepancy between LMP and US ≤5 days = GA by LMP
-- If LMP unknown or discrepancy between LMP and US ≥5 days = GA by US
 
-If the GA by LMP is between 9 weeks 0 days and 15 weeks 6 days:
-- If discrepancy between LMP and US ≤7 days → BOE = GA by LMP
-- If LMP is unknown OR discrepancy between LMP and US ≥7 days = GA by US
+# If the GA by LMP is less than 9 weeks 0 days:
+# - If discrepancy between LMP and US ≤5 days = GA by LMP
+# - If LMP unknown or discrepancy between LMP and US ≥5 days = GA by US
 
-If GA by LMP is greater than 16 weeks 0 days:
-- If discrepancy between LMP and US ≤10 days = GA by LMP
-- If LMP is unknown or discrepancy between LMP and US ≥10 days = GA by US
+# If the GA by LMP is between 9 weeks 0 days and 15 weeks 6 days:
+# - If discrepancy between LMP and US ≤7 days → BOE = GA by LMP
+# - If LMP is unknown OR discrepancy between LMP and US ≥7 days = GA by US
 
-```{r echo=FALSE}
+# If GA by LMP is greater than 16 weeks 0 days:
+# - If discrepancy between LMP and US ≤10 days = GA by LMP
+# - If LMP is unknown or discrepancy between LMP and US ≥10 days = GA by US
+
+
 merged_df <- merged_df %>%
   mutate(GA_BOE = case_when(M01_GA_LMP_DAYS_CALC_1 %/% 7 < 9 ~ 
                               if_else(abs(GA_DIFF_DAYS) <= 5, 
