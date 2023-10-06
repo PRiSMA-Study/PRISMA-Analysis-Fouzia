@@ -76,6 +76,9 @@ The varname structure for the newly integrated forms (hospitalizations, adverse 
 path_to_data <-  'D:/Users/fouziafarooq/Documents/PRISMA_constructed-outcomes/data/2023-09-15/'# - for AWS data
 
 # path_to_data <- 'data' # for Mac R.
+UploadDate = "2023-09-15"
+
+uploadDate <- as.Date(UploadDate, format = "%Y-%m-%d")
 ```
 
 For CSV files in **AWS**:
@@ -1035,11 +1038,13 @@ enrolled_ids_vec <- as.vector(merged_df$PREGID)
 ```
 
 
-# CREATE BOE AND EDD_BOE
+# CREATE BOE AND EDD_BOE (BOE = just at enrollment)
 ```{r}
 merged_df <- merged_df %>%
   mutate(M01_US_OHOSTDAT_1 = ymd(M01_US_OHOSTDAT_1))
 
+# momid <- mnh02_df %>% select(MOMID, SCRNID, PREGID, SITE)
+# mnh01_constructed_df <- left_join()
 mnh01_constructed_df <- mnh01_df %>%
   # only want participants who are enrolled
   filter(PREGID %in% enrolled_ids_vec) %>% 
@@ -1071,6 +1076,8 @@ mnh01_constructed_df <- mnh01_df %>%
   mutate(US_GA_DAYS = pmax(GA_US_DAYS_FTS1_1, GA_US_DAYS_FTS2_1, GA_US_DAYS_FTS3_1, GA_US_DAYS_FTS4_1, na.rm = TRUE)) %>% ## where GA_US_DAYS_FTSx is the reported GA by ultrasound (added together M01_US_GA_WKS_AGE_FTSx and M01_US_GA_DAYS_AGE_FTSx to get a single estimate in days)
   mutate(US_GA_WKS = floor(US_GA_DAYS/7)) %>% 
   #  convert ga by LMP to days and wks
+  # on US meaturement for all 4 babies. 
+  # For LMP we just have info on one baby.
   mutate(LMP_GA_DAYS =  ifelse(M01_GA_LMP_WEEKS_SCORRES_1 != -7 & M01_GA_LMP_DAYS_SCORRES_1 != -7,  (M01_GA_LMP_WEEKS_SCORRES_1 * 7 + M01_GA_LMP_DAYS_SCORRES_1), NA)) %>% 
   mutate(LMP_GA_WKS = floor(LMP_GA_DAYS/7)) %>%
   ## generate indicator variable for missing US 
@@ -1091,10 +1098,12 @@ mnh01_constructed_df <- mnh01_df %>%
                                           LMP_GA_WKS, US_GA_WKS),
                                 TRUE ~ US_GA_WKS)) %>%
   mutate(BOE_GA_DAYS = BOE_GA_WKS*7) %>%
-  # generate indicator variable if LMP or US was used (where 1 = US and 2 = LMP)
+ 
+   # generate indicator variable if LMP or US was used (where 1 = US and 2 = LMP)
   mutate(BOE_METHOD = ifelse(BOE_GA_WKS == US_GA_WKS, 1, 
                              ifelse(BOE_GA_WKS == LMP_GA_WKS, 2, 55))) %>%
-  # generate EDD_BOE based on BOE 
+ 
+   # generate EDD_BOE based on BOE 
   # "zero out" GA and obtain the estimated "date of conception" 
   mutate(EST_CONCEP_DATE = M01_US_OHOSTDAT_1 - BOE_GA_DAYS) %>% 
   # add 280 days to EST_CONCEP_DATE to generate EDD based on BOE 
@@ -1120,7 +1129,9 @@ merged_df <- left_join(merged_df, mnh01_constructed_df2,
 # CREATE MERGED FILE FIRST. 
 merged_df <- merged_df %>%
   rowwise() %>%
-  mutate(DIFFDAYS = as.numeric(difftime(M02_SCRN_OBSSTDAT_1, M01_US_OHOSTDAT_1, units = "days"))) %>% # EXTRAC THE DIFFERENCE IN NUM OF DAYS B/W SCREENING US AND ENROLLMENT VISIT
+  mutate(DIFFDAYS = as.numeric(difftime(M02_SCRN_OBSSTDAT_1, M01_US_OHOSTDAT_1, units = "days"))) %>% # EXTRACT THE DIFFERENCE IN NUM OF DAYS B/W SCREENING US AND ENROLLMENT VISIT
+  # MNH02 is being used as definitive enrollment. 
+  # MNH01 visit 1 is when US is done. 
   mutate(DIFFDAYS = ifelse(DIFFDAYS < 0,0,DIFFDAYS)) %>% #IF THE DIFF IS NEG, REPLACE WITH 0 (JUST USE DATE OF ULTRASOUND SCREENING)
    mutate(GA_ENROLL_WKS = floor(as.numeric((DIFFDAYS + US_GA_DAYS)/7)), #TODO Stacie had this as GA_US_DAYS_1
          GA_ENROLL_DAYS = floor(as.numeric(DIFFDAYS + US_GA_DAYS))) #TODO Stacie had this as GA_US_DAYS_1
@@ -1132,7 +1143,6 @@ merged_df <- merged_df %>%
 
 ```
 
-#TODO STOPPED HERE
 # MNH09 to create var: DOB
 ```{r}
 ## For each participant, extract the minimum delivery time and minimum delivery date 
@@ -1167,7 +1177,7 @@ mnh09_subset_df <- mnh09_subset_df %>%
          DELIVERY_DATETIME_INF3_6 = as.POSIXct(DELIVERY_DATETIME_INF3_6, format= "%Y-%m-%d %H:%M"),
          DELIVERY_DATETIME_INF4_6 = as.POSIXct(DELIVERY_DATETIME_INF4_6, format= "%Y-%m-%d %H:%M")) %>%
   # assign minimum dob and time of birth
-  mutate(DOB = 
+  mutate(DOB = # fist baby gives us DOB and time. 
            pmin(DELIVERY_DATETIME_INF1_6, DELIVERY_DATETIME_INF2_6, 
                 DELIVERY_DATETIME_INF3_6, DELIVERY_DATETIME_INF4_6, na.rm = TRUE)) %>% 
   select(SITE, MOMID, PREGID, DOB)
@@ -1176,10 +1186,189 @@ mnh09_subset_df <- mnh09_subset_df %>%
 merged_df <- left_join(merged_df, mnh09_subset_df, by = c("MOMID", "PREGID", "SITE"))
 ```
 
+# MNH04 
+# SETTING UP ANC WINDOWS: 
+# MAT_VISIT_MNH04  - is the visit complete? 
+if this variables is missing and window has passed, then form is missing. 
+do this for MNH08 for diabetees esp. calc M08_MAT_VISIT_FORM_COMPLETED__1.
+If its NA, nothing was reported - no form there. 
+Wass the visit actually completed? AT_VISIT_MNH08 - when it's 1 or 2, if she missed the visit the HCW still has to fill out the form and the response options are 3-88. 
+
+# VISIT COMPLETE OR NOT LOOKING AT THE DATE: MAT_VISIT_MNHxx
+# ANC 4 NOT FILLED OUT AT BIRTH (VISIT 6)
 ```{r}
+# From M04_MAT_VISIT_MNH04_1 create: M04_MAT_VISIT_FORM_COMPLETED_= Was the visit completed.  If it was filled out by staff, then yes. otherwise no. 
+# From M04_MAT_VISIT_MNH04_1 create: M04_MAT_VISIT_wPERSON_COMPLETED_1 = if the form is filled out by staff, was the visit in person or by phone, if yes, then 1, otherwise woman didn't show or died etc. 
+mnh04_constructed_df <- mnh04_df %>% 
+  # VISIT 1
+  mutate(M04_MAT_VISIT_FORM_COMPLETED_1 = case_when(!is.na(M04_MAT_VISIT_MNH04_1) ~ 1, 
+                                                    TRUE ~ 0),
+         M04_MAT_VISIT_wPERSON_COMPLETED_1 = case_when(M04_MAT_VISIT_MNH04_1 %in% c(1,2) ~ 1,  
+                                                       TRUE ~ 0),
+         # VISIT 2
+         M04_MAT_VISIT_FORM_COMPLETED_2 = case_when(!is.na(M04_MAT_VISIT_MNH04_2) ~ 1, 
+                                                    TRUE ~ 0),
+         M04_MAT_VISIT_wPERSON_COMPLETED_2 = case_when(M04_MAT_VISIT_MNH04_2 %in% c(1,2) ~ 1, 
+                                                       TRUE ~ 0),
+         # VISIT 3
+         M04_MAT_VISIT_FORM_COMPLETED_3 = case_when(!is.na(M04_MAT_VISIT_MNH04_3) ~ 1, 
+                                                    TRUE ~ 0),
+         M04_MAT_VISIT_wPERSON_COMPLETED_3 = case_when(M04_MAT_VISIT_MNH04_3 %in% c(1,2) ~ 1, 
+                                                       TRUE ~ 0),
+         # VISIT 4
+         M04_MAT_VISIT_FORM_COMPLETED_4 = case_when(!is.na(M04_MAT_VISIT_MNH04_4) ~ 1, 
+                                                    TRUE ~ 0),
+         M04_MAT_VISIT_wPERSON_COMPLETED_4 = case_when(M04_MAT_VISIT_MNH04_4 %in% c(1,2) ~ 1, 
+                                                       TRUE ~ 0),
+         # VISIT 5
+         M04_MAT_VISIT_FORM_COMPLETED_5 = case_when(!is.na(M04_MAT_VISIT_MNH04_5) ~ 1, 
+                                                    TRUE ~ 0),
+         M04_MAT_VISIT_wPERSON_COMPLETED_5 = case_when(M04_MAT_VISIT_MNH04_5 %in% c(1,2) ~ 1, 
+                                                       TRUE ~ 0),
+          # VISIT 13 Hosp
+         M04_MAT_VISIT_FORM_COMPLETED_13 = case_when(!is.na(M04_MAT_VISIT_MNH04_13) ~ 1, 
+                                                    TRUE ~ 0),
+         M04_MAT_VISIT_wPERSON_COMPLETED_13 = case_when(M04_MAT_VISIT_MNH04_13 %in% c(1,2) ~ 1, 
+                                                       TRUE ~ 0))
+  
+  mnh04_constructed_df2 <- mnh04_constructed_df %>%
+    select(MOMID, PREGID, SITE, starts_with(c("M04_MAT_VISIT_FORM_COMPLETED_", "M04_MAT_VISIT_wPERSON_COMPLETED_")))
+```
+
+# SETTING UP: IS MNH08 VISIT COMPLETE? 
+# MNH08 IS OPTIONAL AT VISIT 8 (SO SOME PLACES WILL HAVE, SOME WONT.) - NOT INCLUDING HERE ATM.
+```{r}
+mnh08_constructed_df <- mnh08_df %>% 
+  # VISIT 1
+  mutate(M08_MAT_VISIT_FORM_COMPLETED_1 = case_when(!is.na(M08_MAT_VISIT_MNH08_1) ~ 1, 
+                                                    TRUE ~ 0),
+         M08_MAT_VISIT_wPERSON_COMPLETED_1 = case_when(M08_MAT_VISIT_MNH08_1 %in% c(1,2) ~ 1, 
+                                                       TRUE ~ 0),
+         # VISIT 2
+         M08_MAT_VISIT_FORM_COMPLETED_2 = case_when(!is.na(M08_MAT_VISIT_MNH08_2) ~ 1, 
+                                                    TRUE ~ 0),
+         M08_MAT_VISIT_wPERSON_COMPLETED_2 = case_when(M08_MAT_VISIT_MNH08_2 %in% c(1,2) ~ 1, 
+                                                       TRUE ~ 0),
+         # VISIT 3
+         M08_MAT_VISIT_FORM_COMPLETED_3 = case_when(!is.na(M08_MAT_VISIT_MNH08_3) ~ 1, 
+                                                    TRUE ~ 0),
+         M08_MAT_VISIT_wPERSON_COMPLETED_3 = case_when(M08_MAT_VISIT_MNH08_3 %in% c(1,2) ~ 1, # changed order
+                                                       TRUE ~ 0),
+         # VISIT 4
+         M08_MAT_VISIT_FORM_COMPLETED_4 = case_when(!is.na(M08_MAT_VISIT_MNH08_4) ~ 1, 
+                                                    TRUE ~ 0),
+         M08_MAT_VISIT_wPERSON_COMPLETED_4 = case_when(M08_MAT_VISIT_MNH08_4 %in% c(1,2) ~ 1, 
+                                                       TRUE ~ 0),
+         # VISIT 5
+         M08_MAT_VISIT_FORM_COMPLETED_5 = case_when(!is.na(M08_MAT_VISIT_MNH08_5) ~ 1, 
+                                                    TRUE ~ 0),
+         M08_MAT_VISIT_wPERSON_COMPLETED_5 = case_when(M08_MAT_VISIT_MNH08_5 %in% c(1,2) ~ 1, 
+                                                       TRUE ~ 0))
+          # VISIT 13 Hosp
+        # M08_MAT_VISIT_FORM_COMPLETED_13 = case_when(!is.na(M08_MAT_VISIT_MNH08_13) ~ 1, 
+         #                                           TRUE ~ 0),
+        # M08_MAT_VISIT_wPERSON_COMPLETED_13 = case_when(M08_MAT_VISIT_MNH08_13 %in% c(1,2) ~ 1, 
+         #                                              TRUE ~ 0))
+
+  mnh08_constructed_df2 <- mnh08_constructed_df %>%
+    select(MOMID, PREGID, SITE, starts_with(c("M08_MAT_VISIT_FORM_COMPLETED_", "M08_MAT_VISIT_wPERSON_COMPLETED_")))
+```
+
+# COMBINE MNH04_CONSTRUCTED AND MNH08_CONSTRUCTED WITH MNH01_CONSTRUCTED
+```{r}
+merged_df <- left_join(merged_df, mnh04_constructed_df2,
+                                          by = c("MOMID", "PREGID", "SITE"))
+
+merged_df <- left_join(merged_df, mnh08_constructed_df2,
+                                        by = c("MOMID", "PREGID", "SITE"))
+```
+
+```{r}
+# USE UPLOAD DATE
+
+merged_df <- merged_df %>%
+  # EDD BY BOE
+  ## CALCULATE ON TIME AND LATE ANC WINDOWS 
+  mutate(ENROLL_ONTIME = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(139, unit="days"), #EDD-280 = conception date + and then estimate the right hand of the window. Gives a date
+         ENROLL_LATE = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(139, unit="days"), # doesn't have a late window.
+         ANC20_ONTIME = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(160, unit="days"), 
+         ANC20_LATE = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(181, unit="days"),
+         ANC28_ONTIME = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(216, unit="days"), # if miss ANC 28, you miss the visit, there is no late window
+         ANC28_LATE = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(216, unit="days"), 
+         ANC32_ONTIME = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(237, unit="days"), 
+         ANC32_LATE = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(244, unit="days"), ## will need to ask about this
+         ANC36_ONTIME = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(272, unit="days"), 
+         ANC36_LATE = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(300, unit="days")) %>% 
+  ## CALCULATE INDICATOR VARIABLES for missed ANC visits ON-TIME WINDOWS
+  ## max date has to be less than the upload date
+  mutate(M04_ENROLL_OVERDUE = ifelse(UploadDate>ENROLL_ONTIME & is.na(M04_MAT_VISIT_FORM_COMPLETED_1), 1, 0),
+         M08_ENROLL_OVERDUE = ifelse(UploadDate>ENROLL_ONTIME & is.na(M08_MAT_VISIT_FORM_COMPLETED_1), 1, 0),#TODO DO THIS FOR MNH08
+         
+          # if this window ANC20 is passed, then this var would be NA b/c they don't have to have ANC20 visit. 
+         M04_ANC20_OVERDUE = ifelse(UploadDate>ANC20_ONTIME & is.na(M04_MAT_VISIT_FORM_COMPLETED_2) & GA_ENROLL_WKS <= 17, 1, 0),
+         M08_ANC20_OVERDUE = ifelse(UploadDate>ANC20_ONTIME & is.na(M08_MAT_VISIT_FORM_COMPLETED_2) & GA_ENROLL_WKS <= 17, 1, 0),
+         
+         M04_ANC28_OVERDUE = ifelse(UploadDate>ANC28_ONTIME & is.na(M04_MAT_VISIT_FORM_COMPLETED_3), 1, 0), #IF 1 this will mean she is missing the form.
+         M08_ANC28_OVERDUE = ifelse(UploadDate>ANC28_ONTIME & is.na(M08_MAT_VISIT_FORM_COMPLETED_3), 1, 0),
+         
+         M04_ANC32_OVERDUE = ifelse(UploadDate>ANC32_ONTIME & is.na(M04_MAT_VISIT_FORM_COMPLETED_4), 1, 0),
+         M08_ANC32_OVERDUE = ifelse(UploadDate>ANC32_ONTIME & is.na(M08_MAT_VISIT_FORM_COMPLETED_4), 1, 0),
+         
+         M04_ANC36_OVERDUE = ifelse(UploadDate>ANC36_ONTIME & is.na(M04_MAT_VISIT_FORM_COMPLETED_5), 1, 0),
+         M08_ANC36_OVERDUE = ifelse(UploadDate>ANC36_ONTIME & is.na(M08_MAT_VISIT_FORM_COMPLETED_5), 1, 0)) %>% 
+  
+  ## CALCULATE INDICATOR VARIABLES for passed ON-TIME ANC WINDOWS - same as overdue code, but exclude the visit completion piece
+  ## using upload date
+  mutate(ENROLL_PASS = ifelse(ENROLL_ONTIME<UploadDate, 1, 0), # WINDOW HAS PASSED. IF YOUR ENROLL WINDOW END IS JAN 1ST, BUT UPLOAD JAN 5TH. THEN YOU'RE LATE MEANING ON TIME WINDOW IS PASSED. 
+         ANC20_PASS = ifelse(ANC20_ONTIME<UploadDate & GA_ENROLL_WKS <= 17, 1, 0), #IF A WINDOW IS PASSED AND HER GA AT ENROLLEMENT WAS <17 WEEKS, SHE DOES GET AN ANC 20. IF SHE'S >18 THEN HER ANC20 FORMS WILL BE NA B/C SHE'S NOT SUPPOSED TO HAVE IT.
+         ANC28_PASS = ifelse(ANC28_ONTIME<UploadDate, 1, 0),
+         ANC32_PASS = ifelse(ANC32_ONTIME<UploadDate, 1, 0),
+         ANC36_PASS = ifelse(ANC36_ONTIME<UploadDate, 1, 0)) %>% 
+  ## CALCULATE INDICATOR VARIABLES for missed PASSED LATE WINDOWS
+  mutate(ENROLL_PASS_LATE = ifelse(ENROLL_LATE<UploadDate, 1, 0),
+         ANC20_PASS_LATE = ifelse(ANC20_LATE<UploadDate & GA_ENROLL_WKS <= 17, 1, 0),
+         ANC28_PASS_LATE = ifelse(ANC28_LATE<UploadDate, 1, 0),
+         ANC32_PASS_LATE = ifelse(ANC32_LATE<UploadDate, 1, 0),
+         ANC36_PASS_LATE = ifelse(ANC36_LATE<UploadDate, 1, 0)) 
+```
+
+# VISIT date from the form, estimated conception date (visit date - estimated conception date = this is estimated GA at that visit in days or weeks)
+# CALC. GA AT VISIT.
+```{r}
+merged_df <- merged_df %>%
+  mutate(M04_GA_AT_VISIT_1 = as.Date(M04_ANC_OBSSTDAT_1) - EST_CONCEP_DATE, #DATE OF VISIT - CONCEPTION DATE = GA AT VISIT. 
+         M04_GA_AT_VISIT_2 = as.Date(M04_ANC_OBSSTDAT_2) - EST_CONCEP_DATE,
+         M04_GA_AT_VISIT_3 = as.Date(M04_ANC_OBSSTDAT_3) - EST_CONCEP_DATE,
+         M04_GA_AT_VISIT_4 = as.Date(M04_ANC_OBSSTDAT_4) - EST_CONCEP_DATE,
+         M04_GA_AT_VISIT_5 = as.Date(M04_ANC_OBSSTDAT_5) - EST_CONCEP_DATE) 
+
+merged_df <- merged_df %>%
+  mutate(M08_GA_AT_VISIT_1 = as.Date(M08_LBSTDAT_1) - EST_CONCEP_DATE,
+         M08_GA_AT_VISIT_2 = as.Date(M08_LBSTDAT_2) - EST_CONCEP_DATE,
+         M08_GA_AT_VISIT_3 = as.Date(M08_LBSTDAT_3) - EST_CONCEP_DATE,
+         M08_GA_AT_VISIT_4 = as.Date(M08_LBSTDAT_4) - EST_CONCEP_DATE,
+         M08_GA_AT_VISIT_5 = as.Date(M08_LBSTDAT_5) - EST_CONCEP_DATE)
+# VISIT 6 CALCULATION IS DONE BELOW (GA AT DELIVERY VISIT)
+```
+
+# GA AT DELIVERY VISIT
+```{r}
+# NEED JUST DATE FROM DOB DATETIME VARIABLE FOR CREATING GA AT DELIVERY:
+merged_df <- merged_df %>% 
+  mutate(DOB_DATEONLY = as.Date(DOB))
+
+# GA AT DELIVERY: DOB - CONCEPTION DATE. SEP THE DOB FIRST. TIME BECOMES IMPORTANT FOR PNC VISITS LATER.
+merged_df <- merged_df %>%
+  mutate(GA_AT_DELIV_6 = DOB_DATEONLY - EST_CONCEP_DATE)
 
 ```
 
+# WRITE OUT A MERGED FILE RDS
+```{r}
+write_rds(merged_df, '../data_out/merged_df.RDS')
+```
+
+#TODO STOPPED HERE
 
 #######################
 ####RUN CODE ABOVE*
