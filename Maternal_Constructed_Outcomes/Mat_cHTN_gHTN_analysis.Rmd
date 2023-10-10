@@ -204,18 +204,18 @@ temp.df <- htn_df %>% select(MOMID, SITE, DELIVERED_FF, M06_BP_SYS_VSORRES_1_1, 
 <!-- round(prop.table(table(htn_df$CHRON_HYPER_MEAS, SITE = htn_df$SITE, useNA = "always"), margin=2)*100, 2) -->
 
 <!-- ``` -->
-# CHRONIC HYPERTENSION DIAGNOSIS
-```{r}
-htn_df <- htn_df %>%
-  filter(!is.na(M04_ANC_OBSSTDAT_1)) %>% # AMONG WOMEN WHO HAVE ANC1 VISIT
-  mutate(CHRON_HYPER_DIAG = case_when(M04_HTN_EVER_MHOCCUR_1==1 | (!is.na(M04_HTN_MHSTDAT_1)) ~ 1,
-                                      (is.na(M04_HTN_EVER_MHOCCUR_1) | is.na(M04_HTN_MHSTDAT_1)) ~ as.numeric(NA), 
-                                      TRUE ~ as.numeric(0)))
+<!-- # CHRONIC HYPERTENSION DIAGNOSIS -->
+<!-- ```{r} -->
+<!-- htn_df <- htn_df %>% -->
+<!--   filter(!is.na(M04_ANC_OBSSTDAT_1)) %>% # AMONG WOMEN WHO HAVE ANC1 VISIT -->
+<!--   mutate(CHRON_HYPER_DIAG = case_when(M04_HTN_EVER_MHOCCUR_1==1 | (!is.na(M04_HTN_MHSTDAT_1)) ~ 1, -->
+<!--                                       (is.na(M04_HTN_EVER_MHOCCUR_1) | is.na(M04_HTN_MHSTDAT_1)) ~ as.numeric(NA),  -->
+<!--                                       TRUE ~ as.numeric(0))) -->
 
-table(htn_df$CHRON_HYPER_DIAG, SITE = htn_df$SITE, useNA = "always")
-round(prop.table(table(htn_df$CHRON_HYPER_DIAG, SITE = htn_df$SITE, useNA = "always"), margin=2)*100, 2)
+<!-- table(htn_df$CHRON_HYPER_DIAG, SITE = htn_df$SITE, useNA = "always") -->
+<!-- round(prop.table(table(htn_df$CHRON_HYPER_DIAG, SITE = htn_df$SITE, useNA = "always"), margin=2)*100, 2) -->
 
-```
+<!-- ``` -->
 
 # CHRONIC HYPERTENSION MEDICATION USE/TREATMENT
 ```{r}
@@ -280,26 +280,8 @@ write.csv(chtn_diag_df, '../data_out/chtn_diag_df.csv')
 ### END OF SPECIAL NOTE
 
 
-# CHRONIC HYPERTENSION MEASURED + TREATMENT + DIAG
-# change this to just traetment or measured - take out Diagnosed. 
-```{r}
-htn_df <- htn_df %>% 
-  filter(!is.na(M04_ANC_OBSSTDAT_1)) %>% # AMONG WOMEN WHO DELIVERED
-  mutate(CHRON_HYPER = case_when((CHRON_HYPER_MEAS ==1 | CHRON_HYPER_TREAT==1 | 
-                                               CHRON_HYPER_DIAG==1) ~ 1,
-                                            
-                                            (is.na(CHRON_HYPER_MEAS) & is.na(CHRON_HYPER_TREAT) & 
-                                               is.na(CHRON_HYPER_DIAG)) ~ as.numeric(NA),
-                                            
-                                            TRUE ~ as.numeric(0)))
-
-table(htn_df$CHRON_HYPER, SITE = htn_df$SITE, useNA = "always")
-round(prop.table(table(htn_df$CHRON_HYPER, SITE = htn_df$SITE, useNA = "always"), margin=2)*100, 2)
-
-```
-
 # CREATE CHTN CATEGORIES LIKE I DID FOR GHTN. 
-# FUNCTION FOR gHTN and SEVERE gHTN
+# FUNCTION FOR cHTN and SEVERE cHTN
 
 ```{r}
 is_severe_chtn <- function(sbp, dbp, sbp_threshold = 160, dbp_threshold = 110) {
@@ -370,6 +352,24 @@ temp.df <- htn_df %>% select(MOMID, SITE, CHRON_HYPER_MEAS_ANY1, M06_BP_SYS_VSOR
   filter(SITE=="Pakistan")
 ```
 
+# CHRONIC HYPERTENSION MEASURED + TREATMENT 
+# change this to just traetment or measured - take out Diagnosed. 
+```{r}
+htn_df <- htn_df %>% 
+  filter(!is.na(M04_ANC_OBSSTDAT_1)) %>% # AMONG WOMEN WHO DELIVERED
+  mutate(CHRON_HYPER = case_when((CHRON_HYPER_TREAT==1 & CHRON_HYPER_MEAS_ANY1==1) | 
+                                               CHRON_HYPER_MEAS_ANY2==1) ~ 1,
+                                            
+                                            (is.na(CHRON_HYPER_MEAS_ANY2) & 
+                                               is.na(CHRON_HYPER_MEAS_ANY1) & 
+                                                  is.na(CHRON_HYPER_TREAT)) ~ as.numeric(NA),
+                                            
+                                            TRUE ~ as.numeric(0)))
+
+table(htn_df$CHRON_HYPER, SITE = htn_df$SITE, useNA = "always")
+round(prop.table(table(htn_df$CHRON_HYPER, SITE = htn_df$SITE, useNA = "always"), margin=2)*100, 2)
+
+```
 
 ```{r}
 
