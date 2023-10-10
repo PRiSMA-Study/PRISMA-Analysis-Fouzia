@@ -37,7 +37,7 @@ always_allow_html: true
 
 
 ##### **Includes data from synapse last updated:** {.unlisted .unnumbered}
-#####  2023-09-15 {.unlisted .unnumbered}
+#####  2023-10-06 {.unlisted .unnumbered}
 
 
 ```{css, echo=FALSE}
@@ -89,6 +89,46 @@ Fasting Glucose >= 5.1 mmol/L
 **Denominator:** Enrolled women who have a gestational age>=20 wks and have an ANC-28 (VISIT 3) among women without overt diabetes.
 <br>
 <br>
+
+
+```{r echo=FALSE}
+CONVERT_NA <- FALSE
+if(CONVERT_NA ==TRUE){
+  
+  df <- df %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
+    mutate_all(function(d) {
+      if_else(d=="1907-07-07", NA, d)
+    })
+  
+  df <- df %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
+    mutate_all(function(d) {
+      if_else(d==-7, NA, d)
+    })
+  
+  df <- df %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
+    mutate_all(function(d) {
+      if_else(d==77, NA, d)
+    })
+  
+  # -5 IS MISSING FOR CONTINOUS
+  df <- df %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
+    mutate_all(function(d) {
+      if_else(d==-5, NA, d)
+    })
+  
+  # 55 IS MISSING FOR CATEGORICAL
+  df <- df %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
+    mutate_all(function(d) {
+      if_else(d==55, NA, d) 
+    })
+  
+  # 55:55 IS MISSING FOR TIME
+  df <- df %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
+    mutate_all(function(d) {
+      if_else(d=='55:55', NA, d)
+    })
+}
+```
 
 Table 1a: Data Missingness*
 ```{r}
