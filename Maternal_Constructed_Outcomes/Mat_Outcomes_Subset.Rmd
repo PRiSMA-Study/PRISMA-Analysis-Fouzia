@@ -19,25 +19,8 @@ output:
 ---
 
 README: 
-File: Test-data-PRISMA_Constructed-Outcomes_IndivForms.Rmd (not Test2-data...Rmd) has NAs, in this file, I have converted all NAs to 0s like Emily requested. 
-
-This file is created from PRISMA_Constructed-Outcomes_IndivForms(v1) and (v2).Rmd.  This is the active file as of 10/04/2023 
-
-Constructed variables: 
-https://docs.google.com/spreadsheets/d/1dfOWoZNm0RipnIRIucHt3kAFiPl3nISD3U2jA3btKXo/edit#gid=252197818
-
-Data dictionary: 
-https://docs.google.com/spreadsheets/d/1Q9MMoQP9_Ldhzi6R0mxE8LBzsLQ92djw/edit?pli=1#gid=1356168077
-
-CRFs: 
-https://www.dropbox.com/home/PRiSMA/PRISMA%20CRFs%20and%20Data%20Dictionary/CRFs%20Active%20(MAR272023)
-
-Outcomes Review Slides: 
-https://docs.google.com/presentation/d/1fjJV85LYvmifsnKg8CGMiYW2rSzGBx9COSMG_rsY6U4/edit#slide=id.gfe0717f14d_0_42
-
-Monitoring Report: https://github.com/PRiSMA-Study/Monitoring-Report-ACTIVE/tree/main
-
-ReMAPP Protocol: https://www.dropbox.com/scl/fi/9rimh5a8rpkxe6a4qfdku/ReMAPP-Protocol-v1.8-JUN292023.docx.docx?dl=0&rlkey=uprxvk03drnpckcctbjct2j2r
+1. Run this file first.
+This file creates a subset data that will be used in the GDM variable construction. 
 
 
 #TODO: 
