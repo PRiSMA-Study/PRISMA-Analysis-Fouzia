@@ -149,6 +149,7 @@ temp.df2 <- merged_df %>% filter(SITE=="Zambia") %>%
   select(MOMID, SITE, M08_GA_AT_VISIT_3, M08_LBSTDAT_3, M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3, 
          ANC28_PASS, M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_4, ANC32_PASS,
          EST_CONCEP_DATE, GA_ENROLL_DAYS, M01_US_GA_WKS_AGE_FTS1_1,  GA_US_DAYS_FTS1_1, LMP_GA_DAYS) 
+# IF mnh08 overdue ==1, missing the from (for missing variable frequency).  Denominator - everyone who has passed the window. 
 ```
 
 -5 = missing
@@ -287,11 +288,11 @@ write.csv(diabetes_df, '../data_out/mat_diabetes_fortables.csv') # restricted to
         # MEASURED VARS:
       #  M06_BGLUC_POC_MMOLL_LBORRES_3, M08_BGLUC_PRETEST_MMOLL_LBORRES_3,
      #   M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3, M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3) %>% filter(SITE=="Pakistan")
-write.csv(temp.df, 'data_out/diabetes.temp.csv') # INVESTINGATING!
+# write.csv(temp.df, 'data_out/diabetes.temp.csv') # INVESTINGATING!
 
 ```
 
-# OVERT DIABETES DIAGNOISED
+#  DIAGNOISED - OVERT DIABETES
 ```{r}
 # This is DIAGNOSED at enrollment, ANC28, 32, 36 through MNH04.
 

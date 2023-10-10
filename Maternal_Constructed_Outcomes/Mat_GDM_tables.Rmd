@@ -90,7 +90,7 @@ Fasting Glucose >= 5.1 mmol/L
 <br>
 <br>
 
-Table 1a: Data Missingness
+Table 1a: Data Missingness*
 ```{r}
 test.df <- df %>% filter(SITE=="Ghana") %>% select(MOMID, PREGID, SITE, M08_HBA1C_PRCNT_1) # most of Ghana's data is -5 in the csv raw also.
 
@@ -104,21 +104,21 @@ diabetes_table <- df %>%
     "Missing MNH08 Enrollment form, n (%)" = 
       paste0(sum(M08_MAT_VISIT_FORM_COMPLETED_1==0),
              " (",
-             format(round(sum(M08_MAT_VISIT_FORM_COMPLETED_1==0)/n()*100, 2),nsmall=2, digits=3),
+             format(round(sum(M08_MAT_VISIT_FORM_COMPLETED_1==0)/n()*100, 2),nsmall=2, digits=3), # this ALREADY INCLUDES WINDOW HAS PASSED B/C I HAVE SUBSUTTED TO ANC28 WINDOW PASS==1.  COULD ALSO HAVE DONE USING OVERDUE==1.  AND THEN I WOULD DIVIDE BY everyone who is passed the window. 
              ")"),
     # HBA1C IS MEASURED AT ENROLLMENT
     "Missing HbA1c: M08_HBA1C_PRCNT_1, n (%)" =
-      paste0(sum(is.na(M08_HBA1C_PRCNT_1), (M08_HBA1C_PRCNT_1==-5), (M08_HBA1C_PRCNT_1==-7)),
+      paste0(sum(is.na(M08_HBA1C_PRCNT_1), (M08_HBA1C_PRCNT_1==-5), (M08_HBA1C_PRCNT_1==-7)), # & COMPLETED FORM DIVIDED BY EVERYONE WITH FORM COMPLETED. 
              " (",
              format(round(sum(is.na(M08_HBA1C_PRCNT_1), 
                               (M08_HBA1C_PRCNT_1==-5), 
-                              (M08_HBA1C_PRCNT_1==-7))/n()*100, 2),nsmall=2, digits=3),
+                              (M08_HBA1C_PRCNT_1==-7))/(sum(M08_MAT_VISIT_FORM_COMPLETED_1))*100, 2),nsmall=2, digits=3), # this is total missing the variable out of those who have completed the form.
              ")"),
     
     "Missing MNH08 form at ANC28, n (%)" = 
       paste0(sum(M08_MAT_VISIT_FORM_COMPLETED_3==0),
              " (",
-             format(round(sum(M08_MAT_VISIT_FORM_COMPLETED_3==0)/n()*100, 2),nsmall=2, digits=3),
+             format(round(sum(M08_MAT_VISIT_FORM_COMPLETED_3==0)/n()*100, 2),nsmall=2, digits=3), # this is missing the ANC28 form out of everyone who has passed ANC28
              ")"),
     
     "Missing ANC28 Pretest Fasting Glucose: M08_BGLUC_PRETEST_MMOLL_LBORRES_3, n (%)" =
@@ -128,7 +128,7 @@ diabetes_table <- df %>%
              " (",
              format(round(sum(is.na(M08_BGLUC_PRETEST_MMOLL_LBORRES_3), 
                               (M08_BGLUC_PRETEST_MMOLL_LBORRES_3==-5),
-                              (M08_BGLUC_PRETEST_MMOLL_LBORRES_3==-7))/n()*100, 2),nsmall=2, digits=3),
+                              (M08_BGLUC_PRETEST_MMOLL_LBORRES_3==-7))/sum(M08_MAT_VISIT_FORM_COMPLETED_3)*100, 2),nsmall=2, digits=3),
              ")"),
     
     # when fasting OGTT is high, then 1-hr (_2) or 2-hr (-3) should be also high 
@@ -140,7 +140,7 @@ diabetes_table <- df %>%
              " (",
              format(round(sum(is.na(M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3), 
                               (M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3==-7),
-                              (M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3==-5))/n()*100, 2),nsmall=2, digits=3),
+                              (M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3==-5))/sum(M08_MAT_VISIT_FORM_COMPLETED_3)*100, 2),nsmall=2, digits=3),
              ")"),
     
     # 2-hr (_3) test:
@@ -151,24 +151,24 @@ diabetes_table <- df %>%
              " (",
              format(round(sum(is.na(M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3),
                               (M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3==-5),
-                              (M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3==-7))/n()*100, 2),nsmall=2, digits=3),
+                              (M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3==-7))/sum(M08_MAT_VISIT_FORM_COMPLETED_3)*100, 2),nsmall=2, digits=3),
              ")")) %>%
 
   t() %>% as.data.frame() %>% 
   `colnames<-`(c(.[1,])) %>% 
   slice(-1)
 ```
-
+*Out of everyone who has a completed form (MNH08 enrollment for Hba1c and MNH08 ANC-28 visit for the other 3 measurements).
 
 ```{r}
 diabetes_table  %>% 
   `rownames<-` (c(
     "Missing MNH08 Enrollment form, n (%)",
-    "Missing Enrollment HbA1c: M08_HBA1C_PRCNT_1, n (%)",
+    "Missing Enrollment HbA1c: M08_HBA1C_PRCNT, n (%)",
     "Missing MNH08 form at ANC28, n (%)",
-    "Missing ANC28 Pretest Fasting Glucose: M08_BGLUC_PRETEST_MMOLL_LBORRES_3, n (%)",
-    "Missing ANC28 1-hr OGTT: M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3, n (%)",
-    "Missing ANC28 2-hr OGTT: M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3, n (%)")) %>% 
+    "Missing ANC28 Pretest Fasting Glucose: M08_BGLUC_PRETEST_MMOLL_LBORRES, n (%)",
+    "Missing ANC28 1-hr OGTT: M08_BGLUC_ORAL_1HR_MMOLL_LBORRES, n (%)",
+    "Missing ANC28 2-hr OGTT: M08_BGLUC_ORAL_2HR_MMOLL_LBORRES, n (%)")) %>% 
     
   mutate_all(funs(str_replace(., "NaN", "0"))) %>% 
   kbl(caption = "", booktabs = TRUE) %>%
@@ -190,7 +190,7 @@ diabetes_table <- df %>%
     "GDM = Yes " = 
       paste0(sum(GEST_DIAB_MEAS == 1, na.rm = TRUE),
              " (",
-             format(round(sum(GEST_DIAB_MEAS == 1, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             format(round(sum(GEST_DIAB_MEAS == 1, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3), # this is among those who have passed the ANC28 window. I could do this as those who have completed the form. 
              ")"),
     
     "GDM = No " = 
@@ -343,19 +343,19 @@ diabetes_table  %>%
   kable_styling(font_size = 14) %>%
   row_spec(0, extra_css = "border-bottom: 0px white;") %>%
   
-  pack_rows("Overt Diabetes (HbA1c)  Category, n (%)", 1, 3, label_row_css = "color: steelblue;") %>%
-  pack_rows("Fasting Glucose [BGLUC_PRETEST_MMOLL_LBORRES], n (%)", 4, 6, label_row_css = "color: steelblue;") %>%
-  pack_rows("OGTT 1-hr [BGLUC_ORAL_1HR_MMOLL_LBORRES], n (%)", 7, 9, label_row_css = "color: steelblue;") %>%
-  pack_rows("OGTT 2-hr [BGLUC_ORAL_2HR_MMOLL_LBORRES], n (%)", 10, 12, label_row_css = "color: steelblue;")
+  pack_rows("HbA1c [HBA1C_PRCNT] (>=6.5%), n (%)", 1, 3, label_row_css = "color: steelblue;") %>%
+  pack_rows("Fasting Glucose [BGLUC_PRETEST_MMOLL_LBORRES] (>=5.1 mmol/L), n (%)", 4, 6, label_row_css = "color: steelblue;") %>%
+  pack_rows("OGTT 1-hr [BGLUC_ORAL_1HR_MMOLL_LBORRES] (>=10.0 mmol/L), n (%)", 7, 9, label_row_css = "color: steelblue;") %>%
+  pack_rows("OGTT 2-hr [BGLUC_ORAL_2HR_MMOLL_LBORRES] (>=8.5 mmol/L), n (%)", 10, 12, label_row_css = "color: steelblue;")
   
 ```
 
 \newpage
 
-#### Figure 1. Histogram of HbA1c % across sites
+#### Figure 1a. Histogram of HbA1c % across sites
 ```{r fig1}
 
-hba1c_nomissing <- df %>% filter(!is.na(M08_HBA1C_PRCNT_1))
+hba1c_nomissing <- df %>% filter(!is.na(M08_HBA1C_PRCNT_1)) %>% filter(M08_HBA1C_PRCNT_1!=-5 & M08_HBA1C_PRCNT_1!=-7)
 
 ggplot(data=hba1c_nomissing,
        aes(x=M08_HBA1C_PRCNT_1)) +
@@ -370,16 +370,18 @@ ggplot(data=hba1c_nomissing,
   theme(axis.text.x = element_text(vjust = 1, hjust=1), # angle = 60,
         legend.position="bottom",
         legend.title = element_blank(),
-        panel.grid.minor = element_blank())# +
+        panel.grid.minor = element_blank()) +
     #geom_vline(mapping=aes(xintercept=0), linetype ="dashed", color = "red") + # ADDS VERTICAL DASHED LINE AT MIN THRESHOLD
-  #geom_vline(mapping=aes(xintercept=10), linetype ="dashed", color = "red")  # ADDS VERTICAL DASHED LINE AT MAX THRESHOLD
+  geom_vline(mapping=aes(xintercept=6.5), linetype ="dashed", color = "red")  # ADDS VERTICAL DASHED LINE AT MAX THRESHOLD
 
 ```
 
 #### Figure 2a. Histogram of Fasting Glucose across sites
 ```{r fig2a}
 
-fasting_gluc_nomissing <- df %>% filter(!is.na(M08_BGLUC_PRETEST_MMOLL_LBORRES_3))
+fasting_gluc_nomissing <- df %>% 
+  filter(!is.na(M08_BGLUC_PRETEST_MMOLL_LBORRES_3)) %>% 
+  filter(M08_BGLUC_PRETEST_MMOLL_LBORRES_3!=-5 & M08_BGLUC_PRETEST_MMOLL_LBORRES_3!=-7)
 
 ggplot(data=fasting_gluc_nomissing,
        aes(x=M08_BGLUC_PRETEST_MMOLL_LBORRES_3)) +
@@ -400,10 +402,11 @@ ggplot(data=fasting_gluc_nomissing,
 
 ```
 
-#### Figure 2b. Histogram of OGTT 1hr across sites
+#### Figure 1b. Histogram of OGTT 1hr across sites
 ```{r fig2b}
 
-OGTT1hr_nomissing <- df %>% filter(!is.na(M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3))
+OGTT1hr_nomissing <- df %>% filter(!is.na(M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3)) %>%
+  filter(M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3!=-5 & M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3!=-7)
 
 ggplot(data=OGTT1hr_nomissing,
        aes(x=M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3)) +
@@ -424,10 +427,11 @@ ggplot(data=OGTT1hr_nomissing,
 
 ```
 
-#### Figure 2c. Histogram of OGTT 2-hr across sites
+#### Figure 1c. Histogram of OGTT 2-hr across sites
 ```{r fig2c}
 
-OGTT2hr_nomissing <- df %>% filter(!is.na(M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3))
+OGTT2hr_nomissing <- df %>% filter(!is.na(M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3)) %>% 
+  filter(M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3!=-5 & M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3!=-7)
 
 ggplot(data=OGTT2hr_nomissing,
        aes(x=M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3)) +
