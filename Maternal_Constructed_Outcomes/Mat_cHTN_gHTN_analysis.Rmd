@@ -26,7 +26,7 @@ htn_df <- htn_df %>% filter(DELIVERED_FF==1)
 
 # MERGE IN THE TWO SUBSETS
 ```{r}
-htn_df2 <- left_join(htn_df, window_subset_df, 
+htn_dfhtn_df <- left_join(htn_df, window_subset_df, 
                          by = c("MOMID", "PREGID", "SITE"))
 ```
 
@@ -194,9 +194,9 @@ temp.df <- htn_df %>% select(MOMID, SITE, DELIVERED_FF, M06_BP_SYS_VSORRES_1_1, 
 <!-- ENROLLMENT -->
 
 <!-- ```{r echo=FALSE} -->
-<!-- htn_df <- htn_df %>%  -->
+<!-- htn_df <- htn_df %>% -->
 <!--   filter(!is.na(M04_ANC_OBSSTDAT_1)) %>% # AMONG WOMEN WHO HAVE ENROLLMENT VISIT -->
-<!--   mutate(CHRON_HYPER_MEAS = case_when((meanSBP_ANC_LT20 >=140 | meanDBP_ANC_LT20 >=90)  ~ 1,  -->
+<!--   mutate(CHRON_HYPER_MEAS = case_when((meanSBP_ANC_LT20 >=140 | meanDBP_ANC_LT20 >=90)  ~ 1, -->
 <!--                                       (is.na(meanSBP_ANC_LT20) & is.na(meanDBP_ANC_LT20)) ~ as.numeric(NA), -->
 <!--                                      TRUE  ~ as.numeric(0))) -->
 
@@ -204,20 +204,21 @@ temp.df <- htn_df %>% select(MOMID, SITE, DELIVERED_FF, M06_BP_SYS_VSORRES_1_1, 
 <!-- round(prop.table(table(htn_df$CHRON_HYPER_MEAS, SITE = htn_df$SITE, useNA = "always"), margin=2)*100, 2) -->
 
 <!-- ``` -->
-<!-- # CHRONIC HYPERTENSION DIAGNOSIS -->
-<!-- ```{r} -->
-<!-- htn_df <- htn_df %>% -->
-<!--   filter(!is.na(M04_ANC_OBSSTDAT_1)) %>% # AMONG WOMEN WHO HAVE ANC1 VISIT -->
-<!--   mutate(CHRON_HYPER_DIAG = case_when(M04_HTN_EVER_MHOCCUR_1==1 | (!is.na(M04_HTN_MHSTDAT_1)) ~ 1, -->
-<!--                                       (is.na(M04_HTN_EVER_MHOCCUR_1) | is.na(M04_HTN_MHSTDAT_1)) ~ as.numeric(NA),  -->
-<!--                                       TRUE ~ as.numeric(0))) -->
 
-<!-- table(htn_df$CHRON_HYPER_DIAG, SITE = htn_df$SITE, useNA = "always") -->
-<!-- round(prop.table(table(htn_df$CHRON_HYPER_DIAG, SITE = htn_df$SITE, useNA = "always"), margin=2)*100, 2) -->
+# CHRONIC HYPERTENSION DIAGNOSIS
+```{r}
+htn_df <- htn_df %>%
+  filter(!is.na(M04_ANC_OBSSTDAT_1)) %>% # AMONG WOMEN WHO HAVE ANC1 VISIT
+  mutate(CHRON_HYPER_DIAG = case_when(M04_HTN_EVER_MHOCCUR_1==1 | (!is.na(M04_HTN_MHSTDAT_1)) ~ 1,
+                                      (is.na(M04_HTN_EVER_MHOCCUR_1) | is.na(M04_HTN_MHSTDAT_1)) ~ as.numeric(NA),
+                                      TRUE ~ as.numeric(0)))
 
-<!-- ``` -->
+table(htn_df$CHRON_HYPER_DIAG, SITE = htn_df$SITE, useNA = "always")
+round(prop.table(table(htn_df$CHRON_HYPER_DIAG, SITE = htn_df$SITE, useNA = "always"), margin=2)*100, 2)
 
-# CHRONIC HYPERTENSION MEDICATION USE/TREATMENT
+```
+
+# CHRONIC HYPERTENSION TREATMENT
 ```{r}
 # THIS MEDICATION INFO HAS TO BE COLLECTED AT ENROLLEMNT (<20 WEEKS GESTATION) FOR IT TO BE CHTN.
 # THERE IS A SKIP PATTERN FOR THESE MEDICATIONS.
@@ -227,25 +228,30 @@ htn_df <- htn_df %>%
                                           M04_HTN_CMTRT_6_1==1 | M04_HTN_CMTRT_7_1==1 | M04_HTN_CMTRT_8_1==1 |
                                           M04_HTN_CMTRT_9_1==1 | M04_HTN_CMTRT_88_1==1) ~ 1,
                                        
-                                       (M04_HTN_CMTRT_3_1==77 | M04_HTN_CMTRT_3_1==55 | 
-                                          M04_HTN_CMTRT_4_1==77 | M04_HTN_CMTRT_4_1==55 | 
-                                          M04_HTN_CMTRT_5_1==77 | M04_HTN_CMTRT_5_1==55 |
-                                          M04_HTN_CMTRT_6_1==77 | M04_HTN_CMTRT_6_1==77 | 
-                                          M04_HTN_CMTRT_7_1==77 | M04_HTN_CMTRT_7_1==55 |
-                                          M04_HTN_CMTRT_8_1==77 | M04_HTN_CMTRT_8_1==55 | 
-                                          M04_HTN_CMTRT_9_1==77 | M04_HTN_CMTRT_9_1==55 | 
-                                          M04_HTN_CMTRT_88_1==77 | M04_HTN_CMTRT_88_1==55) ~ as.numeric(NA),
+                                       all(is.na(c(M04_HTN_CMTRT_3_1, M04_HTN_CMTRT_4_1,
+                                                   M04_HTN_CMTRT_5_1, M04_HTN_CMTRT_6_1,
+                                                   M04_HTN_CMTRT_7_1, M04_HTN_CMTRT_8_1, 
+                                                   M04_HTN_CMTRT_9_1, M04_HTN_CMTRT_88_1))) ~ as.numeric(NA),
                                        TRUE ~ as.numeric(0)))
 
 with(htn_df, table(is.na(c(M04_HTN_CMTRT_3_1, M04_HTN_CMTRT_4_1, M04_HTN_CMTRT_5_1, 
                             M04_HTN_CMTRT_6_1, M04_HTN_CMTRT_7_1, M04_HTN_CMTRT_8_1,
                             M04_HTN_CMTRT_9_1, M04_HTN_CMTRT_88_1))))
 
+                                       # (M04_HTN_CMTRT_3_1==77 | M04_HTN_CMTRT_3_1==55 | 
+                                       #    M04_HTN_CMTRT_4_1==77 | M04_HTN_CMTRT_4_1==55 | 
+                                       #    M04_HTN_CMTRT_5_1==77 | M04_HTN_CMTRT_5_1==55 |
+                                       #    M04_HTN_CMTRT_6_1==77 | M04_HTN_CMTRT_6_1==77 | 
+                                       #    M04_HTN_CMTRT_7_1==77 | M04_HTN_CMTRT_7_1==55 |
+                                       #    M04_HTN_CMTRT_8_1==77 | M04_HTN_CMTRT_8_1==55 | 
+                                       #    M04_HTN_CMTRT_9_1==77 | M04_HTN_CMTRT_9_1==55 | 
+                                       #    M04_HTN_CMTRT_88_1==77 | M04_HTN_CMTRT_88_1==55) ~ as.numeric(NA),
+
 table(htn_df$CHRON_HYPER_TREAT, SITE = htn_df$SITE, useNA = "always")
 round(prop.table(table(htn_df$CHRON_HYPER_TREAT, SITE = htn_df$SITE, useNA = "always"), margin=2)*100, 2)
 ```
 
-# CHRONIC HYPERTENSION MEDICATION USE/TREATMENT
+# CHRONIC HYPERTENSION TREATMENT
 #### SPECIAL NOTE: THIS IS JUST FOR THE TABLE THAT I NEED TO CREATE IN "MAT_CHTN_GHTN_TABLES.RMD"
 ```{r}
 chtn_diag_df <- htn_df %>% 
@@ -254,15 +260,10 @@ chtn_diag_df <- htn_df %>%
   mutate(CHRON_HYPER_TREAT = case_when((M04_HTN_CMTRT_3_1==1 | M04_HTN_CMTRT_4_1==1 | M04_HTN_CMTRT_5_1==1 |
                                           M04_HTN_CMTRT_6_1==1 | M04_HTN_CMTRT_7_1==1 | M04_HTN_CMTRT_8_1==1 |
                                           M04_HTN_CMTRT_9_1==1 | M04_HTN_CMTRT_88_1==1) ~ 1,
-                                       
-                                       (M04_HTN_CMTRT_3_1==77 | M04_HTN_CMTRT_3_1==55 | 
-                                          M04_HTN_CMTRT_4_1==77 | M04_HTN_CMTRT_4_1==55 | 
-                                          M04_HTN_CMTRT_5_1==77 | M04_HTN_CMTRT_5_1==55 |
-                                          M04_HTN_CMTRT_6_1==77 | M04_HTN_CMTRT_6_1==77 | 
-                                          M04_HTN_CMTRT_7_1==77 | M04_HTN_CMTRT_7_1==55 |
-                                          M04_HTN_CMTRT_8_1==77 | M04_HTN_CMTRT_8_1==55 | 
-                                          M04_HTN_CMTRT_9_1==77 | M04_HTN_CMTRT_9_1==55 | 
-                                          M04_HTN_CMTRT_88_1==77 | M04_HTN_CMTRT_88_1==55) ~ as.numeric(NA),
+                                       all(is.na(c(M04_HTN_CMTRT_3_1, M04_HTN_CMTRT_4_1,
+                                                   M04_HTN_CMTRT_5_1, M04_HTN_CMTRT_6_1,
+                                                   M04_HTN_CMTRT_7_1, M04_HTN_CMTRT_8_1, 
+                                                   M04_HTN_CMTRT_9_1, M04_HTN_CMTRT_88_1))) ~ as.numeric(NA),
                                        TRUE ~ as.numeric(0)))
 
 with(chtn_diag_df, table(is.na(c(M04_HTN_CMTRT_3_1, M04_HTN_CMTRT_4_1, M04_HTN_CMTRT_5_1, 
@@ -296,18 +297,79 @@ is_chtn <- function(sbp, dbp, sbp_threshold = 140, dbp_threshold = 90) {
 # cHTN MEASURED AT ANC<20 AND ONE OTHER TP (TOTAL 2 TIMEPOINTS)
 ```{r}
 
- # WHENY ANY TWO TIMEPOINT SBP OR DBP ARE ABOVE THE THRESHOLD (DO NOT HAVE TO BE CONSECUTIVE)
+ # WHEN Enrollment SBP or DBP is high and one additional during >20 weeks gestation is high (at any point) then it will be considered cHTN. 
 htn_df <- htn_df %>%
   rowwise() %>%
   mutate(CHRON_HYPER_MEAS_ANY2 = ifelse(is_chtn(meanSBP_ANC_LT20, meanDBP_ANC_LT20) & 
-                                          any(is_chtn(meanSBP_ANC20, meanDBP_ANC20),
-                                              is_chtn(meanSBP_ANC28, meanDBP_ANC28),
-                                              is_chtn(meanSBP_ANC32, meanDBP_ANC32),
-                                              is_chtn(meanSBP_ANC36, meanDBP_ANC36),
-                                              is_chtn(meanSBP_IPC, meanDBP_IPC),
-                                              is_chtn(meanSBP_Hosp_ANC, meanDBP_Hosp_ANC)), 1, 0),
+                                          (any(is_chtn(meanSBP_ANC20, meanDBP_ANC20),
+                                               is_chtn(meanSBP_ANC28, meanDBP_ANC28),
+                                               is_chtn(meanSBP_ANC32, meanDBP_ANC32),
+                                               is_chtn(meanSBP_ANC36, meanDBP_ANC36),
+                                               is_chtn(meanSBP_IPC, meanDBP_IPC),
+                                               is_chtn(meanSBP_Hosp_ANC, meanDBP_Hosp_ANC), na.rm=TRUE)), 1, 0),
          # OVERWRITES 0 WITH NA when all these vars are NA
-         CHRON_HYPER_MEAS_ANY2 = ifelse(all(is.na(c(meanSBP_ANC_LT20, meanDBP_ANC_LT20,
+         CHRON_HYPER_MEAS_ANY2 = ifelse(all(is.na(c(meanSBP_ANC_LT20, meanDBP_ANC_LT20))) |
+                                          (all(is.na(c(meanSBP_ANC20, meanDBP_ANC20, 
+                                                       meanSBP_ANC28, meanDBP_ANC28, 
+                                                       meanSBP_ANC32, meanDBP_ANC32, 
+                                                       meanSBP_ANC36, meanDBP_ANC36,
+                                                       meanSBP_IPC, meanDBP_IPC, 
+                                                       meanSBP_Hosp_ANC, meanDBP_Hosp_ANC)))), 
+                                        as.numeric(NA),
+                                        # OTHERWISE, IT LEAVES IT ALONE.
+                                        CHRON_HYPER_MEAS_ANY2)) %>%
+  mutate(SUM_BP = sum(!is.na(meanSBP_ANC_LT20), 
+                      !is.na(meanSBP_ANC20), 
+                      !is.na(meanSBP_ANC28), 
+                      !is.na(meanSBP_ANC32), 
+                      !is.na(meanSBP_ANC36),
+                      !is.na(meanSBP_IPC),
+                      !is.na(meanSBP_Hosp_ANC))) # THIS SUM_BP LOOKS GOOD.
+
+table(htn_df$CHRON_HYPER_MEAS_ANY2, htn_df$SITE, useNA = "always")
+round(prop.table(table(htn_df$CHRON_HYPER_MEAS_ANY2, htn_df$SITE, useNA = "always"), margin=2)*100,2)
+
+temp.df <- htn_df %>% select(MOMID, SITE, SUM_BP, M06_BP_SYS_VSORRES_1_4, M06_BP_SYS_VSORRES_2_4, M06_BP_SYS_VSORRES_3_4,
+                             M06_BP_SYS_VSORRES_1_5, M06_BP_SYS_VSORRES_2_5, M06_BP_SYS_VSORRES_3_5,
+                            meanSBP_ANC36, meanSBP_IPC) %>%
+  filter(SITE=="Pakistan")
+
+
+temp.df <- htn_df %>%
+  select(MOMID, SITE, CHRON_HYPER_MEAS_ANY2,
+         meanSBP_ANC_LT20, meanDBP_ANC_LT20,
+         meanSBP_ANC20, meanDBP_ANC20,
+         meanSBP_ANC28, meanDBP_ANC28,
+         meanSBP_ANC32, meanDBP_ANC32,
+         meanSBP_ANC36, meanDBP_ANC36,
+         meanSBP_IPC, meanDBP_IPC,
+         meanSBP_Hosp_ANC, meanDBP_Hosp_ANC) %>% 
+  filter(SITE=="Pakistan") %>%
+  mutate(SUM_BP = sum(!is.na(meanSBP_ANC_LT20), 
+                      !is.na(meanSBP_ANC20), 
+                      !is.na(meanSBP_ANC28), 
+                      !is.na(meanSBP_ANC32), 
+                      !is.na(meanSBP_ANC36),
+                      !is.na(meanSBP_IPC),
+                      !is.na(meanSBP_Hosp_ANC)))
+
+
+```
+
+# cHTN MEASURED ANY 1 TIMEPOINT
+```{r}
+# DOES SHE HAVE HIGH BP AT ANY POINT.  THIS WILL BE COMBINED WITH TREATMENT VARIABLE. IT CAN'T BE USED ALONE.
+htn_df <- htn_df %>%
+  rowwise() %>%
+  mutate(CHRON_HYPER_MEAS_ANY1 = ifelse(any(is_chtn(meanSBP_ANC_LT20, meanDBP_ANC_LT20),
+                                            is_chtn(meanSBP_ANC20, meanDBP_ANC20),
+                                            is_chtn(meanSBP_ANC28, meanDBP_ANC28),
+                                            is_chtn(meanSBP_ANC32, meanDBP_ANC32),
+                                            is_chtn(meanSBP_ANC36, meanDBP_ANC36),
+                                            is_chtn(meanSBP_IPC, meanDBP_IPC),
+                                            is_chtn(meanSBP_Hosp_ANC, meanDBP_Hosp_ANC), na.rm = TRUE), 1, 0),
+         # OVERWRITES 0 WITH NA when all these vars are NA
+         CHRON_HYPER_MEAS_ANY1 = ifelse(all(is.na(c(meanSBP_ANC_LT20, meanDBP_ANC_LT20, 
                                                     meanSBP_ANC20, meanDBP_ANC20, 
                                                     meanSBP_ANC28, meanDBP_ANC28, 
                                                     meanSBP_ANC32, meanDBP_ANC32, 
@@ -315,71 +377,88 @@ htn_df <- htn_df %>%
                                                     meanSBP_IPC, meanDBP_IPC, 
                                                     meanSBP_Hosp_ANC, meanDBP_Hosp_ANC))), 
                                         as.numeric(NA),
-                                        # OTHERWISE, IT LEAVES IT ALONE.
-                                        CHRON_HYPER_MEAS_ANY2))
-
-table(htn_df$CHRON_HYPER_MEAS_ANY2, htn_df$SITE, useNA = "always")
-round(prop.table(table(htn_df$CHRON_HYPER_MEAS_ANY2, htn_df$SITE, useNA = "always"), margin=2)*100,2)
-
-temp.df <- htn_df %>%
-  select(MOMID, SITE, CHRON_HYPER_MEAS_ANY2,
-         meanSBP_ANC_LT20, meanDBP_ANC_LT20,
-         meanSBP_ANC20, meanDBP_ANC20,
-         meanSBP_ANC32, meanDBP_ANC32,
-         meanSBP_ANC36, meanDBP_ANC36,
-         meanSBP_IPC, meanDBP_IPC,
-         meanSBP_Hosp_ANC, meanDBP_Hosp_ANC) %>% 
-  filter(SITE=="Pakistan")
-```
-
-# cHTN MEASURED ANY 1 TIMEPOINT
-#TODO ask about all(is.na) issue
-```{r}
-htn_df <- htn_df %>%
-  rowwise() %>%
-  mutate(CHRON_HYPER_MEAS_ANY1 = ifelse(any(is_chtn(meanSBP_ANC_LT20, meanDBP_ANC_LT20)), 1, 0),
-         # OVERWRITES 0 WITH NA when all these vars are NA
-         CHRON_HYPER_MEAS_ANY1 = ifelse(all(is.na(c(meanSBP_ANC_LT20, meanDBP_ANC_LT20))), 
-                                       as.numeric(NA),
-                                       # OTHERWISE, LEAVE IT ALONE.
-                                       CHRON_HYPER_MEAS_ANY1))
+                                        # OTHERWISE, LEAVE IT ALONE.
+                                        CHRON_HYPER_MEAS_ANY1))
 
 table(htn_df$CHRON_HYPER_MEAS_ANY1, htn_df$SITE, useNA = "always")
 round(prop.table(table(htn_df$CHRON_HYPER_MEAS_ANY1, htn_df$SITE, useNA = "always"), margin=2)*100,2)
 
-temp.df <- htn_df %>% select(MOMID, SITE, CHRON_HYPER_MEAS_ANY1, M06_BP_SYS_VSORRES_1_1, M06_BP_SYS_VSORRES_2_1, M06_BP_SYS_VSORRES_3_1,
-                             M06_BP_DIA_VSORRES_1_1, M06_BP_DIA_VSORRES_2_1, M06_BP_DIA_VSORRES_3_1, meanSBP_ANC_LT20, meanDBP_ANC_LT20) %>%
+temp.df <- htn_df %>% select(MOMID, SITE, CHRON_HYPER_MEAS_ANY1, meanSBP_ANC_LT20, meanDBP_ANC_LT20,
+                             meanSBP_ANC20, meanDBP_ANC20,
+                             meanSBP_ANC28, meanDBP_ANC28, 
+                             meanSBP_ANC32, meanDBP_ANC32, 
+                             meanSBP_ANC36, meanDBP_ANC36,
+                             meanSBP_IPC, meanDBP_IPC, 
+                             meanSBP_Hosp_ANC, meanDBP_Hosp_ANC) %>%
   filter(SITE=="Pakistan")
 ```
 
-# CHRONIC HYPERTENSION MEASURED + TREATMENT 
-# change this to just traetment or measured - take out Diagnosed. 
+# CHRONIC HYPERTENSION MEAS1 + TREATMENT 
+# change this to just traetment or measured 
+```{r}
+# WHEN TREATMENT INFO IS MISSING OR 1 MEASUREMET IS MISSING - THEN CAN'T DETERMINE chtn
+htn_df <- htn_df %>% 
+ # filter(!is.na(M04_ANC_OBSSTDAT_1)) %>% # AMONG WOMEN WHO DELIVERED
+  mutate(CHRON_HYPER_MEAS1_TREAT = case_when((CHRON_HYPER_TREAT==1 & CHRON_HYPER_MEAS_ANY1==1) ~ 1,
+                                             (is.na(CHRON_HYPER_MEAS_ANY1) | 
+                                                  is.na(CHRON_HYPER_TREAT)) ~ as.numeric(NA),
+                                            TRUE ~ as.numeric(0)))
+
+table(htn_df$CHRON_HYPER_MEAS1_TREAT, SITE = htn_df$SITE, useNA = "always")
+round(prop.table(table(htn_df$CHRON_HYPER_MEAS1_TREAT, SITE = htn_df$SITE, useNA = "always"), margin=2)*100, 2)
+
+temp.df <- htn_df %>% select(MOMID, SITE, CHRON_HYPER_MEAS1_TREAT, CHRON_HYPER_TREAT, CHRON_HYPER_MEAS_ANY1) %>% 
+  filter(SITE=="Kenya")
+```
+
 ```{r}
 htn_df <- htn_df %>% 
-  filter(!is.na(M04_ANC_OBSSTDAT_1)) %>% # AMONG WOMEN WHO DELIVERED
-  mutate(CHRON_HYPER = case_when((CHRON_HYPER_TREAT==1 & CHRON_HYPER_MEAS_ANY1==1) | 
-                                               CHRON_HYPER_MEAS_ANY2==1) ~ 1,
-                                            
+ # filter(!is.na(M04_ANC_OBSSTDAT_1)) %>% # AMONG WOMEN WHO DELIVERED
+  mutate(CHRON_HYPER = case_when((CHRON_HYPER_MEAS1_TREAT==1 | CHRON_HYPER_MEAS_ANY2==1) ~ 1,
                                             (is.na(CHRON_HYPER_MEAS_ANY2) & 
-                                               is.na(CHRON_HYPER_MEAS_ANY1) & 
-                                                  is.na(CHRON_HYPER_TREAT)) ~ as.numeric(NA),
-                                            
+                                               is.na(CHRON_HYPER_MEAS1_TREAT==1)) ~ as.numeric(NA),
                                             TRUE ~ as.numeric(0)))
 
 table(htn_df$CHRON_HYPER, SITE = htn_df$SITE, useNA = "always")
 round(prop.table(table(htn_df$CHRON_HYPER, SITE = htn_df$SITE, useNA = "always"), margin=2)*100, 2)
 
+temp.df <- htn_df %>% select(MOMID, SITE, CHRON_HYPER, CHRON_HYPER_MEAS1_TREAT, CHRON_HYPER_MEAS_ANY2) %>% 
+  filter(SITE=="Kenya")
 ```
 
+# SEVERE CHRONIC HTN
 ```{r}
+htn_df <- htn_df %>%
+  rowwise() %>%
+  mutate(SEVERE_CHRON_HYPER_MEAS = ifelse(any(is_severe_chtn(meanSBP_ANC_LT20, meanDBP_ANC_LT20), na.rm = TRUE), 1, 0),
+         # OVERWRITES 0 WITH NA when all these vars are NA
+         SEVERE_CHRON_HYPER_MEAS = ifelse(all(is.na(c(meanSBP_ANC_LT20, meanDBP_ANC_LT20))), 
+                                       as.numeric(NA),
+                                       # OTHERWISE, LEAVE IT ALONE.
+                                       SEVERE_CHRON_HYPER_MEAS))
 
+table(htn_df$SEVERE_CHRON_HYPER_MEAS, htn_df$SITE, useNA = "always")
+round(prop.table(table(htn_df$SEVERE_CHRON_HYPER_MEAS, htn_df$SITE, useNA = "always"), margin=2)*100,2)
+
+temp.df <- htn_df %>% select(MOMID, SITE, SEVERE_CHRON_HYPER_MEAS, M06_BP_SYS_VSORRES_1_1, M06_BP_SYS_VSORRES_2_1, M06_BP_SYS_VSORRES_3_1,
+                             M06_BP_DIA_VSORRES_1_1, M06_BP_DIA_VSORRES_2_1, M06_BP_DIA_VSORRES_3_1, meanSBP_ANC_LT20, meanDBP_ANC_LT20) %>%
+  filter(SITE=="Kenya")
 ```
 
-# BASELINE PROTEINURIA
+########################################################
+# BASELINE PROTEINURIA - LOOKS GOOD! 
 ```{r}
+# AT ENROLLMENT
+htn_df <- htn_df %>%
+  mutate(PROTEINURIA_BASELINE = case_when(M08_UA_PROT_LBORRES_1 %in% c(1,2) ~ 1,
+                                          is.na(M08_UA_PROT_LBORRES_1) ~ as.numeric(NA),
+                                          TRUE ~ 0))
 
+table(htn_df$PROTEINURIA_BASELINE, htn_df$SITE, useNA = "always")
+round(prop.table(table(htn_df$PROTEINURIA_BASELINE, htn_df$SITE, useNA = "always"), margin=2)*100,2)
+
+temp.df <- htn_df %>% select(MOMID, SITE, PROTEINURIA_BASELINE, M08_UA_PROT_LBORRES_1)
 ```
-
 
 
 # GESTATIONAL PROTEINURIA - PROTEINURIA***
@@ -420,32 +499,29 @@ proteinuria_df <- htn_df %>% #  filter(!is.na(M08_LBSTDAT_2)) %>%
 
 ```
 
-```{r}
-pu_v2_df <- htn_df %>%
-  filter(!is.na(M08_LBSTDAT_2)) %>% select(MOMID, SITE, M08_LBSTDAT_2, PROTEINURIA_ANC_IPC, 
-                                           M08_UA_PROT_LBORRES_2, M08_UA_PROT_LBORRES_3, 
-                                           M08_UA_PROT_LBORRES_4, M08_UA_PROT_LBORRES_5, M08_UA_PROT_LBORRES_6)
-
-pu_v2_df2 <- htn_df %>%
-  filter(!is.na(M08_LBSTDAT_2)) %>% filter(SITE=="Kenya") %>% select(MOMID, M08_LBSTDAT_2, PROTEINURIA_ANC_IPC,
-                                                                     PROTEINURIA_ANC_IPC, 
-                                                                     M08_UA_PROT_LBORRES_2, M08_UA_PROT_LBORRES_3, 
-                                                                     M08_UA_PROT_LBORRES_4, M08_UA_PROT_LBORRES_5, M08_UA_PROT_LBORRES_6)
-table(pu_v2_df2$PROTEINURIA_ANC_IPC)
-table(pu_v2_df2$M08_LBSTDAT_2, useNA = "always")
-
-mnh08_df2 <- mnh_list[["mnh08"]]
-
-mnh08_df3 <- mnh08_df2 %>% filter(!is.na(M08_LBSTDAT)) %>% 
-  select(MOMID, SITE, M08_TYPE_VISIT, M08_LBSTDAT, 
-         M08_UA_PROT_LBORRES) %>% 
-  filter(SITE=="Kenya", M08_TYPE_VISIT==2)
-```
+# ```{r}
+# pu_v2_df <- htn_df %>%
+#   filter(!is.na(M08_LBSTDAT_2)) %>% select(MOMID, SITE, M08_LBSTDAT_2, PROTEINURIA_ANC_IPC, 
+#                                            M08_UA_PROT_LBORRES_2, M08_UA_PROT_LBORRES_3, 
+#                                            M08_UA_PROT_LBORRES_4, M08_UA_PROT_LBORRES_5, M08_UA_PROT_LBORRES_6)
+# 
+# pu_v2_df2 <- htn_df %>%
+#   filter(!is.na(M08_LBSTDAT_2)) %>% filter(SITE=="Kenya") %>% select(MOMID, M08_LBSTDAT_2, PROTEINURIA_ANC_IPC,
+#                                                                      PROTEINURIA_ANC_IPC, 
+#                                                                      M08_UA_PROT_LBORRES_2, M08_UA_PROT_LBORRES_3, 
+#                                                                      M08_UA_PROT_LBORRES_4, M08_UA_PROT_LBORRES_5, M08_UA_PROT_LBORRES_6)
+# table(pu_v2_df2$PROTEINURIA_ANC_IPC)
+# table(pu_v2_df2$M08_LBSTDAT_2, useNA = "always")
+# 
+# mnh08_df2 <- mnh_list[["mnh08"]]
+# 
+# mnh08_df3 <- mnh08_df2 %>% filter(!is.na(M08_LBSTDAT)) %>% 
+#   select(MOMID, SITE, M08_TYPE_VISIT, M08_LBSTDAT, 
+#          M08_UA_PROT_LBORRES) %>% 
+#   filter(SITE=="Kenya", M08_TYPE_VISIT==2)
+# ```
 
 # GESTATIONAL HYPERTENSION (gHTN) - GEST_HYPER_MEAS***
-
-# NEED TO REVISE GESTATIONAL HYPERTENSION TO INCLUDE MEDICATION USE
-# A systolic blood pressure >140 mm Hg on two occasions at least 1 hour apart or diastolic blood pressure >90 mm Hg on two occasions at least 1 hour apart or severe gestational hypertension in pregnancy (not at time of delivery) defined as systolic blood pressure > 160 mmHg or a diastolic blood pressure >110 mmHg on two occasions at least 1 minute apart after 20 weeks gestation or severe gestational hypertension at the time of delivery defined as one systolic blood pressure > 160 mmHg or a diastolic blood pressure >110 mmHg among participants WITHOUT chronic hypertension.
 
 "ANC
 Wk 20, 28, 32, 36 (VISITS 2-4),
@@ -455,14 +531,6 @@ L&D"	we don't MNH04 at L&D so won't have those vars.
 MNH01	US_GA_WKS_AGE_FTS1	1st fetus: GA by ultrasound at TODAY’s visit:  weeks
 		MNH04	HTN_EVER_MHOCCUR	Have you ever been diagnosed with chronic hypertension?
 		MNH04	HPD_MHTERM	Specify type of HPD
-		MNH06	TYPE_VISIT	Indicate type of visit when PoC measurements were performed:
-		MNH06	BP_SYS_VSORRES_1	Record first BP measurement:  (systolic) mm Hg
-		MNH06	BP_SYS_VSORRES_2	Record 2nd BP measurement:  (systolic) mm Hg
-		MNH06	BP_SYS_VSORRES_3	Record 3rd BP measurement:  (systolic) mm Hg
-		MNH06	BP_DIA_VSORRES_1	Record first BP measurement: (diastolic) mm Hg   
-		MNH06	BP_DIA_VSORRES_2	Record 2nd BP measurement: (diastolic) mm Hg
-		MNH06	BP_DIA_VSORRES_3	Record 3rd BP measurement: (diastolic) mm Hg 
-		
 		
 Medications include magnesium sulfate, hydralazine, methyldopa (aldomet), atenolol, nifedipine, betamethasone, labetalol, and dexamethasone. 
 
@@ -495,53 +563,76 @@ is_ghtn <- function(sbp, dbp, sbp_threshold = 140, dbp_threshold = 90) {
 
 # gHTN MEASURED ANY 2 TIMEPOINTS
 ```{r}
-
+# SETTING NA UP AS: WHEN ALL OF ANC BP ARE MISSING OR PROTEINURIA DURING ANC_PNC IS MISSING THEN GEST_HYPER_MEAS_ANY1==missing.
  # WHENY ANY TWO TIMEPOINT SBP OR DBP ARE ABOVE THE THRESHOLD (DO NOT HAVE TO BE CONSECUTIVE)
 htn_df <- htn_df %>%
   rowwise() %>%
-  mutate(GEST_HYPER_MEAS_ANY2 = ifelse(((sum(is_ghtn(meanSBP_ANC20, meanDBP_ANC20),
-                                       is_ghtn(meanSBP_ANC28, meanDBP_ANC28),
-                                       is_ghtn(meanSBP_ANC32, meanDBP_ANC32),
-                                       is_ghtn(meanSBP_ANC36, meanDBP_ANC36),
-                                       is_ghtn(meanSBP_IPC, meanDBP_IPC),
-                                       is_ghtn(meanSBP_Hosp_ANC, meanDBP_Hosp_ANC), na.rm = TRUE) >=2) & 
-                                    CHRON_HYPER==0), 1, 0),
+  mutate(GT20_HTN_MEAS_ANY2 = ifelse(((sum(is_ghtn(meanSBP_ANC20, meanDBP_ANC20),
+                                           is_ghtn(meanSBP_ANC28, meanDBP_ANC28),
+                                           is_ghtn(meanSBP_ANC32, meanDBP_ANC32),
+                                           is_ghtn(meanSBP_ANC36, meanDBP_ANC36),
+                                           is_ghtn(meanSBP_IPC, meanDBP_IPC),
+                                           is_ghtn(meanSBP_Hosp_ANC, meanDBP_Hosp_ANC), na.rm = TRUE) >=2) & 
+                                        CHRON_HYPER==0), 1, 0),
          # OVERWRITES 0 WITH NA when all these vars are NA
-         GEST_HYPER_MEAS_ANY2 = ifelse(all(is.na(c(meanSBP_ANC20, meanDBP_ANC20, meanSBP_ANC28, meanDBP_ANC28, 
-                                                   meanSBP_ANC32, meanDBP_ANC32, meanSBP_ANC36, meanDBP_ANC36,
-                                                   meanSBP_IPC, meanDBP_IPC, meanSBP_Hosp_ANC, meanDBP_Hosp_ANC))), 
-                                       as.numeric(NA),
-                                       # OTHERWISE, IT LEAVES IT ALONE.
-                                       GEST_HYPER_MEAS_ANY2))
+         # HAVE TO HAVE AT LEAST 2 MEASUREMETNS (I.E 1 PAIR)
+         GT20_HTN_MEAS_ANY2 = ifelse((sum(!is.na(c(meanSBP_ANC20, meanDBP_ANC20, meanSBP_ANC28, meanDBP_ANC28, 
+                                                  meanSBP_ANC32, meanDBP_ANC32, meanSBP_ANC36, meanDBP_ANC36,
+                                                  meanSBP_IPC, meanDBP_IPC, meanSBP_Hosp_ANC, meanDBP_Hosp_ANC)))<=2 | is.na(CHRON_HYPER)), 
+                                     as.numeric(NA),
+                                     # OTHERWISE, IT LEAVES IT ALONE.
+                                     GT20_HTN_MEAS_ANY2))
 
-table(htn_df$GEST_HYPER_MEAS_ANY2, htn_df$SITE, useNA = "always")
-round(prop.table(table(htn_df$GEST_HYPER_MEAS_ANY2, htn_df$SITE, useNA = "always"), margin=2)*100,2)
+table(htn_df$GT20_HTN_MEAS_ANY2, htn_df$SITE, useNA = "always")
+round(prop.table(table(htn_df$GT20_HTN_MEAS_ANY2, htn_df$SITE, useNA = "always"), margin=2)*100,2)
+
+temp.df <- htn_df %>% select(MOMID, SITE, 
+                             CHRON_HYPER,
+                             GT20_HTN_MEAS_ANY2,
+                             meanSBP_ANC20, meanDBP_ANC20,
+                             meanSBP_ANC28, meanDBP_ANC28,
+                             meanSBP_ANC32, meanDBP_ANC32,
+                             meanSBP_ANC36, meanDBP_ANC36,
+                             meanSBP_IPC, meanDBP_IPC,
+                             meanSBP_Hosp_ANC, meanDBP_Hosp_ANC) %>%
+  filter(SITE=="Pakistan")
 ```
 
 # gHTN MEASURED ANY 1 TIMEPOINT
 ```{r}
 htn_df <- htn_df %>%
   rowwise() %>%
-  mutate(GEST_HYPER_MEAS_ANY1 = ifelse(((sum(is_ghtn(meanSBP_ANC20, meanDBP_ANC20),
+  mutate(GT20_HTN_MEAS_ANY1 = ifelse((sum(is_ghtn(meanSBP_ANC20, meanDBP_ANC20),
                                              is_ghtn(meanSBP_ANC28, meanDBP_ANC28),
                                              is_ghtn(meanSBP_ANC32, meanDBP_ANC32),
                                              is_ghtn(meanSBP_ANC36, meanDBP_ANC36),
                                              is_ghtn(meanSBP_IPC, meanDBP_IPC),
                                              is_ghtn(meanSBP_Hosp_ANC, meanDBP_Hosp_ANC), na.rm = TRUE) >=1) & # just need one TP to be high and then add in the medication piece next (it will be 1 TP high AND Medication use)
-                                          CHRON_HYPER==0), 1, 0),
+                                          CHRON_HYPER==0, 1, 0),
          # OVERWRITES 0 WITH NA when all these vars are NA
-         GEST_HYPER_MEAS_ANY1 = ifelse(all(is.na(c(meanSBP_ANC20, meanDBP_ANC20, 
+         GT20_HTN_MEAS_ANY1 = ifelse((all(is.na(c(meanSBP_ANC20, meanDBP_ANC20, 
                                                    meanSBP_ANC28, meanDBP_ANC28, 
                                                    meanSBP_ANC32, meanDBP_ANC32, 
                                                    meanSBP_ANC36, meanDBP_ANC36,
                                                    meanSBP_IPC, meanDBP_IPC, 
-                                                   meanSBP_Hosp_ANC, meanDBP_Hosp_ANC))), 
+                                                   meanSBP_Hosp_ANC, meanDBP_Hosp_ANC))) | is.na(CHRON_HYPER)), 
                                        as.numeric(NA),
                                        # OTHERWISE, IT LEAVES IT ALONE.
-                                       GEST_HYPER_MEAS_ANY1))
+                                       GT20_HTN_MEAS_ANY1))
 
-table(htn_df$GEST_HYPER_MEAS_ANY1, htn_df$SITE, useNA = "always")
-round(prop.table(table(htn_df$GEST_HYPER_MEAS_ANY1, htn_df$SITE, useNA = "always"), margin=2)*100,2)
+table(htn_df$GT20_HTN_MEAS_ANY1, htn_df$SITE, useNA = "always")
+round(prop.table(table(htn_df$GT20_HTN_MEAS_ANY1, htn_df$SITE, useNA = "always"), margin=2)*100,2)
+
+temp.df <- htn_df %>% select(MOMID, SITE, GT20_HTN_MEAS_ANY1, 
+                             PROTEINURIA_ANC_IPC,
+                             meanSBP_ANC20, meanDBP_ANC20,
+                             meanSBP_ANC28, meanDBP_ANC28,
+                             meanSBP_ANC32, meanDBP_ANC32,
+                             meanSBP_ANC36, meanDBP_ANC36,
+                             meanSBP_IPC, meanDBP_IPC,
+                             meanSBP_Hosp_ANC, meanDBP_Hosp_ANC) %>%
+  filter(SITE=="Pakistan")
+  
 ```
 
 # TREATMENT FOR GESTATIONAL HTN
@@ -551,7 +642,7 @@ round(prop.table(table(htn_df$GEST_HYPER_MEAS_ANY1, htn_df$SITE, useNA = "always
 #TODO QUERY CHECK: HDP_HTN_MHOCCUR_4 - 10 and 88 in M19 should be 1,0 variables but they don't exist.
 ######################################
 htn_df <- htn_df %>%                      
-  mutate(GEST_HYPER_TREAT = case_when((M04_HPD_MHTERM_2!=3 & # When it is not cHTN
+  mutate(GT20_HTN_TREAT = case_when((M04_HPD_MHTERM_2!=3 & # When it is not cHTN
                                          # VISIT 20
                                          (1 %in% c(M04_HPD_OECTRT_3_2, M04_HPD_OECTRT_4_2, M04_HPD_OECTRT_5_2, # ANC
                                                    M04_HPD_OECTRT_6_2, M04_HPD_OECTRT_7_2, M04_HPD_OECTRT_8_2,
@@ -613,8 +704,8 @@ htn_df <- htn_df %>%
                                                   M19_HDP_HTN_MHOCCUR_9_13, M19_HDP_HTN_MHOCCUR_10_13, M19_HDP_HTN_MHOCCUR_88_13))) ~ as.numeric(NA),
                                       TRUE ~ as.numeric(0)))
 
-table(GEST_HYPER_TREAT = htn_df$GEST_HYPER_TREAT, htn_df$SITE, useNA = "always")
-round(prop.table(table(GEST_HYPER_TREAT = htn_df$GEST_HYPER_TREAT, SITE = htn_df$SITE, useNA = "always"), margin=2)*100,2)  
+table(GT20_HTN_TREAT = htn_df$GT20_HTN_TREAT, htn_df$SITE, useNA = "always")
+round(prop.table(table(GT20_HTN_TREAT = htn_df$GT20_HTN_TREAT, SITE = htn_df$SITE, useNA = "always"), margin=2)*100,2)  
 
 # temp.df <- htn_df %>% select(MOMID, PREGID, GEST_HYPER_MEAS, starts_with("M04_HTN_CMTRT_")) # I DON'T NEED THIS CHRONIC HTN MEDICATION TREATMENT DATA. 
 ```
@@ -622,12 +713,15 @@ round(prop.table(table(GEST_HYPER_TREAT = htn_df$GEST_HYPER_TREAT, SITE = htn_df
 # GESTATIONAL HYPERTENSION MEASURED ONCE AND TREATMENT
 ```{r}
 htn_df <- htn_df %>%
-  mutate(GEST_HYPER_MEAS1_TREAT = case_when((GEST_HYPER_MEAS_ANY1==1 & GEST_HYPER_TREAT==1) ~ 1,
+  mutate(GT20_MEAS1_TREAT = case_when((GT20_HTN_TREAT==1 & GT20_HTN_MEAS_ANY1==1) ~ 1,
+                                      (is.na(GT20_HTN_TREAT) | is.na(GT20_HTN_MEAS_ANY1)) ~ as.numeric(NA),
                                             TRUE ~ as.numeric(0)))
 
-table(GEST_HYPER_MEAS1_TREAT = htn_df$GEST_HYPER_MEAS1_TREAT, htn_df$SITE, useNA = "always")
-round(prop.table(table(GEST_HYPER_MEAS1_TREAT = htn_df$GEST_HYPER_MEAS1_TREAT, SITE = htn_df$SITE, useNA = "always"), margin=2)*100,2) 
+table(GT20_MEAS1_TREAT = htn_df$GT20_MEAS1_TREAT, htn_df$SITE, useNA = "always")
+round(prop.table(table(GT20_MEAS1_TREAT = htn_df$GT20_MEAS1_TREAT, SITE = htn_df$SITE, useNA = "always"), margin=2)*100,2) 
 
+temp.df <- htn_df %>% select(MOMID, SITE, GT20_MEAS1_TREAT, GT20_HTN_TREAT, GT20_HTN_MEAS_ANY1) %>%
+  filter(SITE=="Zambia")
 ```
 
 # SEVERE GESTATIONAL HYPERTENSION - SEVERE_GEST_HYPER_MEAS***
@@ -639,50 +733,60 @@ In pregnancy defined as systolic blood pressure ≥160 mmHg or a diastolic blood
 
 # NEED JUST ONE BP >160/110 NOT 2.
 htn_df <- htn_df %>% 
-  mutate(SEVERE_GEST_HYPER_MEAS = ifelse(((sum(is_severe_ghtn(meanSBP_ANC20, meanDBP_ANC20),
+  mutate(SEVERE_GT20_HTN_MEAS = ifelse((sum(is_severe_ghtn(meanSBP_ANC20, meanDBP_ANC20),
                                                is_severe_ghtn(meanSBP_ANC28, meanDBP_ANC28),
                                                is_severe_ghtn(meanSBP_ANC32, meanDBP_ANC32),
                                                is_severe_ghtn(meanSBP_ANC36, meanDBP_ANC36),
                                                is_severe_ghtn(meanSBP_IPC, meanDBP_IPC),
                                                is_severe_ghtn(meanSBP_Hosp_ANC, meanDBP_Hosp_ANC), na.rm = TRUE) >=1) & # just need one high measurement 
-                                            CHRON_HYPER==0), 1, 0),
+                                            CHRON_HYPER==0, 1, 0),
          # OVERWRITES 0 WITH NA when all these vars are NA:
-         SEVERE_GEST_HYPER_MEAS = ifelse(all(is.na(c(meanSBP_ANC20, meanDBP_ANC20, meanSBP_ANC28, meanDBP_ANC28,
+         SEVERE_GT20_HTN_MEAS = ifelse(all(is.na(c(meanSBP_ANC20, meanDBP_ANC20, meanSBP_ANC28, meanDBP_ANC28,
                                                      meanSBP_ANC32, meanDBP_ANC32, meanSBP_ANC36, meanDBP_ANC36,
                                                      meanSBP_IPC, meanDBP_IPC, meanSBP_Hosp_ANC, meanDBP_Hosp_ANC))),
                                          as.numeric(NA),
                                          # OTHERWISE, IT LEAVES IT ALONE.
-                                         SEVERE_GEST_HYPER_MEAS))
+                                         SEVERE_GT20_HTN_MEAS))
            
-table(SEVERE_GEST_HYPER_MEAS = htn_df$SEVERE_GEST_HYPER_MEAS, htn_df$SITE, useNA = "always")
-round(prop.table(table(SEVERE_GEST_HYPER_MEAS = htn_df$SEVERE_GEST_HYPER_MEAS, SITE = htn_df$SITE, useNA = "always"), margin=2)*100,2)           
+table(SEVERE_GT20_HTN_MEAS = htn_df$SEVERE_GT20_HTN_MEAS, htn_df$SITE, useNA = "always")
+round(prop.table(table(SEVERE_GT20_HTN_MEAS = htn_df$SEVERE_GT20_HTN_MEAS, SITE = htn_df$SITE, useNA = "always"), margin=2)*100,2)           
            
 # temp.df <- htn_df %>% select(MOMID, PREGID, GEST_HYPER_MEAS, starts_with("M04_HTN_CMTRT_")) # I DON'T NEED THIS CHRONIC HTN MEDICATION TREATMENT DATA. 
 ```
 
-# GESTAITONAL HYPERTENSION MEASURED 2+ OR (1 MEASURED & TREATMENT) OR SEVERE gHTN (FINAL)
+# HYPERTENSION MEASURED 2+ OR (1 MEASURED & TREATMENT) OR SEVERE HTN >20 weeks (FINAL)
 ```{r}
-
+# EVEN IF BP MEASUREMENTS ARE PRESENT BUT WE DON'T HAVE PROTEINRUIA IN ANC_IPC INFO. THEN GHTN CAN'T BE DETERMINED.
 htn_df <- htn_df %>%
-  mutate(GEST_HYPER = case_when((GEST_HYPER_MEAS1_TREAT==1 | GEST_HYPER_MEAS_ANY2 ==1 | 
-                                  SEVERE_GEST_HYPER_MEAS ==1) ~ 1,
-                                all(is.na(c(GEST_HYPER_MEAS1_TREAT, GEST_HYPER_MEAS_ANY2, SEVERE_GEST_HYPER_MEAS))) ~ as.numeric(NA), 
+  mutate(GT20_HTN_MEAS_ANY = case_when((GT20_MEAS1_TREAT==1 | GT20_HTN_MEAS_ANY2 ==1 | 
+                                   SEVERE_GT20_HTN_MEAS ==1) ~ 1,
+                                (all(is.na(c(GT20_MEAS1_TREAT, 
+                                             GT20_HTN_MEAS_ANY2, 
+                                             SEVERE_GT20_HTN_MEAS))))  ~ as.numeric(NA), 
+                                TRUE ~ as.numeric(0)))
+
+table(GT20_HTN_MEAS_ANY = htn_df$GT20_HTN_MEAS_ANY, htn_df$SITE, useNA = "always")
+round(prop.table(table(GT20_HTN_MEAS_ANY = htn_df$GT20_HTN_MEAS_ANY, SITE = htn_df$SITE, useNA = "always"), margin=2)*100,2) 
+
+temp.df <- htn_df %>%
+  select(MOMID, SITE, GT20_HTN_MEAS_ANY, GT20_MEAS1_TREAT, GT20_HTN_MEAS_ANY2, SEVERE_GT20_HTN_MEAS) %>%
+  filter(SITE=="Zambia")
+```
+
+# GESTAITONAL HYPERTENSION - NO PROTEINURIA (FINAL)
+```{r}
+# EVEN IF BP MEASUREMENTS ARE PRESENT BUT WE DON'T HAVE PROTEINRUIA IN ANC_IPC INFO. THEN GHTN CAN'T BE DETERMINED.
+htn_df <- htn_df %>%
+  mutate(GEST_HYPER = case_when((GT20_HTN_MEAS_ANY ==1 & PROTEINURIA_ANC_IPC==0) ~ 1,
+                                (is.na(GT20_HTN_MEAS_ANY) | is.na(PROTEINURIA_ANC_IPC)) ~ as.numeric(NA), 
                                 TRUE ~ as.numeric(0)))
 
 table(GEST_HYPER = htn_df$GEST_HYPER, htn_df$SITE, useNA = "always")
 round(prop.table(table(GEST_HYPER = htn_df$GEST_HYPER, SITE = htn_df$SITE, useNA = "always"), margin=2)*100,2) 
-```
 
-# GESTATIONAL HYPERTENSION MEASURED 2+ OR (1 MEASURED & TREATMENT) OR SEVERE gHTN - "WITHOUT" PROTEINURIA (FINAL)
-PROTEINURIA_ANC_IPC
-```{r}
-htn_df <- htn_df %>%
-  mutate(GEST_HYPER_WO_PROTEINURIA = case_when(GEST_HYPER==1 & (PROTEINURIA_ANC_IPC==0 | is.na(PROTEINURIA_ANC_IPC)) ~ 1,
-                                               all(is.na(c(GEST_HYPER, PROTEINURIA_ANC_IPC))) ~ as.numeric(NA),
-                                               TRUE ~ as.numeric(0)))
-
-table(GEST_HYPER_WO_PROTEINURIA = htn_df$GEST_HYPER_WO_PROTEINURIA, htn_df$SITE, useNA = "always")
-round(prop.table(table(GEST_HYPER_WO_PROTEINURIA = htn_df$GEST_HYPER_WO_PROTEINURIA, SITE = htn_df$SITE, useNA = "always"), margin=2)*100,2)
+temp.df <- htn_df %>%
+  select(MOMID, SITE, GEST_HYPER, PROTEINURIA_ANC_IPC, GT20_HTN_MEAS_ANY) %>%
+  filter(SITE=="Zambia")
 ```
 
 # HELLP (MAT_HELLP)
@@ -720,31 +824,42 @@ Presence of all lab abnormalities: hemolysis, elevated liver enzymes, and low pl
 #####################
 htn_df <- htn_df %>%
   mutate(MAT_HEMOLYSIS = case_when((MAT_ANEMIA_MEAS4 == "severe" & M08_IBILIRUBIN_LBORRES_4 >=20.52) ~ 1,
+                                   (is.na(MAT_ANEMIA_MEAS4) | is.na(M08_IBILIRUBIN_LBORRES_4)) ~ as.numeric(NA),
                                     TRUE ~ as.numeric(0)))
                                
 table(MAT_HEMOLYSIS = htn_df$MAT_HEMOLYSIS, SITE = htn_df$SITE, useNA = "always")
 round(prop.table(table(MAT_HEMOLYSIS = htn_df$MAT_HEMOLYSIS, SITE = htn_df$SITE, useNA = "always"), margin=2)*100, 2)
 
+temp.df <- htn_df %>% select(MOMID, SITE, MAT_HEMOLYSIS, MAT_ANEMIA_MEAS4, M08_IBILIRUBIN_LBORRES_4) %>%
+  filter(SITE=="Pakistan")
+
 ####################
 # HELLP
 ####################
-
 #TODO ADD HOSPITALIZATION VISIT ALSO
+# HEELP DOESN'T INCLUDE CREATININE B/C IT'S KIDNEY FN.
+
 htn_df <- htn_df %>%
   mutate(MAT_HELLP = case_when((MAT_HEMOLYSIS ==1 | M08_AST_UL_LBORRES_4 >= 90 | M08_ALT_UL_LBORRES_4 >= 120 | # AST AND ALT 2X THE UPPER NORMAL RANGE
-                                           (M08_CBC_PLATE_LBORRES_4 >=0 & M08_CBC_PLATE_LBORRES_4 < 100 |)) ~ 1,
+                                  (M08_CBC_PLATE_LBORRES_4 >=0 & M08_CBC_PLATE_LBORRES_4 < 100)) ~ 1,
                                # DURING HOSPITALIZATION:
+                               # Hospitalization - there is no bilirubin so can't create hemolysis.
                                ((M19_CBC_PLATELET_LBORRES_13>=0 & M19_CBC_PLATELET_LBORRES_13 < 100) |
-                                 M19_CREAT_LBORRESU_13 >97.26)) ~ 1,  # Creatinine is umol/L
+                                  M19_AST_UL_LBORRES_13 >=90 | M19_ALT_UL_LBORRES_13 >=120) ~ 1,  # Creatinine is umol/L
                                
-         TRUE ~ as.numeric(0)))
+                               all(is.na(c(MAT_HEMOLYSIS, M08_AST_UL_LBORRES_4, M08_ALT_UL_LBORRES_4, 
+                                         M08_CBC_PLATE_LBORRES_4,
+                                         M19_CBC_PLATELET_LBORRES_13,
+                                         M19_AST_UL_LBORRES_13, M19_ALT_UL_LBORRES_13))) ~ as.numeric(NA),
+                               TRUE ~ as.numeric(0)))
 
 table(MAT_HELLP = htn_df$MAT_HELLP, SITE = htn_df$SITE, useNA = "always")
 round(prop.table(table(MAT_HELLP = htn_df$MAT_HELLP, SITE = htn_df$SITE, useNA = "always"), margin=2)*100, 2)
 
 temp.df <- htn_df %>%
-  select(MOMID, SITE, MAT_HELLP, MAT_HEMOLYSIS, M08_AST_UL_LBORRES_4, M08_ALT_UL_LBORRES_4, M08_CBC_PLATE_LBORRES_4)
-
+  select(MOMID, SITE, MAT_HELLP, MAT_HEMOLYSIS, M08_AST_UL_LBORRES_4, M08_ALT_UL_LBORRES_4, M08_CBC_PLATE_LBORRES_4,
+         M19_CBC_PLATELET_LBORRES_13, M19_CREAT_LBORRESU_13, M19_AST_UL_LBORRES_13, M19_ALT_UL_LBORRES_13) %>%
+  filter(SITE=="Pakistan")
 ```
 
 
@@ -773,68 +888,42 @@ temp.df <- htn_df %>%
 # --------HEMOLYSIS, LIVER, PLATELET, AND KIDNEY AR ONLY DONE AT WEEK 32. 
 # FIX CREAT 1.1 THRESHOLD.  1.1 is in mg/dL.  This data is in mmol
 ##################################################################################
+# IF A WOMAN HAS SEVERE HTN AND HELLP, THEN SHE HAS SEVERE FEATURES OF PREECLAMPSIA.
 htn_df <- htn_df %>%
-  mutate(MAT_PE_SEV_MEAS = case_when((SEVERE_GEST_HYPER_MEAS==1 |
-                                           (MAT_HEMOLYSIS ==1 | # HEMOGLOBIN <7 & BILI HIGH
-                                              M08_AST_UL_LBORRES_4 >= 90 | M08_ALT_UL_LBORRES_4 >= 120 | # HEPATIC ABNORMALITY: AST AND ALT 2X THE UPPER NORMAL RANGE
-                                              (M08_CBC_PLATE_LBORRES_4 >=0 & M08_CBC_PLATE_LBORRES_4 < 100)) | # LOW PLATELET
-                                           M08_CREAT_UMOLL_LBORRES_4 > 97.26) ~ 1, # 1.1mg/dl or 97.26umol/dl KIDNEY FUNCTION 
-                                         TRUE ~ as.numeric(0)))
+  mutate(MAT_PE_SEV_MEAS = case_when((SEVERE_GT20_HTN_MEAS==1  &
+                                        (MAT_HELLP==1 |
+                                        M08_CREAT_UMOLL_LBORRES_4 > 97.26 |  # 1.1mg/dl or 97.26umol/dl KIDNEY FUNCTION 
+                                        M19_CREAT_LBORRESU_13 >97.26)) ~ 1, #HOSPITALIZATION;  Creatinine 97.26umol/dl
+                                     all(is.na(c(SEVERE_GT20_HTN_MEAS, MAT_HELLP,
+                                        M08_CREAT_UMOLL_LBORRES_4, M19_CREAT_LBORRESU_13))) ~ as.numeric(NA),
+                                     TRUE ~ as.numeric(0)))
 
 table(MAT_PE_SEV_MEAS = htn_df$MAT_PE_SEV_MEAS, SITE = htn_df$SITE, useNA = "always" )
 round(prop.table(table(MAT_PE_SEV_MEAS = htn_df$MAT_PE_SEV_MEAS, SITE = htn_df$SITE, useNA = "always" ), margin=2)*100, 2)
                                          
 ```
 
-# PREECLAMPSIA (PE) WITH cHTN (FINAL)
-```{r}
-##################################################################################
-#TODO 
-# NOTES: 
-# - THIS INCLUDES cHTN + GESTATIONAL PROTEINURIA
-##################################################################################
-
-htn_df <- htn_df %>%
-  mutate(MAT_PE_CHRONIC_HTN_MEAS = case_when((CHRON_HYPER ==1 & PROTEINURIA==1) ~ 1,
-                                      TRUE ~ as.numeric(0)))
-
-table(MAT_PE_CHRONIC_HTN_MEAS = htn_df$MAT_PE_CHRONIC_HTN_MEAS, SITE = htn_df$SITE, useNA = "always")
-round(prop.table(table(MAT_PE_CHRONIC_HTN_MEAS = htn_df$MAT_PE_CHRONIC_HTN_MEAS, SITE = htn_df$SITE, useNA = "always"), margin=2)*100, 2)
-```
-
-# PREECLAMPSIA (PE) WITHOUT cHTN (FINAL)
-```{r}
-##################################################################################
-#TODO 
-# NOTES: 
-# - THIS INCLUDES gHTN + GESTATIONAL PROTEINURIA
-##################################################################################
-
-htn_df <- htn_df %>%
-  mutate(MAT_PE_GEST_HTN_MEAS = case_when((GEST_HYPER_MEAS ==1 & PROTEINURIA==1) ~ 1,
-                                      TRUE ~ as.numeric(0)))
-
-table(MAT_PE_GEST_HTN_MEAS = htn_df$MAT_PE_GEST_HTN_MEAS, SITE = htn_df$SITE, useNA = "always")
-round(prop.table(table(MAT_PE_GEST_HTN_MEAS = htn_df$MAT_PE_GEST_HTN_MEAS, SITE = htn_df$SITE, useNA = "always"), margin=2)*100, 2)
-
-```
-
-# PREECLAMPSIA (PE) ANY (CHRONIC, GESTATIONAL, OR WITH SEVERE FEATURES) MEASURED (FINAL)
+# PREECLAMPSIA (PE) MEASURED (FINAL)
 ```{r}
 htn_df <- htn_df %>%
-  mutate(MAT_PE_ANY_MEAS = case_when((MAT_PE_SEV_MEAS==1 |
-                                       MAT_PE_CHRONIC_HTN_MEAS==1 | 
-                                       MAT_PE_GEST_HTN_MEAS==1) ~ 1,
+  mutate(MAT_PE_MEAS = case_when(((GT20_HTN_MEAS_ANY==1 & PROTEINURIA_ANC_IPC==1  & CHRON_HYPER==0) |
+                                        (GT20_HTN_MEAS_ANY==1 & MAT_PE_SEV_MEAS==1 & CHRON_HYPER==0)) ~ 1, # THIS WILL INCLUDE WHEN SHE HAS SEVERE GHTN W/O PROTEIN
+                                     ((is.na(GT20_HTN_MEAS_ANY) & is.na(PROTEINURIA_ANC_IPC) & is.na(CHRON_HYPER)) | 
+                                        ((is.na(GT20_HTN_MEAS_ANY) & is.na(SEVERE_GT20_HTN_MEAS) & CHRON_HYPER==0))) ~ as.numeric(NA),
                                      TRUE ~ as.numeric(0)))
 
-table(MAT_PE_ANY_MEAS = htn_df$MAT_PE_ANY_MEAS, SITE = htn_df$SITE, useNA = "always")
-round(prop.table(table(MAT_PE_ANY_MEAS = htn_df$MAT_PE_ANY_MEAS, SITE = htn_df$SITE, useNA = "always"), margin=2)*100, 2)
+table(MAT_PE_MEAS = htn_df$MAT_PE_MEAS, SITE = htn_df$SITE, useNA = "always")
+round(prop.table(table(MAT_PE_MEAS = htn_df$MAT_PE_MEAS, SITE = htn_df$SITE, useNA = "always"), margin=2)*100, 2)
+
+temp.df <- htn_df %>% 
+  select(MOMID, SITE, MAT_PE_MEAS, GT20_HTN_MEAS_ANY, PROTEINURIA_ANC_IPC, CHRON_HYPER, MAT_PE_SEV_MEAS) %>% 
+  filter(SITE=="Zambia")
 
 ```
 # WRITE CSV OUT FOR HTML
 ```{r}
 
-write.csv(htn_df, '../data_out/mat_htn_tables.csv')
+write.csv(htn_df, '../data_out/mat_htn_tables_20231010.csv')
 
 ```
 
