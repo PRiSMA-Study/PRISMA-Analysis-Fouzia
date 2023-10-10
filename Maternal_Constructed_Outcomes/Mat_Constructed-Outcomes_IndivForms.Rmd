@@ -73,10 +73,10 @@ The varname structure for the newly integrated forms (hospitalizations, adverse 
 
 # path_to_data <- 'Z:/Stacked Data/2023-09-15/' # - for AWS data
 
-path_to_data <-  'D:/Users/fouziafarooq/Documents/PRISMA_constructed-outcomes/data/2023-09-15/'# - for AWS data
+path_to_data <-  'D:/Users/fouziafarooq/Documents/PRISMA_constructed-outcomes/data/2023-10-06/'# - for AWS data that
 
 # path_to_data <- 'data' # for Mac R.
-UploadDate = "2023-09-15"
+UploadDate = "2023-10-06"
 
 uploadDate <- as.Date(UploadDate, format = "%Y-%m-%d")
 ```
@@ -103,7 +103,12 @@ print(toc - tic)
 
 # mnh_list <- readRDS(paste0("MNH_list_", basename(path_to_data), ".RDS"))  #read in the RDS objects with all the MNH files as a massive list.
 
-mnh_list <- readRDS(file = '../MNH_list_2023-09-15.RDS')
+mnh_list <- readRDS(file = 'MNH_list_2023-10-06.RDS')
+```
+
+```{r}
+# mnh01_df <- mnh_list[["mnh01"]]
+# df <- mnh01_df %>% filter(SITE=="Zambia")
 ```
 
 For SAS files from **Test data**.
@@ -127,6 +132,7 @@ For SAS files from **Test data**.
 # mnh_list <- readRDS("MNH_list_data.RDS")  #read in the RDS objects with all the MNH files as a massive list.
 
 ```
+
 
 ### Hard code TYPE_VISIT for M00=1, M02=1, M03=1, M09=6, M10=6, M11=6, M17=6, M18=12 ***
 ```{r echo=FALSE}
@@ -218,25 +224,42 @@ if("mnh19" %in% names(mnh_list)){
  # mutate(M01_TYPE_VISIT = ifelse(M01_TYPE_VISIT == 36, 5, M01_TYPE_VISIT))
 ```
 
-# ONLY FOR TEST KENYA DATA:
-MNH01 doesn't have MOMID and PREGID in Kenya data. Merge it in from MNH02. 
+
+# MNH00 and MNH01 don't have MOMID and PREGID in Kenya and Zambia. Merge it in from MNH02. 
+# THERE ARE NA'S AND THEN THERE ARE "" IN ZAMBIA MOMID AND PREGID
 Keep an eye on SITE variable. 
 ```{r echo=FALSE}
-# mnh_list[["mnh00"]] <- mnh_list[["mnh00"]] %>% select(-PREGID, -MOMID , -SITE) # Only need to run this line outside of AWS when I need to add Mxx prefix.
-# 
-# # mnh_list[["mnh00"]] <- mnh_list[["mnh00"]] %>% filter(!is.na(SCRN_OBSSTDAT)) # had to remove 2 rows of garbage. 
-# #mnh_list[["mnh00"]]$SCRNID <- as.double(mnh_list[["mnh00"]]$SCRNID) # Just for Test Kenya data on Mac
-# 
-# mnh_list[["mnh00"]]$SCRNID <- as.character(mnh_list[["mnh00"]]$SCRNID)
-# mnh_list[["mnh00"]] <- left_join(mnh_list[["mnh00"]], 
-#                                  mnh_list[["mnh02"]] %>% select(SCRNID, MOMID, PREGID, SITE),
-#                                  by = "SCRNID")
-# 
-# mnh_list[["mnh01"]] <- mnh_list[["mnh01"]] %>% select(-PREGID, -MOMID, -SITE)
-# mnh_list[["mnh01"]] <- left_join(mnh_list[["mnh01"]], 
-#                                  mnh_list[["mnh02"]] %>% select(SCRNID, MOMID, PREGID, SITE),
-#                                  by = "SCRNID")
+mnh_list[["mnh00"]] <- mnh_list[["mnh00"]] %>% select(-PREGID, -MOMID) # Only need to run this line outside of AWS when I need to add Mxx prefix.
 
+# mnh_list[["mnh00"]] <- mnh_list[["mnh00"]] %>% filter(!is.na(SCRN_OBSSTDAT)) # had to remove 2 rows of garbage.
+# mnh_list[["mnh00"]]$SCRNID <- as.double(mnh_list[["mnh00"]]$SCRNID) # Just for Test Kenya data on Mac
+
+# mnh_list[["mnh00"]]$SCRNID <- as.character(mnh_list[["mnh00"]]$SCRNID)
+
+mnh_list[["mnh00"]] <- left_join(mnh_list[["mnh00"]],
+                                 mnh_list[["mnh02"]] %>% select(SCRNID, MOMID, PREGID, SITE),
+                                 by = c("SCRNID", "SITE"))
+
+mnh_list[["mnh01"]] <- mnh_list[["mnh01"]] %>% select(-PREGID, -MOMID)
+mnh_list[["mnh01"]] <- left_join(mnh_list[["mnh01"]],
+                                 mnh_list[["mnh02"]] %>% select(SCRNID, MOMID, PREGID, SITE),
+                                 by = c("SCRNID", "SITE"))
+
+mnh_list[["mnh00"]] <- mnh_list[["mnh00"]] %>% filter(PREGID !="")
+mnh_list[["mnh01"]] <- mnh_list[["mnh01"]] %>% filter(PREGID !="")
+mnh_list[["mnh02"]] <- mnh_list[["mnh02"]] %>% filter(PREGID !="")
+
+test.df <- mnh_list[["mnh00"]] %>% filter(SITE=="Zambia") %>%
+  select(SCRNID, MOMID, PREGID, SITE) # M01_US_GA_DAYS_AGE_FTS1 )
+
+test.df <- mnh_list[["mnh01"]] %>% filter(SITE=="Zambia") %>%
+  select(SCRNID, MOMID, PREGID, SITE) # M01_US_GA_DAYS_AGE_FTS1 )
+
+test.df <- mnh_list[["mnh02"]] %>% filter(SITE=="Zambia") %>%
+  select(SCRNID, MOMID, PREGID, SITE) 
+
+test.df <- mnh_list[["mnh04"]] %>% filter(SITE=="Zambia") %>%
+  select(MOMID, PREGID, SITE)
 ```
 
 # Adding a prefix of M_XX: *Just for Test Kenya data on mac*
@@ -270,7 +293,7 @@ mnh_list[["mnh00"]] <- mnh_list[["mnh00"]] %>%
 mnh_list[["mnh01"]] <- mnh_list[["mnh01"]] %>%
   filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
   filter(!is.na(MOMID)) %>%
-  distinct (MOMID, PREGID, SITE, M01_TYPE_VISIT, .keep_all = TRUE)
+  distinct ( SITE, SCRNID, M01_TYPE_VISIT, .keep_all = TRUE) #MOMID, PREGID,
 
 mnh_list[["mnh02"]] <- mnh_list[["mnh02"]] %>%
   filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
@@ -287,10 +310,30 @@ mnh_list[["mnh05"]] <- mnh_list[["mnh05"]] %>%
   drop_na(MOMID, PREGID) %>%
   distinct (MOMID, PREGID, SITE, M05_TYPE_VISIT, .keep_all = TRUE)
 
+mnh_list[["mnh06"]] <- mnh_list[["mnh06"]] %>%
+  filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
+  drop_na(MOMID, PREGID) %>%
+  distinct (MOMID, PREGID, SITE, M06_TYPE_VISIT, .keep_all = TRUE)
+
+mnh_list[["mnh07"]] <- mnh_list[["mnh07"]] %>%
+  filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
+  drop_na(MOMID, PREGID) %>%
+  distinct (MOMID, PREGID, SITE, M07_TYPE_VISIT, .keep_all = TRUE)
+
+mnh_list[["mnh08"]] <- mnh_list[["mnh08"]] %>%
+  filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
+  drop_na(MOMID, PREGID) %>%
+  distinct (MOMID, PREGID, SITE, M08_TYPE_VISIT, .keep_all = TRUE)
+
 mnh_list[["mnh11"]] <- mnh_list[["mnh11"]] %>%
   filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
   filter(!is.na(MOMID)) %>%
   distinct (MOMID, PREGID, SITE, M11_TYPE_VISIT, .keep_all = TRUE)
+
+mnh_list[["mnh12"]] <- mnh_list[["mnh12"]] %>%
+  filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
+  drop_na(MOMID, PREGID) %>%
+  distinct (MOMID, PREGID, SITE, M12_TYPE_VISIT, .keep_all = TRUE)
 
 mnh_list[["mnh13"]] <- mnh_list[["mnh13"]] %>%
   filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
@@ -362,154 +405,13 @@ assign(paste0(form_name, "_df"), mnh_list_wide[[form_name]]) # assign is the opp
 ```
 
 
-```{r}
-# 
-# MERGE - ADD VARIABLES HERE
-# ```{r}
-# #########
-# # MNH00 #
-# #########
-# mnh00_df <- mnh_list_wide[["mnh00"]] %>% dplyr::select(MOMID, PREGID,# SITE, #TODO: 
-#                                                   M00_KNOWN_DOBYN_SCORRES_1, 
-#                                                   M00_BRTHDAT_1, M00_ESTIMATED_AGE_1)
-# 
-# #########
-# # MNH01 #
-# #########
-# mnh01_df <- mnh_list_wide[["mnh01"]] %>% dplyr::select(MOMID, PREGID, M01_US_OHOLOC_1, # SITE,
-#                                                        M01_GA_LMP_WEEKS_SCORRES_1, M01_GA_LMP_DAYS_SCORRES_1,
-#                                                        M01_US_GA_WKS_AGE_FTS1_1,
-#                                                        M01_US_GA_WKS_AGE_FTS2_1, M01_US_GA_WKS_AGE_FTS2_1,
-#                                                        M01_US_GA_WKS_AGE_FTS3_1, M01_US_GA_WKS_AGE_FTS4_1,
-#                                                        M01_US_GA_DAYS_AGE_FTS1_1, M01_US_GA_DAYS_AGE_FTS2_1,
-#                                                        M01_US_GA_DAYS_AGE_FTS3_1, M01_US_GA_DAYS_AGE_FTS4_1,
-#                                                        M01_GA_LMP_WEEKS_SCORRES_1, M01_GA_LMP_DAYS_SCORRES_1,
-#                                                        starts_with(c("M01_US_OHOSTDAT")),
-#                                                        M01_US_GA_WKS_AGE_FTS1_1)
-# 
-# #########
-# # MNH04 #
-# #########
-# mnh04_df <- mnh_list_wide[["mnh04"]] %>% 
-#   dplyr::select(MOMID, PREGID, # SITE,
-#                 M04_FETAL_LOSS_DSSTDAT_1, M04_FETAL_LOSS_DSSTDAT_2,
-#                 M04_FETAL_LOSS_DSSTDAT_3, M04_FETAL_LOSS_DSSTDAT_4, 
-#                 M04_FETAL_LOSS_DSSTDAT_5,
-#                 M04_FETAL_LOSS_DSSTDAT_1, M04_FETAL_LOSS_DSSTDAT_2, 
-#                 M04_FETAL_LOSS_DSSTDAT_3, M04_FETAL_LOSS_DSSTDAT_4,
-#                 M04_FETAL_LOSS_DSSTDAT_5,
-#                 M04_FETAL_LOSS_DSDECOD_1, M04_FETAL_LOSS_DSDECOD_2, 
-#                 M04_FETAL_LOSS_DSDECOD_3, M04_FETAL_LOSS_DSDECOD_4,
-#                 M04_FETAL_LOSS_DSDECOD_5, 
-#                 M04_FETAL_LOSS_DSSTDAT_1, M04_FETAL_LOSS_DSSTDAT_2, 
-#                 M04_FETAL_LOSS_DSSTDAT_3, M04_FETAL_LOSS_DSSTDAT_4, 
-#                 M04_FETAL_LOSS_DSSTDAT_5, 
-#                 M04_FETAL_LOSS_DSDECOD_1, M04_FETAL_LOSS_DSDECOD_2,
-#                 M04_FETAL_LOSS_DSDECOD_3, M04_FETAL_LOSS_DSDECOD_4,
-#                 M04_FETAL_LOSS_DSDECOD_5,
-#                 starts_with(c("M04_HTN_EVER_MHOCCUR")),
-#                 starts_with("M04_HTN_CMTRT_"))
-# 
-# #########
-# # MNH06 #
-# #########
-# mnh06_df <- mnh_list_wide[["mnh06"]] %>% dplyr::select(MOMID, PREGID, # SITE,  
-#                                                        # Maternal anemia:
-#                                                        starts_with(c("M06_DIAG_VSDAT_", "M06_TYPE_VISIT_", "M06_HB_POC_LBORRES_")),
-#                                                        starts_with("M06_BP_SYS_VSORRES_"),
-#                                                        starts_with("M06_BP_DIA_VSORRES_"))
-# 
-# #########
-# # MNH08 #
-# #########
-# mnh08_df <- mnh_list_wide[["mnh08"]] %>% dplyr::select(MOMID, PREGID, # SITE, 
-#                                                        starts_with(c("M08_LBSTDAT_", "M08_TYPE_VISIT_", "M08_CBC_HB_LBORRES")))
-# 
-# #################################
-# # MNH09 - Maternal L&D Outcomes #
-# #################################
-# mnh09_df <- mnh_list_wide[["mnh09"]] %>% dplyr::select(MOMID, PREGID, # SITE,                                        
-#                                                        M09_CRY_CEOCCUR_INF1_6, M09_FHR_VSTAT_INF1_6, 
-#                                                        M09_MACER_CEOCCUR_INF1_6,M09_CORD_PULS_CEOCCUR_INF1_6,
-#                                                        M09_BIRTH_DSTERM_INF1_6, M09_BIRTH_DSTERM_INF2_6, 
-#                                                        M09_BIRTH_DSTERM_INF3_6, M09_BIRTH_DSTERM_INF4_6,
-#                                                        M09_PPH_TRNSFSN_PROCCUR_6, M09_PPH_TRNSFSN_PROCCUR_6, 
-#                                                        M09_PPH_FAORRES_5_6, M09_RUPT_UTERUS_CEOCCUR_6, M09_PPH_COMP_3_6,
-#                                                        starts_with(c("M09_DELIV_DSSTDAT_INF",
-#                                                                      "M09_BIRTH_DSTERM_INF")),
-#                                                        M09_HDP_HTN_MHOCCUR_3_6)
-# #########
-# # MNH10 #
-# #########
-# mnh10_df <- mnh_list_wide[["mnh10"]] %>% dplyr::select(MOMID, PREGID, # SITE,
-#                                                 M10_MAT_DSTERM_6, M10_TRANSFER_OHOLOC_6)
-# 
-# ###############
-# # MNH11 - PNC #
-# ###############
-# mnh11_df <- mnh_list_wide[["mnh11"]] %>% dplyr::select(MOMID, PREGID, # SITE,
-#                                                 M11_DTHDAT_6)
-# 
-# ###############
-# # MNH 12- PNC #
-# # This dataset has no MNH12 yet# 
-# ###############
-# mnh12_df <- mnh_list_wide[["mnh12"]] %>% dplyr::select(MOMID, PREGID,#  SITE,
-#                                                       M12_MAT_VITAL_MNH12_7, M12_MAT_VITAL_MNH12_8, M12_MAT_VITAL_MNH12_9, 
-#                                                       M12_MAT_VITAL_MNH12_10, M12_MAT_VITAL_MNH12_11)
-# 
-# #########
-# # MNH19 #
-# #########
-# #M19_PREG_FAORES (try: the variable is there but called M19_PREG_FAORRES_VISIT{x} where {x} 
-# # is the visit number based on total number of visits or To see the total number of MNH19 
-# #forms filled out by an individual, refer to M19_VISITS_TOT)
-# if("mnh19" %in% names(mnh_list_wide)){
-# mnh19_df <- mnh_list_wide[["mnh19"]] %>% dplyr::select(MOMID, PREGID,#  SITE,
-#                                                        M19_OBSSTDAT_13, M19_TX_PROCCUR_1_13, M19_TX_PROCCUR_2_13,
-#                                                        M19_TX_PROCCUR_3_13, M19_TX_PROCCUR_4_13, M19_TX_PROCCUR_5_13, 
-#                                                        M19_TX_PROCCUR_6_13, M19_TX_PROCCUR_77_13,
-#                                                 starts_with(c("M19_TIMING_OHOCAT", "M19_CBC_LBDAT", 
-#                                                               "M19_CBC_HB_LBORRES",
-#                                                               "M19_HB_POC_LBTSTDAT", "M19_HB_POC_LBORRES")),
-#                                                 M19_HDP_HTN_MHOCCUR_3_13, M19_BP_SYS_VSORRES_13, M19_BP_DIA_VSORRES_13)
-# } else{
-#   "MNH19 does not exist in the wide format"
-# }
-#                                                               
-# 
-# #############################
-# # MNH23 - Maternal Closeout #
-# #############################
-# if("mnh23" %in% names(mnh_list_wide)){
-# mnh23_df <- mnh_list_wide[["mnh23"]] %>% dplyr::select(MOMID, PREGID, # SITE, 
-#                                                 M23_CLOSE_DSDECOD, M23_ACC_DDORRES, M23_DTHDAT,
-#                                                 M23_CLOSE_DSDECOD, M23_DTHDAT)
-# } else{
-#   "MNH23 does not exist in the wide format"
-# }
-# 
-# 
-# ###########################
-# # MNH24 - Infant Closeout #
-# ###########################
-# if("mnh24" %in% names(mnh_list_wide)){
-# mnh24_df <- mnh_list_wide[["mnh24"]] %>% dplyr::select(MOMID, PREGID, # SITE, 
-#                                                 M24_DTHDAT)
-# } else{
-#   "MNH24 does not exist in the wide format"
-# }
-
-```
-
-
 # MERGE together all the forms. - ENROLLED 
 ```{r echo=FALSE}
 merged_df <- mnh02_df 
 merged_df <- merged_df %>% 
   mutate(ENROLLED_FF = ifelse(M02_AGE_IEORRES_1 ==1 & M02_PC_IEORRES_1==1 & 
                                 M02_CATCHMENT_IEORRES_1==1 & M02_CATCH_REMAIN_IEORRES_1==1 & 
-                                M02_CONSENT_IEORRES_1==1, 1,0)) %>% filter(ENROLLED_FF ==1)
+                                M02_CONSENT_IEORRES_1==1, 1,0)) %>% filter(ENROLLED_FF ==1) # THIS DOES DROP SOME WOMEN!
 
 # merged_df <- left_join(merged_df, mnh00_df, by = c("MOMID", "PREGID", "SITE"))
 # merged_df <- left_join(merged_df, mnh01_df, by = c("MOMID", "PREGID", "SITE"))
@@ -1240,7 +1142,7 @@ mnh04_constructed_df <- mnh04_df %>%
 ```{r}
 mnh08_constructed_df <- mnh08_df %>% 
   # VISIT 1
-  mutate(M08_MAT_VISIT_FORM_COMPLETED_1 = case_when(!is.na(M08_MAT_VISIT_MNH08_1) ~ 1, 
+  mutate(M08_MAT_VISIT_FORM_COMPLETED_1 = case_when(!is.na(M08_MAT_VISIT_MNH08_1) ~ 1, # M08_MAT_VISIT_MNH08_1 is always 1,2, 3 etc number or NA
                                                     TRUE ~ 0),
          M08_MAT_VISIT_wPERSON_COMPLETED_1 = case_when(M08_MAT_VISIT_MNH08_1 %in% c(1,2) ~ 1, 
                                                        TRUE ~ 0),
@@ -1252,7 +1154,7 @@ mnh08_constructed_df <- mnh08_df %>%
          # VISIT 3
          M08_MAT_VISIT_FORM_COMPLETED_3 = case_when(!is.na(M08_MAT_VISIT_MNH08_3) ~ 1, 
                                                     TRUE ~ 0),
-         M08_MAT_VISIT_wPERSON_COMPLETED_3 = case_when(M08_MAT_VISIT_MNH08_3 %in% c(1,2) ~ 1, # changed order
+         M08_MAT_VISIT_wPERSON_COMPLETED_3 = case_when(M08_MAT_VISIT_MNH08_3 %in% c(1,2) ~ 1, 
                                                        TRUE ~ 0),
          # VISIT 4
          M08_MAT_VISIT_FORM_COMPLETED_4 = case_when(!is.na(M08_MAT_VISIT_MNH08_4) ~ 1, 
@@ -1270,8 +1172,12 @@ mnh08_constructed_df <- mnh08_df %>%
         # M08_MAT_VISIT_wPERSON_COMPLETED_13 = case_when(M08_MAT_VISIT_MNH08_13 %in% c(1,2) ~ 1, 
          #                                              TRUE ~ 0))
 
+  test.df <- mnh08_constructed_df %>%
+    select(MOMID, PREGID, SITE, M08_MAT_VISIT_MNH08_1, M08_MAT_VISIT_FORM_COMPLETED_1)
+  
+  # NEED THIS CONSTRUCTED_DF2 TO BE MERGED NEXT:
   mnh08_constructed_df2 <- mnh08_constructed_df %>%
-    select(MOMID, PREGID, SITE, starts_with(c("M08_MAT_VISIT_FORM_COMPLETED_", "M08_MAT_VISIT_wPERSON_COMPLETED_")))
+    select(MOMID, PREGID, SITE, starts_with(c( "M08_MAT_VISIT_FORM_COMPLETED_", "M08_MAT_VISIT_wPERSON_COMPLETED_")))
 ```
 
 # COMBINE MNH04_CONSTRUCTED AND MNH08_CONSTRUCTED WITH MNH01_CONSTRUCTED
@@ -1293,29 +1199,35 @@ merged_df <- merged_df %>%
          ENROLL_LATE = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(139, unit="days"), # doesn't have a late window.
          ANC20_ONTIME = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(160, unit="days"), 
          ANC20_LATE = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(181, unit="days"),
-         ANC28_ONTIME = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(216, unit="days"), # if miss ANC 28, you miss the visit, there is no late window
+         ANC28_ONTIME = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(216, unit="days"), # if miss this ANC 28 on time window, you miss the visit, there is no late window
          ANC28_LATE = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(216, unit="days"), 
          ANC32_ONTIME = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(237, unit="days"), 
          ANC32_LATE = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(244, unit="days"), ## will need to ask about this
          ANC36_ONTIME = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(272, unit="days"), 
          ANC36_LATE = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(300, unit="days")) %>% 
+  
+  #####################
+#TODO FIX NEEDS TO FIXED. 
+# QUESTION FOR STACIE: WHY DID SHE USE ONTIME WINDOWS TO CALC OVERDUE AND NOT LATE WINDOWS. 
+
+
   ## CALCULATE INDICATOR VARIABLES for missed ANC visits ON-TIME WINDOWS
   ## max date has to be less than the upload date
-  mutate(M04_ENROLL_OVERDUE = ifelse(UploadDate>ENROLL_ONTIME & is.na(M04_MAT_VISIT_FORM_COMPLETED_1), 1, 0),
-         M08_ENROLL_OVERDUE = ifelse(UploadDate>ENROLL_ONTIME & is.na(M08_MAT_VISIT_FORM_COMPLETED_1), 1, 0),#TODO DO THIS FOR MNH08
+  mutate(M04_ENROLL_OVERDUE = ifelse(UploadDate>ENROLL_ONTIME & (M04_MAT_VISIT_FORM_COMPLETED_1==0), 1, 0),
+         M08_ENROLL_OVERDUE = ifelse(UploadDate>ENROLL_ONTIME & (M08_MAT_VISIT_FORM_COMPLETED_1==0), 1, 0),#TODO DO THIS FOR MNH08
          
           # if this window ANC20 is passed, then this var would be NA b/c they don't have to have ANC20 visit. 
-         M04_ANC20_OVERDUE = ifelse(UploadDate>ANC20_ONTIME & is.na(M04_MAT_VISIT_FORM_COMPLETED_2) & GA_ENROLL_WKS <= 17, 1, 0),
-         M08_ANC20_OVERDUE = ifelse(UploadDate>ANC20_ONTIME & is.na(M08_MAT_VISIT_FORM_COMPLETED_2) & GA_ENROLL_WKS <= 17, 1, 0),
+         M04_ANC20_OVERDUE = ifelse(UploadDate>ANC20_ONTIME & (M04_MAT_VISIT_FORM_COMPLETED_2==0) & GA_ENROLL_WKS <= 17, 1, 0), # GA_ENROLL_WKS is in weeks. 
+         M08_ANC20_OVERDUE = ifelse(UploadDate>ANC20_ONTIME & (M08_MAT_VISIT_FORM_COMPLETED_2==0) & GA_ENROLL_WKS <= 17, 1, 0),
          
-         M04_ANC28_OVERDUE = ifelse(UploadDate>ANC28_ONTIME & is.na(M04_MAT_VISIT_FORM_COMPLETED_3), 1, 0), #IF 1 this will mean she is missing the form.
-         M08_ANC28_OVERDUE = ifelse(UploadDate>ANC28_ONTIME & is.na(M08_MAT_VISIT_FORM_COMPLETED_3), 1, 0),
+         M04_ANC28_OVERDUE = ifelse(UploadDate>ANC28_ONTIME & (M04_MAT_VISIT_FORM_COMPLETED_3==0), 1, 0), #IF 1 this will mean she is missing the form.
+         M08_ANC28_OVERDUE = ifelse(UploadDate>ANC28_ONTIME & (M08_MAT_VISIT_FORM_COMPLETED_3==0), 1, 0),
          
-         M04_ANC32_OVERDUE = ifelse(UploadDate>ANC32_ONTIME & is.na(M04_MAT_VISIT_FORM_COMPLETED_4), 1, 0),
-         M08_ANC32_OVERDUE = ifelse(UploadDate>ANC32_ONTIME & is.na(M08_MAT_VISIT_FORM_COMPLETED_4), 1, 0),
+         M04_ANC32_OVERDUE = ifelse(UploadDate>ANC32_ONTIME & (M04_MAT_VISIT_FORM_COMPLETED_4==0), 1, 0),
+         M08_ANC32_OVERDUE = ifelse(UploadDate>ANC32_ONTIME & (M08_MAT_VISIT_FORM_COMPLETED_4==0), 1, 0),
          
-         M04_ANC36_OVERDUE = ifelse(UploadDate>ANC36_ONTIME & is.na(M04_MAT_VISIT_FORM_COMPLETED_5), 1, 0),
-         M08_ANC36_OVERDUE = ifelse(UploadDate>ANC36_ONTIME & is.na(M08_MAT_VISIT_FORM_COMPLETED_5), 1, 0)) %>% 
+         M04_ANC36_OVERDUE = ifelse(UploadDate>ANC36_ONTIME & (M04_MAT_VISIT_FORM_COMPLETED_5==0), 1, 0),
+         M08_ANC36_OVERDUE = ifelse(UploadDate>ANC36_ONTIME & (M08_MAT_VISIT_FORM_COMPLETED_5==0), 1, 0)) %>% 
   
   ## CALCULATE INDICATOR VARIABLES for passed ON-TIME ANC WINDOWS - same as overdue code, but exclude the visit completion piece
   ## using upload date
@@ -1368,6 +1280,85 @@ merged_df <- merged_df %>%
 write_rds(merged_df, '../data_out/merged_df.RDS')
 ```
 
+# WINDOW SUBSET
+```{r}
+window_subset_df <- merged_df %>% 
+  select(MOMID, PREGID, SITE, DELIVERED_FF, BOE_GA_WKS, BOE_GA_DAYS, EST_CONCEP_DATE,
+         EDD_BOE, GA_ENROLL_WKS, GA_ENROLL_DAYS, DOB, DOB_DATEONLY, 
+         
+         starts_with(c("M04_MAT_VISIT_FORM_", "M04_MAT_VISIT_wPERSON_",
+                     "M08_MAT_VISIT_FORM_", "M08_MAT_VISIT_wPERSON_")),
+         
+         ENROLL_ONTIME, ENROLL_LATE, 
+         ANC20_ONTIME, ANC20_LATE,
+         ANC28_ONTIME, ANC28_LATE,
+         ANC32_ONTIME, ANC28_LATE,
+         ANC36_ONTIME, ANC36_LATE,
+         
+         M04_ENROLL_OVERDUE, M04_ANC20_OVERDUE, M04_ANC28_OVERDUE,
+         M04_ANC32_OVERDUE, M04_ANC36_OVERDUE,
+         
+         M08_ENROLL_OVERDUE, M08_ANC20_OVERDUE, M08_ANC28_OVERDUE,
+         M08_ANC32_OVERDUE, M08_ANC36_OVERDUE,
+         
+         ENROLL_PASS, ANC20_PASS, ANC28_PASS, ANC32_PASS, ANC36_PASS,
+         
+         ENROLL_PASS_LATE, ANC20_PASS_LATE, ANC28_PASS_LATE, ANC32_PASS_LATE, ANC36_PASS_LATE,
+         
+         # GA AT VISIT:
+         M04_GA_AT_VISIT_1, M04_GA_AT_VISIT_2, M04_GA_AT_VISIT_3, M04_GA_AT_VISIT_4, M04_GA_AT_VISIT_5,
+         M08_GA_AT_VISIT_1,  M08_GA_AT_VISIT_2,  M08_GA_AT_VISIT_3,  M08_GA_AT_VISIT_4,  M08_GA_AT_VISIT_5,
+         GA_AT_DELIV_6)# JUST NEED ONE B/C M08 IS OPTIONAL AT DELIVERY)
+
+write.csv(window_subset_df, '../data_out/window_subset_df.csv')
+```
+
+#################################################
+# WRITE OUT A CSV FILE FOR DIABETES/GDM ANALYSIS
+#################################################
+```{r}
+diabetes_df <- merged_df %>%
+  select(MOMID, PREGID, SITE, DELIVERED_FF, M08_LBSTDAT_1, M08_LBSTDAT_3,
+        M04_DIABETES_EVER_MHOCCUR_3, M04_DIABETES_EVER_MHOCCUR_4, M04_DIABETES_EVER_MHOCCUR_5,
+        M09_GEST_DIAB_MHOCCUR_6, M09_INDUCED_PROCCUR_6, M09_INDUCED_PRINDC_6,
+        M19_PRIMARY_MHTERM_13, M19_LD_COMPL_MHTERM_3_13,
+        #MEASURED VARS:
+        M08_HBA1C_PRCNT_1,
+        M08_BGLUC_PRETEST_MMOLL_LBORRES_3, 
+        M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3, M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3 )
+
+write.csv(diabetes_df, '../data_out/mat_diabetes_vars.csv')
+```
+
+
+#####################################
+#### WRITE OUT CSV FILE  FOR HTN, PE
+####################################
+```{r}
+htn_df <- merged_df %>% 
+  select(MOMID, PREGID, SITE, DELIVERED_FF, M06_HB_POC_LBORRES_4, M08_CBC_HB_LBORRES_4,
+         M04_ANC_OBSSTDAT_1, # Date ANC1 from MNH04
+         M04_HPD_MHTERM_2, # Chronic hypertension or gHTN or PE or Don't know.  
+         M19_BP_SYS_VSORRES_13, M19_BP_DIA_VSORRES_13, M19_BP_SYS_VSORRES_14, M19_BP_DIA_VSORRES_14,
+         M04_HTN_EVER_MHOCCUR_1, M04_HTN_MHSTDAT_1, # CHRONIC HYPERTENSION
+         M08_CBC_HB_LBORRES_4, M06_HB_POC_LBORRES_4, 
+         M08_IBILIRUBIN_LBORRES_4, M08_AST_UL_LBORRES_4, M08_ALT_UL_LBORRES_4,
+         M08_CBC_PLATE_LBORRES_4, M08_CREAT_UMOLL_LBORRES_4,
+         # Hospitalization HELLP:
+         M19_CBC_HB_LBORRES_13, M19_CBC_PLATELET_LBORRES_13,
+         M19_AST_LBPERF_13, M19_ALT_LBPERF_13, M19_CREAT_LBORRESU_13,
+         # OTHER VARS
+         starts_with(c("M06_BP_SYS_VSORRES_", "M06_BP_DIA_VSORRES_", "M04_HTN_CMTRT_", 
+                       "M04_HPD_OECTRT_", 
+                       "M09_HDP_HTN_PROCCUR_", # L&D Medication
+                       # ANC HOSP _13
+                       "M19_HDP_HTN_MHOCCUR_",
+                       # PROTEINURIA
+                       "M08_UA_PROT_LBORRES",
+                       "M08_LBSTDAT_")))  # M08_LBSTDAT_ GIVES DATE OF THE VISIT
+
+write.csv(htn_df, '../data_out/mat_htn.csv')
+```
 #TODO STOPPED HERE
 
 #######################
@@ -2427,6 +2418,8 @@ table(LATE_MAT_DEATH = merged_df$LATE_MAT_DEATH, SITE = merged_df$SITE, useNA = 
 #TODO Convert M23 info for closeout response and date into an OR not AND.
 ```
 
+
+
 # GESTATIONAL PROTEINURIA - PROTEINURIA***
 24 hour urine collection >300 mg protein OR single voided urine protein/creatinine ratio ≥0.3 OR Dipstick of 1+ or 2+.
 Measured ANC20,28,32,36
@@ -2483,26 +2476,6 @@ table(PROTEINURIA_PNC = merged_df$PROTEINURIA_PNC, SITE = merged_df$SITE, useNA 
 round(prop.table(table(PROTEINURIA_PNC = merged_df$PROTEINURIA_PNC, SITE = merged_df$SITE, useNA = "always"), margin=2)*100, 2)
 ```
 
-############################
-#### WRITE OUT CSV FOR HTN
-###########################
-```{r}
-htn_df <- merged_df %>% 
-  select(MOMID, PREGID, SITE, DELIVERED_FF, M04_ANC_OBSSTDAT_1, # Date ANC1 from MNH04
-         M04_HPD_MHTERM_2, # Chronic hypertension or gHTN or PE or Don't know.  
-         M19_BP_SYS_VSORRES_13, M19_BP_DIA_VSORRES_13, M19_BP_SYS_VSORRES_14, M19_BP_DIA_VSORRES_14,
-         M04_HTN_EVER_MHOCCUR_1, M04_HTN_MHSTDAT_1, # CHRONIC HYPERTENSION
-         starts_with(c("M06_BP_SYS_VSORRES_", "M06_BP_DIA_VSORRES_", "M04_HTN_CMTRT_", 
-                       "M04_HPD_OECTRT_", 
-                       "M09_HDP_HTN_PROCCUR_", # L&D Medication
-                       # ANC HOSP _13
-                       "M19_HDP_HTN_MHOCCUR_",
-                       # PROTEINURIA
-                       "M08_UA_PROT_LBORRES",
-                       "M08_LBSTDAT_")))  # M08_LBSTDAT_ GIVES DATE OF THE VISIT
-
-write.csv(htn_df, '../data_out/mat_htn.csv')
-```
 
 # MEAN BLOOD PRESSURE MEASUREMENTS
 ```{r}
@@ -2890,6 +2863,8 @@ missing_df <- merged_df %>%
          M08_UA_PROT_LBORRES_13, M08_UA_PROT_LBORRES_14)
 ```
 
+# Liver function tests and Kidney function tests are done at enrollment and week 32
+# Dipstick done at VISIT1-5.
 # HELLP (MAT_HELLP)
 Presence of all lab abnormalities: hemolysis, elevated liver enzymes, and low platelet count.
 
@@ -2923,7 +2898,7 @@ Presence of all lab abnormalities: hemolysis, elevated liver enzymes, and low pl
 # MATERNAL HEMOLYSIS - ONLY AT ANC-32
 #####################
 merged_df <- merged_df %>%
-  mutate(MAT_HEMOLYSIS = case_when((MAT_ANEMIA_MEAS4 == "severe" & M08_IBILIRUBIN_LBORRES_4 >=20.52 | M08_GAMMAGT_LBORRES_2) ~ 1,
+  mutate(MAT_HEMOLYSIS = case_when((MAT_ANEMIA_MEAS4 == "severe" & M08_IBILIRUBIN_LBORRES_4 >=20.52 ) ~ 1, # M08_GAMMAGT_LBORRES_4 is not part of the hemolysis definition on slide 58.
                                     TRUE ~ as.numeric(0)))
                                
 table(MAT_HEMOLYSIS = merged_df$MAT_HEMOLYSIS, SITE = merged_df$SITE, useNA = "always")
@@ -2934,7 +2909,7 @@ round(prop.table(table(MAT_HEMOLYSIS = merged_df$MAT_HEMOLYSIS, SITE = merged_df
 ####################
 
 merged_df <- merged_df %>%
-  mutate(MAT_HELLP = case_when((MAT_HEMOLYSIS ==1 | M08_AST_UL_LBORRES_4 >= 90 | M08_ALT_UL_LBORRES_4 >= 120 | # AST AND ALT 2X THE UPPER NORMAL RANGE
+  mutate(MAT_HELLP = case_when((MAT_HEMOLYSIS ==1 | M08_AST_UL_LBORRES_4 >= 90 | M08_ALT_UL_LBORRES_4 >= 120 | # AST AND ALT 2X THE UPPER NORMAL RANGE and ONLY MEASURED AT ENROLLMENT AND WEEK32.
                                            (M08_CBC_PLATE_LBORRES_4 >=0 & M08_CBC_PLATE_LBORRES_4 < 100)) ~ 1, 
          TRUE ~ as.numeric(0)))
 
@@ -3128,7 +3103,7 @@ temp.df <- merged_df %>%
 ```
 
 
-***PREECLAMPSIA (DIAGNOSED) - SECONDARY OUTCOME: PRE_DIAG***
+# PREECLAMPSIA (DIAGNOSED) - SECONDARY OUTCOME: PRE_DIAG***
 LnD:
 MNH09	HDP_HTN_MHOCCUR_3	Was mother diagnosed with any of the following hypertensive disorders of pregnancy (HDP)? Preeclampsia
 
@@ -3300,8 +3275,8 @@ diabetes_df <- merged_df %>%
         M19_PRIMARY_MHTERM_13, M19_LD_COMPL_MHTERM_3_13,
         #MEASURED VARS:
         M08_HBA1C_PRCNT_1,
-        M08_HBA1C_LBORRES_1,M06_BGLUC_POC_MMOLL_LBORRES_3,
-        M08_BGLUC_PRETEST_MMOLL_LBORRES_3, M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3, M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3 )
+        M08_BGLUC_PRETEST_MMOLL_LBORRES_3, 
+        M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3, M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3 )
 
 write.csv(diabetes_df, 'data_out/mat_diabetes.csv')
 ```
