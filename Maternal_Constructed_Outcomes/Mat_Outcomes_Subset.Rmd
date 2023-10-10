@@ -19,9 +19,8 @@ output:
 ---
 
 README: 
-1. Run this file first.
 This file creates a subset data that will be used in the GDM variable construction. 
-
+1. Run this file first.
 
 #TODO: 
 # - Need to look at Visit=13s and 14s (unscheduled ANC=13 and PNC=14) - this is not working currently in AWS dataset.
