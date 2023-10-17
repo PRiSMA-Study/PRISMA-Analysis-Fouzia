@@ -1312,3 +1312,48 @@ diabetes_df <- merged_df %>%
 
 write.csv(diabetes_df, '../data_out/mat_diabetes_vars.csv')
 ```
+
+#####################################
+#### WRITE OUT CSV FILE  FOR HDP
+####################################
+```{r}
+htn_df <- merged_df %>% 
+  select(MOMID, PREGID, SITE, DELIVERED_FF, M06_HB_POC_LBORRES_4, M08_CBC_HB_LBORRES_4,
+         M04_ANC_OBSSTDAT_1, # Date ANC1 from MNH04
+         M04_HTN_EVER_MHOCCUR_1, M04_HTN_MHSTDAT_1, # CHRONIC HYPERTENSION
+         M04_HPD_MHTERM_1, M04_HPD_MHTERM_2, M04_HPD_MHTERM_3,# Chronic hypertension or gHTN or PE or Don't know. 
+         M04_HPD_MHTERM_4, M04_HPD_MHTERM_5, M04_HPD_MHTERM_13,
+         starts_with(c("M04_HPD_OECTRT_")),
+         starts_with(c("M04_HPD_MHTERM_")),
+         #Delivery form has _1-3, _77, _99 that I need to keep b/c it is a "No HDP diagnosis" and "No treatment received"
+         M09_HDP_HTN_MHOCCUR_1_6, M09_HDP_HTN_MHOCCUR_2_6, 
+         M09_HDP_HTN_MHOCCUR_3_6, M09_HDP_HTN_MHOCCUR_77_6, M09_HDP_HTN_MHOCCUR_99_6,
+         # variables for HDP medication during Delivery:
+         starts_with(c("M09_HDP_HTN_PROCCUR_")), 
+         # BP:
+         M19_BP_SYS_VSORRES_13, M19_BP_DIA_VSORRES_13, M19_BP_SYS_VSORRES_14, M19_BP_DIA_VSORRES_14,
+         # Other labs
+         M08_CBC_HB_LBORRES_4, M06_HB_POC_LBORRES_4, 
+         M08_IBILIRUBIN_LBORRES_4, M08_AST_UL_LBORRES_4, M08_ALT_UL_LBORRES_4,
+         M08_CBC_PLATE_LBORRES_4, M08_CREAT_UMOLL_LBORRES_4,
+         # Hospitalization HELLP:
+         M19_OBSSTDAT_13, # DATE OF HOSP.
+         M19_CBC_HB_LBORRES_13, M19_CBC_PLATELET_LBORRES_13,
+         M19_AST_UL_LBORRES_13, 
+         M19_ALT_UL_LBORRES_13,M19_ALT_UKATL_LBORRESU_13, 
+         M19_CREAT_LBORRESU_13,
+         M19_UA_PROT_LBORRES_13,
+         # OTHER VARS
+         starts_with(c("M06_BP_SYS_VSORRES_", "M06_BP_DIA_VSORRES_", "M04_HTN_CMTRT_", 
+                       "M04_HPD_OECTRT_", 
+                      # ANC HOSP _13
+                      "M19_HDP_HTN_MHOCCUR_", # was mother diagnosed
+                       "M19_HPD_HTN_CMOCCUR_", # did mother receive medication
+                       # PROTEINURIA
+                       "M08_UA_PROT_LBORRES",
+                       "M08_LBSTDAT_")))  # M08_LBSTDAT_ GIVES DATE OF THE VISIT
+
+write.csv(htn_df, '../data_out/mat_htn.csv')
+
+```
+
