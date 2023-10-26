@@ -1,0 +1,150 @@
+---
+title: "GDM Venn Diagrams"
+author: "Fouzia Farooq"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(knitr)
+library(tidyverse)
+library(reshape2)
+library(lubridate)
+library(emo)
+library(naniar)
+library(dplyr)
+library(RColorBrewer)
+library(ggvenn)
+library(wesanderson)
+```
+
+```{r, echo=FALSE}
+# AMONG WOMEN WHO HAVE A VISIT 3 (ANC28)
+diabetes_df <- read.csv('../data_out/mat_diabetes_fortables_20231017.csv', header = TRUE)
+df <- diabetes_df 
+```
+
+### **All sites (Ghana, Kenya, Pakistan, Zambia)**  
+```{r, echo=FALSE}
+# VennDiagram - All site
+GDM_pre <- diabetes_df %>% filter(OGTT_PRE==1) %>% 
+  select(MOMID) %>% unlist()
+
+GDM_1 <- diabetes_df %>% filter(OGTT_1hr==1) %>% 
+  select(MOMID) %>% unlist()
+
+GDM_2 <- diabetes_df %>% filter(OGTT_2hr==1) %>% 
+  select(MOMID) %>% unlist()
+
+# Package ggvenn
+ggvenn(data = list(`Fasting glucose` = GDM_pre,
+                   `1-hr OGTT` = GDM_1,
+                   `2-hr OGTT` = GDM_2), 
+       fill_color = wesanderson::wes_palette("FantasticFox1", n=3),
+       text_size = 3.5,
+       stroke_size = 0.5,set_name_size = 5)
+```
+
+### **Ghana**  
+```{r, echo=FALSE}
+# VennDiagram - Ghana
+
+GDM_pre <- diabetes_df %>% filter(SITE=="Ghana") %>%
+  filter(OGTT_PRE==1) %>%
+  select(MOMID) %>% unlist()
+
+GDM_1 <- diabetes_df %>% filter(SITE=="Ghana") %>%
+  filter(OGTT_1hr==1) %>% 
+  select(MOMID) %>% unlist()
+
+GDM_2 <- diabetes_df %>% filter(SITE=="Ghana") %>%
+  filter(OGTT_2hr==1) %>% 
+  select(MOMID) %>% unlist()
+
+# Package ggvenn
+ggvenn(data = list(`Fasting glucose` = GDM_pre,
+                   `1-hr OGTT` = GDM_1,
+                   `2-hr OGTT` = GDM_2), 
+       fill_color = wesanderson::wes_palette("Rushmore1", n=3),
+       text_size = 3.5,
+       stroke_size = 0.5,set_name_size = 5)
+```
+
+### **Kenya**  
+```{r, echo=FALSE}
+# VennDiagram - Kenya
+GDM_pre <- diabetes_df %>% filter(SITE=="Kenya") %>%
+  filter(OGTT_PRE==1) %>%
+  select(MOMID) %>% unlist()
+
+GDM_1 <- diabetes_df %>% filter(SITE=="Kenya") %>% 
+  filter(OGTT_1hr==1) %>% 
+  select(MOMID) %>% unlist()
+
+GDM_2 <- diabetes_df %>% filter(SITE=="Kenya") %>% 
+  filter(OGTT_2hr==1) %>% 
+  select(MOMID) %>% unlist()
+
+# Package ggvenn
+ggvenn(data = list(`Fasting glucose` = GDM_pre,
+                   `1-hr OGTT` = GDM_1,
+                   `2-hr OGTT` = GDM_2), 
+       fill_color = wesanderson::wes_palette("Zissou1", n=3),
+       text_size = 3.5,
+       stroke_size = 0.5,set_name_size = 5)
+```
+
+### **Pakistan**  
+```{r, echo=FALSE}
+# VennDiagram - Pakistan
+GDM_pre <- diabetes_df %>% filter(SITE=="Pakistan") %>%
+  filter(OGTT_PRE==1) %>%
+  select(MOMID) %>% unlist()
+
+GDM_1 <- diabetes_df %>% filter(SITE=="Pakistan") %>% 
+  filter(OGTT_1hr==1) %>% 
+  select(MOMID) %>% unlist()
+
+GDM_2 <- diabetes_df %>% filter(SITE=="Pakistan") %>% 
+  filter(OGTT_2hr==1) %>% 
+  select(MOMID) %>% unlist()
+
+# Package ggvenn
+ggvenn(data = list(`Fasting glucose` = GDM_pre,
+                   `1-hr OGTT` = GDM_1,
+                   `2-hr OGTT` = GDM_2), 
+       fill_color = wesanderson::wes_palette("BottleRocket2", n=3),
+       text_size = 3.5,
+       stroke_size = 0.5,set_name_size = 5)
+```
+
+### **Zambia**  
+```{r, echo=FALSE}
+# VennDiagram - Zambia
+GDM_pre <- diabetes_df %>% filter(SITE=="Zambia") %>%
+  filter(OGTT_PRE==1) %>%
+  select(MOMID) %>% unlist()
+
+GDM_1 <- diabetes_df %>% filter(SITE=="Zambia") %>% 
+  filter(OGTT_1hr==1) %>% 
+  select(MOMID) %>% unlist()
+
+GDM_2 <- diabetes_df %>% filter(SITE=="Zambia") %>% 
+  filter(OGTT_2hr==1) %>% 
+  select(MOMID) %>% unlist()
+
+# Package ggvenn
+ggvenn(data = list(`Fasting glucose` = GDM_pre,
+                   `1-hr OGTT` = GDM_1,
+                   `2-hr OGTT` = GDM_2), 
+       fill_color = wesanderson::wes_palette("Chevalier1", n=3),
+       text_size = 3.5,
+       stroke_size = 0.5,set_name_size = 5)
+```
