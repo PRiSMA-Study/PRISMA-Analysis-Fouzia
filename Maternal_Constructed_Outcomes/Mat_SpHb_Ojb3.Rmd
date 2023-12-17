@@ -1,0 +1,214 @@
+---
+title: "Mat_Sphb_Obj3"
+author: "Fouzia Farooq"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, warning=FALSE, echo=FALSE}
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(knitr)
+library(stringr)
+library(purrr)
+library(lubridate)
+library(readr)
+library(tidyr)
+library(haven)
+library(tableone)
+library(kableExtra)
+```
+
+Import data: 
+```{r}
+path_to_data <-  'D:/Users/fouziafarooq/Documents/PRISMA_constructed-outcomes/data/2023-12-08/'# - for AWS data
+
+UploadDate = "2023-12-08"
+uploadDate <- as.Date(UploadDate, format = "%Y-%m-%d")
+```
+
+Pulling CSV files from AWS into a list:
+```{r}
+########################################################################################
+recreate_mnh_list <- FALSE #if I want to recreate the big data list then set this to TRUE
+########################################################################################
+tic <- Sys.time()
+if(recreate_mnh_list == TRUE){
+  mnh_names <- c()
+  list_mnh <- dir(path = path_to_data, pattern = "*.csv", full.names = TRUE) #creates a list of all the csv files in the directory
+  for (data_file in list_mnh[]) { #can test by just bringing in a small number (add 1:2 inside the bracket to do so)
+    form_name <- substr(basename(data_file), 1,5) #substr pulls out the 1:5 spaces in a char (will pull out "mnh00" etc);
+    #basename() pulls out just the name of the file from the entire directory/path.
+    print(paste("Reading", form_name))
+    assign(form_name, read.csv(data_file))
+    mnh_names <- c(mnh_names, form_name) # it's buidling up a vector of obj names.
+  }
+  save(list=mnh_names, file = paste0("MNH_dfs_", basename(path_to_data), ".RDS"))
+} else{
+  load(file = paste0('MNH_dfs_',  basename(path_to_data), ".RDS"))
+}
+
+toc <- Sys.time()
+print(toc - tic)
+```
+
+
+### Hard code TYPE_VISIT for M00=1, M02=1, M03=1, M09=6, M10=6, M11=6, M17=6, M18=12 ***
+```{r echo=FALSE}
+
+if (exists("mnh00")) {
+  mnh00 <- mnh00 %>% 
+    mutate(M00_TYPE_VISIT = 1)
+} else{
+  "MNH00 dataframe doesn't exist"
+}
+
+if (exists("mnh02")) {
+  mnh02 <- mnh02 %>% 
+    mutate(M02_TYPE_VISIT = 1)
+} else{
+  "MNH02 dataframe doesn't exist"
+}
+
+if (exists("mnh03")) {
+  mnh03 <- mnh03 %>% 
+    mutate(M03_TYPE_VISIT = 1)
+} else{
+  "MNH03 dataframe doesn't exist"
+}
+
+if (exists("mnh09")) {
+  mnh09 <- mnh09 %>% 
+    mutate(M09_TYPE_VISIT = 6)
+} else{
+  "MNH09 dataframe doesn't exist"
+}
+
+if (exists("mnh10")) {
+  mnh10 <- mnh10 %>% 
+    mutate(M10_TYPE_VISIT = 6)
+} else{
+  "MNH10 dataframe doesn't exist"
+}
+
+if (exists("mnh11")) {
+  mnh11 <- mnh11 %>% 
+    mutate(M11_TYPE_VISIT = 6)
+} else{
+  "MNH11 dataframe doesn't exist"
+}
+
+if (exists("mnh16")) {
+  mnh16 <- mnh16 %>% 
+    mutate(M16_TYPE_VISIT = 5)
+} else{
+  "MNH16 dataframe doesn't exist"
+}
+
+if (exists("mnh17")) {
+  mnh17 <- mnh17 %>% 
+    mutate(M17_TYPE_VISIT = 6)
+} else{
+  "MNH17 dataframe doesn't exist"
+}
+
+if (exists("mnh18")) {
+  mnh18 <- mnh18 %>% 
+    mutate(M18_TYPE_VISIT = 12)
+} else{
+  "MNH18 dataframe doesn't exist"
+}
+
+if (exists("mnh19")) {
+  mnh19 <- mnh19 %>% 
+    mutate(M19_TYPE_VISIT = 13)
+} else{
+  "MNH19 dataframe doesn't exist"
+}
+```
+
+Create a vector of women who are enrolled. 
+```{r}
+mnh02 <- mnh02 %>% 
+  mutate(ENROLLED_FF = ifelse(M02_AGE_IEORRES==1 & M02_PC_IEORRES==1 & 
+                                M02_CATCHMENT_IEORRES==1 & M02_CATCH_REMAIN_IEORRES==1 & 
+                                M02_CONSENT_IEORRES==1, 1,0)) %>% filter(ENROLLED_FF ==1) # THIS DOES DROP SOME WOMEN!
+
+unique <- mnh02 %>% group_by(SITE, PREGID) %>% unique()
+
+enrolled_ids_vec <- as.vector(mnh02$PREGID)
+```
+
+Rename TYPE_VISIT variables:
+```{r}
+mnh02 <- mnh02 %>% rename(TYPE_VISIT = M02_TYPE_VISIT)
+mnh06 <- mnh06 %>% rename(TYPE_VISIT = M06_TYPE_VISIT)
+mnh08 <- mnh08 %>% rename(TYPE_VISIT = M08_TYPE_VISIT)
+```
+
+Clean up the data frames: 
+```{r}
+mnh02 <- mnh02 %>%
+  filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
+  drop_na(MOMID, PREGID) %>%
+  distinct (MOMID, PREGID, SITE, TYPE_VISIT, .keep_all = TRUE)
+
+
+mnh06 <- mnh06 %>%
+  filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
+  drop_na(MOMID, PREGID) %>%
+  distinct (MOMID, PREGID, SITE, TYPE_VISIT, .keep_all = TRUE)
+
+mnh08 <- mnh08 %>%
+  filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
+  drop_na(MOMID, PREGID) %>%
+  distinct (MOMID, PREGID, SITE, TYPE_VISIT, .keep_all = TRUE)
+```
+
+Drop TYPE_VISIT in MNH02 (b/c  TYPE_VISIT=1 for all)
+```{r}
+mnh02 <- mnh02 %>% select(-TYPE_VISIT)
+```
+
+1. Arranging Based on Dates and Scheduled/unscheduled visits:
+```{r}
+mnh08_temp <- mnh08 %>% 
+  # select(MOMID, PREGID, SITE, M08_LBSTDAT, TYPE_VISIT) %>%
+ # filter(SITE=="Pakistan") %>%
+  group_by(MOMID, PREGID) %>%
+  arrange(M08_LBSTDAT) %>%
+  mutate(visit_seq = row_number(),
+         scheduled=if_else(TYPE_VISIT %in% c(13,14), "unscheduled", "scheduled"),
+         prior_scheduled_visit_type = if_else(scheduled == 'scheduled', visit_seq, as.numeric(NA)),
+         next_scheduled_visit_type = prior_scheduled_visit_type) %>% 
+  fill(prior_scheduled_visit_type, .direction = "down") %>%
+  fill(next_scheduled_visit_type, .direction = "up") %>% 
+  mutate(prior_scheduled_visit_type = if_else(scheduled == 'scheduled', as.numeric(NA), prior_scheduled_visit_type),
+         next_scheduled_visit_type = if_else(scheduled == 'scheduled', as.numeric(NA), next_scheduled_visit_type)) %>% 
+  arrange(MOMID, PREGID, M08_LBSTDAT)
+
+temp_df <- mnh08 %>% select(SITE, MOMID, PREGID, M08_LBSTDAT, TYPE_VISIT) %>% 
+  group_by(SITE, MOMID, PREGID)
+temp_df <- mnh08_temp %>% select(SITE, MOMID, PREGID, M08_LBSTDAT, TYPE_VISIT, scheduled, visit_seq, prior_scheduled_visit_type, next_scheduled_visit_type) %>% 
+  filter(TYPE_VISIT %in% c(13, 14))
+```
+
+Merge MNH02, MNH08, MNH06 together:
+```{r}
+merged_df <- left_join(mnh02, mnh08, by = c("SITE", "MOMID", "PREGID"))
+temp_df <- merged_df %>% select(SITE, MOMID, PREGID, TYPE_VISIT, M08_LBSTDAT, M02_SCRN_OBSSTDAT)
+
+merged_df2 <- full_join(merged_df, mnh06, by = c("SITE", "MOMID", "PREGID", "TYPE_VISIT"))
+
+temp_df <- merged_df2 %>% select(SITE, MOMID, PREGID, TYPE_VISIT, M08_LBSTDAT, M02_SCRN_OBSSTDAT, M06_DIAG_VSDAT, M08_CBC_LBPERF_1, M06_SPHB_LBORRES)
+```
+
+```{r}
+temp_df <- merged_df3 %>% select(SITE, MOMID, PREGID, TYPE_VISIT, M08_LBSTDAT, M02_SCRN_OBSSTDAT, M06_DIAG_VSDAT, scheduled, visit_seq, prior_scheduled_visit_type, next_scheduled_visit_type, M08_CBC_LBPERF_1, M06_SPHB_LBORRES)
+```
+
