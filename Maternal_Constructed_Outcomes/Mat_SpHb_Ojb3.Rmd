@@ -20,15 +20,17 @@ library(lubridate)
 library(readr)
 library(tidyr)
 library(haven)
+library(lme4)
+library(Matrix) # dependency for lme4
 library(tableone)
 library(kableExtra)
 ```
 
 Import data: 
 ```{r}
-path_to_data <-  'D:/Users/fouziafarooq/Documents/PRISMA_constructed-outcomes/data/2023-12-08/'# - for AWS data
+path_to_data <-  'D:/Users/fouziafarooq/Documents/PRISMA_constructed-outcomes/data/2023-12-15/'# - for AWS data
 
-UploadDate = "2023-12-08"
+UploadDate = "2023-12-15"
 uploadDate <- as.Date(UploadDate, format = "%Y-%m-%d")
 ```
 
@@ -175,9 +177,11 @@ Drop TYPE_VISIT in MNH02 (b/c  TYPE_VISIT=1 for all)
 mnh02 <- mnh02 %>% select(-TYPE_VISIT)
 ```
 
-1. Arranging Based on Dates and Scheduled/unscheduled visits:
+1. Arranging Based on Dates and Scheduled/Unscheduled visits:
+This I might have to do for each MNH that is included.  FOr this analysis, I need MNH08 and MNH06 for now.  No need to worry about organizing other ones for now. 
 ```{r}
-mnh08_temp <- mnh08 %>% 
+# mnh08_temp
+mnh08 <- mnh08 %>% 
   # select(MOMID, PREGID, SITE, M08_LBSTDAT, TYPE_VISIT) %>%
  # filter(SITE=="Pakistan") %>%
   group_by(MOMID, PREGID) %>%
@@ -194,21 +198,136 @@ mnh08_temp <- mnh08 %>%
 
 temp_df <- mnh08 %>% select(SITE, MOMID, PREGID, M08_LBSTDAT, TYPE_VISIT) %>% 
   group_by(SITE, MOMID, PREGID)
-temp_df <- mnh08_temp %>% select(SITE, MOMID, PREGID, M08_LBSTDAT, TYPE_VISIT, scheduled, visit_seq, prior_scheduled_visit_type, next_scheduled_visit_type) %>% 
+temp_df <- mnh08 %>% select(SITE, MOMID, PREGID, M08_LBSTDAT, TYPE_VISIT, scheduled, visit_seq, prior_scheduled_visit_type, next_scheduled_visit_type) %>% 
   filter(TYPE_VISIT %in% c(13, 14))
+```
+
+Arrange Scheduled/Unscheduled visits for MNH06:
+```{r}
+mnh06 <- mnh06 %>% 
+   # select(MOMID, PREGID, SITE, M06_DIAG_VSDAT, TYPE_VISIT) %>%
+   # filter(SITE=="Pakistan") %>%
+  group_by(MOMID, PREGID) %>%
+  arrange(M06_DIAG_VSDAT) %>%
+  mutate(visit_seq = row_number(),
+         scheduled=if_else(TYPE_VISIT %in% c(13,14), "unscheduled", "scheduled"),
+         prior_scheduled_visit_type = if_else(scheduled == 'scheduled', visit_seq, as.numeric(NA)),
+         next_scheduled_visit_type = prior_scheduled_visit_type) %>% 
+  fill(prior_scheduled_visit_type, .direction = "down") %>%
+  fill(next_scheduled_visit_type, .direction = "up") %>% 
+  mutate(prior_scheduled_visit_type = if_else(scheduled == 'scheduled', as.numeric(NA), prior_scheduled_visit_type),
+         next_scheduled_visit_type = if_else(scheduled == 'scheduled', as.numeric(NA), next_scheduled_visit_type)) %>% 
+  arrange(MOMID, PREGID, M06_DIAG_VSDAT)
 ```
 
 Merge MNH02, MNH08, MNH06 together:
 ```{r}
 merged_df <- left_join(mnh02, mnh08, by = c("SITE", "MOMID", "PREGID"))
-temp_df <- merged_df %>% select(SITE, MOMID, PREGID, TYPE_VISIT, M08_LBSTDAT, M02_SCRN_OBSSTDAT)
+temp_df <- merged_df %>% select(SITE, MOMID, PREGID, TYPE_VISIT, M08_LBSTDAT, M02_SCRN_OBSSTDAT, 
+                                scheduled, visit_seq, prior_scheduled_visit_type, next_scheduled_visit_type)
 
-merged_df2 <- full_join(merged_df, mnh06, by = c("SITE", "MOMID", "PREGID", "TYPE_VISIT"))
+merged_df2 <- full_join(merged_df, mnh06, by = c("SITE", "MOMID", "PREGID", "TYPE_VISIT",
+                                                 "scheduled", "visit_seq", "prior_scheduled_visit_type", "next_scheduled_visit_type"))
 
-temp_df <- merged_df2 %>% select(SITE, MOMID, PREGID, TYPE_VISIT, M08_LBSTDAT, M02_SCRN_OBSSTDAT, M06_DIAG_VSDAT, M08_CBC_LBPERF_1, M06_SPHB_LBORRES)
+temp_df <- merged_df2 %>% select(SITE, MOMID, PREGID, TYPE_VISIT, M08_LBSTDAT, M02_SCRN_OBSSTDAT, M06_DIAG_VSDAT, 
+                                 M08_CBC_LBPERF_1, M06_SPHB_LBORRES, 
+                                 scheduled, visit_seq,
+                                 prior_scheduled_visit_type,next_scheduled_visit_type) %>% 
+  filter(MOMID == 'AZ-4173')
+
+# temp_df <- merged_df2 %>% select(SITE, MOMID, PREGID, TYPE_VISIT, M08_LBSTDAT, M02_SCRN_OBSSTDAT, M06_DIAG_VSDAT, 
+#                                  M08_CBC_LBPERF_1, M06_SPHB_LBORRES, 
+#                                  scheduled.x, scheduled.y, visit_seq.x, visit_seq.y,
+#                                  prior_scheduled_visit_type.x, prior_scheduled_visit_type.y,
+#                                  next_scheduled_visit_type.x, next_scheduled_visit_type.y) %>% filter(MOMID == 'AZ-4173')
 ```
 
+Since I only am doing analysis on a few time points (<20, 20, 28, 36 and 6 wk PP (only Pak had week 32 data also)) --> I can just filter this first. 
+For now, I can leave UNSCHEDULED VISITS out.
+
 ```{r}
-temp_df <- merged_df3 %>% select(SITE, MOMID, PREGID, TYPE_VISIT, M08_LBSTDAT, M02_SCRN_OBSSTDAT, M06_DIAG_VSDAT, scheduled, visit_seq, prior_scheduled_visit_type, next_scheduled_visit_type, M08_CBC_LBPERF_1, M06_SPHB_LBORRES)
+merged_df3 <- merged_df2 %>% filter(TYPE_VISIT %in% c(1,2,3,5,6))
+temp_df <- merged_df3 %>% select(SITE, MOMID, TYPE_VISIT, M06_SPHB_LBORRES, M08_CBC_HB_LBORRES)
+```
+
+Set all -7, 77, -5, 55, etc to NA
+```{r echo=FALSE}
+CONVERT_NA <- TRUE
+if(CONVERT_NA ==TRUE){
+  tic <- Sys.time()
+  merged_df3 <- merged_df3 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
+    mutate_all(function(d) {
+      if_else(d=="1907-07-07", NA, d)
+    })
+  
+  merged_df3 <- merged_df3 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
+    mutate_all(function(d) {
+      if_else(d==-7, NA, d)
+    })
+  
+  merged_df3 <- merged_df3 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
+    mutate_all(function(d) {
+      if_else(d==77, NA, d)
+    })
+  
+  # -5 IS MISSING FOR CONTINUOUS
+  merged_df3 <- merged_df3 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
+    mutate_all(function(d) {
+      if_else(d==-5, NA, d) 
+    })
+  
+  # 55 IS MISSING FOR CATEGORICAL
+  merged_df3 <- merged_df3 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
+    mutate_all(function(d) {
+      if_else(d==55, NA, d) 
+    })
+  
+  # 55:55 IS MISSING FOR TIME
+  merged_df3 <- merged_df3 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
+    mutate_all(function(d) {
+      if_else(d=='55:55', NA, d)
+    })
+  
+  toc <- Sys.time()
+}
+time_diff <- toc-tic
+time_diff
+```
+
+Compute difference between SphB and CBC at each time point
+```{r}
+merged_df3 <- merged_df3 %>% 
+  mutate(diff_hb = M06_SPHB_LBORRES - M08_CBC_HB_LBORRES)
+
+temp_df <- merged_df3 %>% select(SITE, MOMID, TYPE_VISIT, M06_SPHB_LBORRES, M08_CBC_HB_LBORRES, diff_hb)
+```
+
+
+Linear Mixed Modeling
+```{r}
+# Fit a linear mixed model
+# specify random intercepts for MOMID and SITE (allows for individual variations withing MOMID and different intercepts for each SITE)
+mixed_model <- lmer(diff_hb ~ TYPE_VISIT + (1 | MOMID) + (1 | SITE), data = merged_df3)
+
+# Get the model summary
+summary(mixed_model)
+
+# Extract fixed effects coefficients
+fixed_effects <- fixef(mixed_model)
+fixed_effects
+
+# Compute Relative Risk
+RR <- exp(fixed_effects)
+
+# Get the standard errors of the fixed effects
+SE <- sqrt(diag(vcov(mixed_model)))
+
+# Compute 95% Confidence Interval for RR
+lower_CI <- exp(fixed_effects - 1.96 * SE)
+upper_CI <- exp(fixed_effects + 1.96 * SE)
+
+# Display the Relative Risk and 95% CI
+results <- data.frame(Relative_Risk = RR, Lower_CI = lower_CI, Upper_CI = upper_CI)
+results
 ```
 
