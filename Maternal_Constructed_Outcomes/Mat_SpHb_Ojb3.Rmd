@@ -149,6 +149,7 @@ enrolled_ids_vec <- as.vector(mnh02$PREGID)
 Rename TYPE_VISIT variables:
 ```{r}
 mnh02 <- mnh02 %>% rename(TYPE_VISIT = M02_TYPE_VISIT)
+mnh05 <- mnh05 %>% rename(TYPE_VISIT = M05_TYPE_VISIT)
 mnh06 <- mnh06 %>% rename(TYPE_VISIT = M06_TYPE_VISIT)
 mnh08 <- mnh08 %>% rename(TYPE_VISIT = M08_TYPE_VISIT)
 ```
@@ -222,14 +223,16 @@ mnh06 <- mnh06 %>%
 
 Merge MNH02, MNH08, MNH06 together:
 ```{r}
-merged_df <- left_join(mnh02, mnh08, by = c("SITE", "MOMID", "PREGID"))
+merged_df <- left_join(mnh02, mnh00, by = c("SITE", "SCRNID"))
+merged_df <- left_join(merged_df, mnh08, by = c("SITE", "MOMID", "PREGID"))
+merged_df2 <- left_join(merged_df, mnh05, by = c("SITE", "MOMID", "PREGID", "TYPE_VISIT"))
 temp_df <- merged_df %>% select(SITE, MOMID, PREGID, TYPE_VISIT, M08_LBSTDAT, M02_SCRN_OBSSTDAT, 
                                 scheduled, visit_seq, prior_scheduled_visit_type, next_scheduled_visit_type)
 
-merged_df2 <- full_join(merged_df, mnh06, by = c("SITE", "MOMID", "PREGID", "TYPE_VISIT",
+merged_df3 <- full_join(merged_df2, mnh06, by = c("SITE", "MOMID", "PREGID", "TYPE_VISIT",
                                                  "scheduled", "visit_seq", "prior_scheduled_visit_type", "next_scheduled_visit_type"))
 
-temp_df <- merged_df2 %>% select(SITE, MOMID, PREGID, TYPE_VISIT, M08_LBSTDAT, M02_SCRN_OBSSTDAT, M06_DIAG_VSDAT, 
+temp_df <- merged_df3 %>% select(SITE, MOMID, PREGID, TYPE_VISIT, M08_LBSTDAT, M02_SCRN_OBSSTDAT, M06_DIAG_VSDAT, 
                                  M08_CBC_LBPERF_1, M06_SPHB_LBORRES, 
                                  scheduled, visit_seq,
                                  prior_scheduled_visit_type,next_scheduled_visit_type) %>% 
@@ -242,12 +245,27 @@ temp_df <- merged_df2 %>% select(SITE, MOMID, PREGID, TYPE_VISIT, M08_LBSTDAT, M
 #                                  next_scheduled_visit_type.x, next_scheduled_visit_type.y) %>% filter(MOMID == 'AZ-4173')
 ```
 
+Count number of participants who have completed week 6 postpartum (VISIT 10)
+```{r}
+participant_count <- merged_df3 %>% 
+  filter(TYPE_VISIT==10) %>% 
+  group_by(SITE) %>%
+  distinct(MOMID) %>%
+  summarise(total_count_6wkPP = n())
+ # summarise(count = n_distinct(MOMID))
+```
+
+```{r}
+merged_df4 <- merged_df3 %>%
+  filter(SITE %in% c("Pakistan", "Kenya", "Zambia"))
+```
+
 Since I only am doing analysis on a few time points (<20, 20, 28, 36 and 6 wk PP (only Pak had week 32 data also)) --> I can just filter this first. 
 For now, I can leave UNSCHEDULED VISITS out.
 
 ```{r}
-merged_df3 <- merged_df2 %>% filter(TYPE_VISIT %in% c(1,2,3,5,6))
-temp_df <- merged_df3 %>% select(SITE, MOMID, TYPE_VISIT, M06_SPHB_LBORRES, M08_CBC_HB_LBORRES)
+merged_df4 <- merged_df3 %>% filter(TYPE_VISIT %in% c(1,2,3,5,6))
+temp_df <- merged_df4 %>% select(SITE, MOMID, TYPE_VISIT, M06_SPHB_LBORRES, M08_CBC_HB_LBORRES)
 ```
 
 Set all -7, 77, -5, 55, etc to NA
@@ -255,35 +273,35 @@ Set all -7, 77, -5, 55, etc to NA
 CONVERT_NA <- TRUE
 if(CONVERT_NA ==TRUE){
   tic <- Sys.time()
-  merged_df3 <- merged_df3 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
+  merged_df4 <- merged_df4 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
     mutate_all(function(d) {
       if_else(d=="1907-07-07", NA, d)
     })
   
-  merged_df3 <- merged_df3 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
+  merged_df4 <- merged_df4 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
     mutate_all(function(d) {
       if_else(d==-7, NA, d)
     })
   
-  merged_df3 <- merged_df3 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
+  merged_df4 <- merged_df4 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
     mutate_all(function(d) {
       if_else(d==77, NA, d)
     })
   
   # -5 IS MISSING FOR CONTINUOUS
-  merged_df3 <- merged_df3 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
+  merged_df4 <- merged_df4 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
     mutate_all(function(d) {
       if_else(d==-5, NA, d) 
     })
   
   # 55 IS MISSING FOR CATEGORICAL
-  merged_df3 <- merged_df3 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
+  merged_df4 <- merged_df4 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
     mutate_all(function(d) {
       if_else(d==55, NA, d) 
     })
   
   # 55:55 IS MISSING FOR TIME
-  merged_df3 <- merged_df3 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
+  merged_df4 <- merged_df4 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
     mutate_all(function(d) {
       if_else(d=='55:55', NA, d)
     })
@@ -296,18 +314,138 @@ time_diff
 
 Compute difference between SphB and CBC at each time point
 ```{r}
-merged_df3 <- merged_df3 %>% 
+merged_df4 <- merged_df4 %>% 
   mutate(diff_hb = M06_SPHB_LBORRES - M08_CBC_HB_LBORRES)
 
-temp_df <- merged_df3 %>% select(SITE, MOMID, TYPE_VISIT, M06_SPHB_LBORRES, M08_CBC_HB_LBORRES, diff_hb)
+temp_df <- merged_df4 %>% select(SITE, MOMID, TYPE_VISIT, M06_SPHB_LBORRES, M08_CBC_HB_LBORRES, diff_hb)
 ```
 
+FACTORIZE TYPE_VISIT VARIABLE:
+```{r}
+merged_df4$TYPE_VISIT <- factor(merged_df4$TYPE_VISIT)
+merged_df4$TYPE_VISIT <- relevel(merged_df4$TYPE_VISIT, ref = "1")
+levels(merged_df4$TYPE_VISIT)
+```
+
+COMPUTE MATERNAL AGE CATEGORIES:
+```{r}
+merged_df4$M00_BRTHDAT <- as.Date(merged_df4$M00_BRTHDAT)
+merged_df4$M02_SCRN_OBSSTDAT <- as.Date(merged_df4$M02_SCRN_OBSSTDAT)
+
+#Age
+merged_df4 <- merged_df4 %>% 
+  mutate(
+    mom_age_enroll = if_else(
+      (!is.na(M02_SCRN_OBSSTDAT) & !is.na(M00_BRTHDAT)), ((as.numeric(M02_SCRN_OBSSTDAT) - as.numeric(M00_BRTHDAT)) %/% 365),
+      if_else(!is.na(M00_ESTIMATED_AGE), M00_ESTIMATED_AGE, as.numeric(NA))))
+
+merged_df4 <- merged_df4 %>% 
+  mutate(
+    #age below 18
+    age_lt_18 = case_when(
+      mom_age_enroll > 0 & mom_age_enroll < 18 ~ 1, 
+      mom_age_enroll >= 18 ~ 0,
+      TRUE ~ NA_real_
+    ))
+
+temp.df <- merged_df4 %>% select(SITE, MOMID, M02_SCRN_OBSSTDAT, M00_BRTHDAT, M00_ESTIMATED_AGE, mom_age_enroll, age_lt_18)
+```
+
+CALCULATE BMI:
+```{r}
+temp.df <- merged_df4 %>% filter(MOMID == 'AA-4424') %>% select(SITE, MOMID, TYPE_VISIT, M05_WEIGHT_PERES, M05_HEIGHT_PERES, mat_bmi_enroll)
+
+merged_df4 <- merged_df4 %>% 
+  group_by(MOMID) %>%
+  mutate(mat_bmi_enroll = ifelse(
+    TYPE_VISIT==1,
+    ifelse(complete.cases(M05_WEIGHT_PERES, M05_HEIGHT_PERES),
+           (M05_WEIGHT_PERES/((M05_HEIGHT_PERES/100)^2)), 
+           as.numeric(NA)),
+    NA_real_ # Default value if TYPE_VISIT!=1
+    ))
+
+merged_df4 <- merged_df4 %>%
+  mutate(bmi_enroll_cat = case_when(
+      mat_bmi_enroll < 18.5 ~ 1, #UNDERWEIGHT
+      mat_bmi_enroll >= 18.5 & mat_bmi_enroll < 25 ~ 2, # NORMAL WEIGHT
+      mat_bmi_enroll >= 25 & mat_bmi_enroll < 30 ~ 3, # OVERWEIGHT
+      mat_bmi_enroll >= 30 ~ 4, # OBESE
+      TRUE ~ NA_real_ # DEFAULT VALUE 
+      ))
+
+temp.df <- merged_df4 %>% 
+  select(SITE, MOMID, TYPE_VISIT, M05_WEIGHT_PERES, M05_HEIGHT_PERES, mat_bmi_enroll, bmi_enroll_cat)
+
+```
+
+CALCULATE PLASMA EXPANSION VOLUME
+Kaplan-Hakim formula:
+PV (cPV) = (1-hematocrit)*[a +(b*weight in kg)] 
+a=1,530 in males; a=864 in females
+b=41 in males; b=47.9 in females
+```{r}
+merged_df4$pv_a <- 864 # a=1,530 in males; a=864 in females
+merged_df4$pv_b <- 47.9 # b=41 in males; b=47.9 in females
+
+merged_df4 <- merged_df4 %>% 
+  mutate(
+    (PV = (1-M08_CBC_HCT_LBORRES)*(pv_a + (pv_b * M05_WEIGHT_PERES)))
+    )
+```
+
+```{r}
+ggplot(data = merged_df4) +
+  geom_point(aes(x=M08_CBC_HB_LBORRES, y=M06_SPHB_LBORRES, 
+                 color=SITE), 
+             alpha = 0.4, size=1) + 
+  geom_abline(slope = 1) +
+  ylim(6,17) +
+  xlim(7,17)
+
+ggplot(data = merged_df4) +
+  geom_hex(aes(x=M08_CBC_HB_LBORRES, y=M06_SPHB_LBORRES)) + 
+  geom_abline(slope = 1) +
+  ylim(0,25)
+```
+
+```{r}
+mean_cbc <- merged_df4 %>%
+  group_by(TYPE_VISIT, SITE) %>%
+  summarise(mean_cbc = mean(M08_CBC_HB_LBORRES, na.rm=TRUE))
+```
+
+```{r}
+typevisit_analysis <- merged_df4 %>% 
+  mutate(cbc_bin = cut(M08_CBC_HB_LBORRES, breaks = seq(0,23, by = 0.5)))
+
+table(typevisit_analysis$cbc_bin)
+
+mean_cbc_bin <- typevisit_analysis %>%
+  group_by(cbc_bin) %>%
+  summarise(mean_diff = mean(M06_SPHB_LBORRES - M08_CBC_HB_LBORRES, na.rm=TRUE))
+```
+
+```{r}
+merged_df4 %>% ggplot() +
+  geom_boxplot(aes(x=TYPE_VISIT, y = M08_CBC_HB_LBORRES)) + 
+  geom_point(aes(x=TYPE_VISIT, y = M08_CBC_HB_LBORRES), alpha=0.2) 
+```
 
 Linear Mixed Modeling
 ```{r}
 # Fit a linear mixed model
 # specify random intercepts for MOMID and SITE (allows for individual variations withing MOMID and different intercepts for each SITE)
-mixed_model <- lmer(diff_hb ~ TYPE_VISIT + (1 | MOMID) + (1 | SITE), data = merged_df3)
+mixed_model <- lmer(diff_hb ~ TYPE_VISIT + (1 | MOMID) + (1 | SITE), data = merged_df4)
+
+# LOOKING AT THE IMPACT OF SITE: 
+mixed_model <- lmer(diff_hb ~ SITE + (1 | MOMID), data = merged_df4)
+
+# LOOKING AT THE IMPACT OF MATERNAL AGE: 
+mixed_model <- lmer(diff_hb ~ M00_ESTIMATED_AGE + (1 | MOMID) + (1 | SITE), data = merged_df4)
+
+# LOOKING AT THE IMPACT OF MATERNAL BMI AT ENROLLMENT: 
+mixed_model <- lmer(diff_hb ~ Mat_BMI_enroll + (1 | MOMID) + (1 | SITE), data = merged_df4)
 
 # Get the model summary
 summary(mixed_model)
