@@ -2,8 +2,27 @@
 title: "Mat_Sphb_Obj3"
 author: "Fouzia Farooq"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
+
+OBJECTIVE 3 RISK FACTORS TO ASSESS: 
+●	Maternal age,
+●	Study site,
+●	Tobacco use,
+●	Participant’s early pregnancy BMI (measured at first ANC visit),
+●	Anemia severity stratum, 
+●	Gestational age at assessment and at first ANC visit,
+●	Time between SpHb collection and CBC collection,
+●	Mid upper arm circumference (MUAC),
+●	Nutritional status (e.g., iron deficiency),
+●	Technician,
+●	Estimated plasma volume (PV)  
+●	HIV status (Zambia and Kenya sites only),
+●	Malaria status (Kenya site only),
+●	Helminth infection status (Kenya site only),
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -23,7 +42,8 @@ library(haven)
 library(lme4)
 library(Matrix) # dependency for lme4
 library(tableone)
-library(kableExtra)
+# library(kableExtra)
+library(equatiomatic) # for creating equations from models 
 ```
 
 Import data: 
@@ -83,6 +103,8 @@ if (exists("mnh03")) {
 } else{
   "MNH03 dataframe doesn't exist"
 }
+
+
 
 if (exists("mnh09")) {
   mnh09 <- mnh09 %>% 
@@ -149,9 +171,12 @@ enrolled_ids_vec <- as.vector(mnh02$PREGID)
 Rename TYPE_VISIT variables:
 ```{r}
 mnh02 <- mnh02 %>% rename(TYPE_VISIT = M02_TYPE_VISIT)
+mnh03 <- mnh03 %>% rename(TYPE_VISIT = M03_TYPE_VISIT)
+mnh04 <- mnh04 %>% rename(TYPE_VISIT = M04_TYPE_VISIT)
 mnh05 <- mnh05 %>% rename(TYPE_VISIT = M05_TYPE_VISIT)
 mnh06 <- mnh06 %>% rename(TYPE_VISIT = M06_TYPE_VISIT)
 mnh08 <- mnh08 %>% rename(TYPE_VISIT = M08_TYPE_VISIT)
+mnh12 <- mnh12 %>% rename(TYPE_VISIT = M12_TYPE_VISIT)
 ```
 
 Clean up the data frames: 
@@ -161,6 +186,15 @@ mnh02 <- mnh02 %>%
   drop_na(MOMID, PREGID) %>%
   distinct (MOMID, PREGID, SITE, TYPE_VISIT, .keep_all = TRUE)
 
+mnh03 <- mnh03 %>%
+  filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
+  drop_na(MOMID, PREGID) %>%
+  distinct (MOMID, PREGID, SITE, TYPE_VISIT, .keep_all = TRUE)
+
+mnh04 <- mnh04 %>%
+  filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
+  drop_na(MOMID, PREGID) %>%
+  distinct (MOMID, PREGID, SITE, TYPE_VISIT, .keep_all = TRUE)
 
 mnh06 <- mnh06 %>%
   filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
@@ -171,18 +205,111 @@ mnh08 <- mnh08 %>%
   filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
   drop_na(MOMID, PREGID) %>%
   distinct (MOMID, PREGID, SITE, TYPE_VISIT, .keep_all = TRUE)
+
+mnh12 <- mnh12 %>%
+  filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
+  drop_na(MOMID, PREGID) %>%
+  distinct (MOMID, PREGID, SITE, TYPE_VISIT, .keep_all = TRUE)
 ```
 
-Drop TYPE_VISIT in MNH02 (b/c  TYPE_VISIT=1 for all)
+Drop TYPE_VISIT in MNH02 and in MNH03 (b/c  TYPE_VISIT=1 for all)
 ```{r}
 mnh02 <- mnh02 %>% select(-TYPE_VISIT)
+mnh03 <- mnh03 %>% select(-TYPE_VISIT)
+```
+
+SUBSETTING BEFORE MERGING
+########### STOPPED HERE ########## I AM THINKING THAT I SHOULD JUST SUBSET THE VARS I NEED.  IT WILL BE EASIER TO CATCH MISTAKES IN MERGING. 
+
+Vars needed: 
+1. Maternal age, 
+2. Study site,
+3. Tobacco use,
+4. Early pregnancy BMI
+5. Estimated plasma volume
+6. Mid upper arm circumference (MUAc)
+7. Anemia severity stratum
+8. Time between SpHb collection and CBC collection
+9. GA at first ANC visit
+10. Gestational age at assessment
+11. Technician
+12.Nutritional status (e.g. iron deficiency)
+13. HIV status (Zambia, Kenya)
+14. Helminth infection status (Kenya)
+
+```{r}
+######################
+### MNH03 SUBSET ####
+###      SES     ####
+######################
+
+mnh03_subset <- mnh03 %>%
+  select(SITE, MOMID, PREGID, M03_SD_OBSSTDAT, M03_CHEW_OECOCCUR) 
+
+###########################
+### MNH04 SUBSET ####
+### ANC CLINICAL STATUS ###
+###########################
+
+mnh04_subset <- mnh04 %>% 
+  select(SITE, MOMID, PREGID, TYPE_VISIT, M04_ANC_OBSSTDAT, TYPE_VISIT, 
+         # HIV diagnosis since last visit
+         M04_HIV_MHOCCUR,
+         M04_FOLIC_ACID_CMOCCUR, M04_IRON_ORAL_CMOCCUR, M04_IFA_CMOCCUR, M04_CALCIUM_CMOCCUR,
+         M04_VITAMIN_A_CMOCCUR, M04_ZINC_CMOCCUR, M04_MICRONUTRIENT_CMOCCUR) # FOLIC ACID, IRON, IFA, CALCIUM, 
+# vA, zINC, MULTIPLE MICRONUTRIENT SUPP (MMN). DID YOU RECEIVE ANY OF THESE AT THIS VISIT? 
+
+######################
+### MNH05 SUBSET ####
+###  MAT ANTHRO   ###
+######################
+mnh05_subset <- mnh05 %>% 
+  select(SITE, MOMID, PREGID, M05_ANT_PEDAT, TYPE_VISIT, M05_WEIGHT_PERES, M05_HEIGHT_PERES, M05_MUAC_PERES)
+
+##########################
+###    MNH06 SUBSET   ###
+###   MAT POC DIAG.   ###
+##########################
+mnh06_subset <- mnh06 %>% 
+  select(SITE, MOMID, PREGID, TYPE_VISIT, M06_DIAG_VSDAT, 
+         #Form completion Date, Time, Person ID
+         M06_FORMCOMPLDAT_MNH06, M06_FORMCOMPLTIM_MNH06, M06_FORMCOMPLID_MNH06, 
+         M06_SPHB_LBORRES,
+         # Malaria, HIV, Helminth
+         M06_MALARIA_POC_LBORRES, M06_HIV_POC_LBORRES, 
+         # HIV POC
+         M06_HIV_POC_LBORRES)
+
+##########################
+###    MNH08 SUBSET   ###
+###     MAT LABS      ###
+##########################
+mnh08_subset <- mnh08 %>% 
+  select(SITE, MOMID, PREGID, TYPE_VISIT, M08_LBSTDAT,
+         #  and Hemoglobin
+          M08_CBC_HB_LBORRES, 
+         # Hematocrit
+         M08_CBC_HCT_LBORRES,
+         # Person ID
+         M08_FORMCOMPLID_MNH08,
+         # Helminth test results
+         M08_HELM_LBORRES,
+         # Malaria test results
+         M08_MALBL_LBORRES)
+
+##########################
+###    MNH12 SUBSET   ###
+###    MAT PNC Labs   ###
+##########################
+mnh12_subset <- mnh12 %>% 
+  select(SITE, MOMID, PREGID, TYPE_VISIT, M12_VISIT_OBSSTDAT)
 ```
 
 1. Arranging Based on Dates and Scheduled/Unscheduled visits:
 This I might have to do for each MNH that is included.  FOr this analysis, I need MNH08 and MNH06 for now.  No need to worry about organizing other ones for now. 
 ```{r}
 # mnh08_temp
-mnh08 <- mnh08 %>% 
+mnh08_subset <- mnh08_subset %>% 
   # select(MOMID, PREGID, SITE, M08_LBSTDAT, TYPE_VISIT) %>%
  # filter(SITE=="Pakistan") %>%
   group_by(MOMID, PREGID) %>%
@@ -197,17 +324,31 @@ mnh08 <- mnh08 %>%
          next_scheduled_visit_type = if_else(scheduled == 'scheduled', as.numeric(NA), next_scheduled_visit_type)) %>% 
   arrange(MOMID, PREGID, M08_LBSTDAT)
 
-temp_df <- mnh08 %>% select(SITE, MOMID, PREGID, M08_LBSTDAT, TYPE_VISIT) %>% 
+temp_df <- mnh08_subset %>% select(SITE, MOMID, PREGID, M08_LBSTDAT, TYPE_VISIT) %>% 
   group_by(SITE, MOMID, PREGID)
-temp_df <- mnh08 %>% select(SITE, MOMID, PREGID, M08_LBSTDAT, TYPE_VISIT, scheduled, visit_seq, prior_scheduled_visit_type, next_scheduled_visit_type) %>% 
+temp_df <- mnh08_subset %>% select(SITE, MOMID, PREGID, M08_LBSTDAT, TYPE_VISIT, scheduled, visit_seq, prior_scheduled_visit_type, next_scheduled_visit_type) %>% 
   filter(TYPE_VISIT %in% c(13, 14))
+```
+
+Arrange Scheduled/Unscheduled visits for MNH04:
+```{r}
+mnh04_subset <- mnh04_subset %>% 
+  group_by(MOMID, PREGID) %>%
+  arrange(M04_ANC_OBSSTDAT) %>% # DATE OF VISIT
+  mutate(visit_seq = row_number(),
+         scheduled=if_else(TYPE_VISIT %in% c(13,14), "unscheduled", "scheduled"),
+         prior_scheduled_visit_type = if_else(scheduled == 'scheduled', visit_seq, as.numeric(NA)),
+         next_scheduled_visit_type = prior_scheduled_visit_type) %>% 
+  fill(prior_scheduled_visit_type, .direction = "down") %>%
+  fill(next_scheduled_visit_type, .direction = "up") %>% 
+  mutate(prior_scheduled_visit_type = if_else(scheduled == 'scheduled', as.numeric(NA), prior_scheduled_visit_type),
+         next_scheduled_visit_type = if_else(scheduled == 'scheduled', as.numeric(NA), next_scheduled_visit_type)) %>% 
+  arrange(MOMID, PREGID, M04_ANC_OBSSTDAT)
 ```
 
 Arrange Scheduled/Unscheduled visits for MNH06:
 ```{r}
-mnh06 <- mnh06 %>% 
-   # select(MOMID, PREGID, SITE, M06_DIAG_VSDAT, TYPE_VISIT) %>%
-   # filter(SITE=="Pakistan") %>%
+mnh06_subset <- mnh06_subset %>% 
   group_by(MOMID, PREGID) %>%
   arrange(M06_DIAG_VSDAT) %>%
   mutate(visit_seq = row_number(),
@@ -221,33 +362,95 @@ mnh06 <- mnh06 %>%
   arrange(MOMID, PREGID, M06_DIAG_VSDAT)
 ```
 
-Merge MNH02, MNH08, MNH06 together:
+Arrange Scheduled/Unscheduled visits for MNH12: - MNH12 IS FOR PNC VISITS
 ```{r}
-merged_df <- left_join(mnh02, mnh00, by = c("SITE", "SCRNID"))
-merged_df <- left_join(merged_df, mnh08, by = c("SITE", "MOMID", "PREGID"))
-merged_df2 <- left_join(merged_df, mnh05, by = c("SITE", "MOMID", "PREGID", "TYPE_VISIT"))
-temp_df <- merged_df %>% select(SITE, MOMID, PREGID, TYPE_VISIT, M08_LBSTDAT, M02_SCRN_OBSSTDAT, 
-                                scheduled, visit_seq, prior_scheduled_visit_type, next_scheduled_visit_type)
+mnh12_subset <- mnh12_subset %>% 
+  group_by(MOMID, PREGID) %>%
+  arrange(M12_VISIT_OBSSTDAT) %>%
+  mutate(visit_seq = row_number(),
+         scheduled=if_else(TYPE_VISIT %in% c(13,14), "unscheduled", "scheduled"),
+         prior_scheduled_visit_type = if_else(scheduled == 'scheduled', visit_seq, as.numeric(NA)),
+         next_scheduled_visit_type = prior_scheduled_visit_type) %>% 
+  fill(prior_scheduled_visit_type, .direction = "down") %>%
+  fill(next_scheduled_visit_type, .direction = "up") %>% 
+  mutate(prior_scheduled_visit_type = if_else(scheduled == 'scheduled', as.numeric(NA), prior_scheduled_visit_type),
+         next_scheduled_visit_type = if_else(scheduled == 'scheduled', as.numeric(NA), next_scheduled_visit_type)) %>% 
+  arrange(MOMID, PREGID, M12_VISIT_OBSSTDAT)
+```
 
-merged_df3 <- full_join(merged_df2, mnh06, by = c("SITE", "MOMID", "PREGID", "TYPE_VISIT",
-                                                 "scheduled", "visit_seq", "prior_scheduled_visit_type", "next_scheduled_visit_type"))
 
-temp_df <- merged_df3 %>% select(SITE, MOMID, PREGID, TYPE_VISIT, M08_LBSTDAT, M02_SCRN_OBSSTDAT, M06_DIAG_VSDAT, 
-                                 M08_CBC_LBPERF_1, M06_SPHB_LBORRES, 
+MERGED MNH02 AND MNH03 FIRST:
+```{r}
+mnh02_03 <- left_join(mnh02, mnh03_subset,by = c("SITE", "MOMID", "PREGID"))
+```
+
+Merge MNH02_03, MNH00, MNH04, MNH05, MNH08, MNH06 together: 
+***STILL NEED TO MERGE IN MNH12***
+```{r}
+merged_df <- left_join(mnh02_03, mnh00, 
+                       by = c("SITE", "SCRNID"))
+
+merged_df2 <- left_join(merged_df, mnh04_subset, 
+                        by = c("SITE", "MOMID", "PREGID"))
+
+merged_df2 <- left_join(merged_df2, mnh05_subset, 
+                        by = c("SITE", "MOMID", "PREGID", "TYPE_VISIT"))
+
+merged_df3 <- full_join(merged_df2, mnh08_subset, 
+                        by = c("SITE", "MOMID", "PREGID", "TYPE_VISIT", 
+                               "scheduled", "visit_seq", 
+                               "prior_scheduled_visit_type", "next_scheduled_visit_type"))
+
+mnh06_subset <- mnh06_subset %>% select(-scheduled, -visit_seq, 
+                               -prior_scheduled_visit_type, -next_scheduled_visit_type)
+
+# NOTE: Doing a full join here to add in mnh06.
+merged_df4 <- full_join(merged_df3, mnh06_subset, 
+                        by = c("SITE", "MOMID", "PREGID", "TYPE_VISIT"))
+
+temp.df <- merged_df4 %>% select(SITE, MOMID, PREGID, TYPE_VISIT, M06_DIAG_VSDAT, M08_LBSTDAT, 
+                                 scheduled, visit_seq, 
+                                 prior_scheduled_visit_type, next_scheduled_visit_type, 
+                                 M08_CBC_HCT_LBORRES, M08_CBC_HB_LBORRES,
+                                 # Person ID
+                                 M08_FORMCOMPLID_MNH08,
+                                 # Helminth test results
+                                 M08_HELM_LBORRES,
+                                 # Malaria test results
+                                 M08_MALBL_LBORRES, 
+                                 
+                                 #Form completion Date, Time, Person ID
+                                 M06_FORMCOMPLDAT_MNH06, M06_FORMCOMPLTIM_MNH06, M06_FORMCOMPLID_MNH06, 
+                                 M06_SPHB_LBORRES,
+                                 # Malaria, HIV, Helminth
+                                 M06_MALARIA_POC_LBORRES, M06_HIV_POC_LBORRES, 
+                                 # HIV POC
+                                 M06_HIV_POC_LBORRES) 
+
+temp.df <- merged_df4 %>% select(SITE, MOMID, PREGID, TYPE_VISIT, M08_LBSTDAT, M02_SCRN_OBSSTDAT, M06_DIAG_VSDAT, 
+                                  M06_SPHB_LBORRES, 
                                  scheduled, visit_seq,
                                  prior_scheduled_visit_type,next_scheduled_visit_type) %>% 
   filter(MOMID == 'AZ-4173')
 
-# temp_df <- merged_df2 %>% select(SITE, MOMID, PREGID, TYPE_VISIT, M08_LBSTDAT, M02_SCRN_OBSSTDAT, M06_DIAG_VSDAT, 
-#                                  M08_CBC_LBPERF_1, M06_SPHB_LBORRES, 
-#                                  scheduled.x, scheduled.y, visit_seq.x, visit_seq.y,
-#                                  prior_scheduled_visit_type.x, prior_scheduled_visit_type.y,
-#                                  next_scheduled_visit_type.x, next_scheduled_visit_type.y) %>% filter(MOMID == 'AZ-4173')
+# NOTE: Should i keep this as a left join? 
+merged_df5 <- left_join(merged_df4, mnh12_subset,
+                        by = c("SITE", "MOMID", "PREGID", "TYPE_VISIT"))
+
+temp.df <- merged_df4 %>% filter(SITE =="Zambia") %>% 
+  select(MOMID, PREGID, TYPE_VISIT, M06_FORMCOMPLDAT_MNH06, M06_FORMCOMPLTIM_MNH06, M06_FORMCOMPLID_MNH06)
 ```
+
 
 Count number of participants who have completed week 6 postpartum (VISIT 10)
 ```{r}
-participant_count <- merged_df3 %>% 
+
+merged_df5 <- merged_df5 %>%
+  filter(SITE %in% c("Pakistan", "Kenya", "Zambia"))
+
+
+
+participant_count <- merged_df5 %>% 
   filter(TYPE_VISIT==10) %>% 
   group_by(SITE) %>%
   distinct(MOMID) %>%
@@ -256,52 +459,59 @@ participant_count <- merged_df3 %>%
 ```
 
 ```{r}
-merged_df4 <- merged_df3 %>%
-  filter(SITE %in% c("Pakistan", "Kenya", "Zambia"))
+#Since I only am doing analysis on a few time points (<20, 20, 28, 36 and 6 wk PP (only Pak had week 32 data also)) --> I can just filter this first. 
+# For now, I can leave UNSCHEDULED VISITS out.
+
+merged_df5 <- merged_df5 %>% filter(TYPE_VISIT %in% c(1,2,3,5,10))
+temp_df <- merged_df5 %>% select(SITE, MOMID, TYPE_VISIT, M06_SPHB_LBORRES, M08_CBC_HB_LBORRES)
 ```
 
-Since I only am doing analysis on a few time points (<20, 20, 28, 36 and 6 wk PP (only Pak had week 32 data also)) --> I can just filter this first. 
-For now, I can leave UNSCHEDULED VISITS out.
-
+First do some crosstabs: 
 ```{r}
-merged_df4 <- merged_df3 %>% filter(TYPE_VISIT %in% c(1,2,3,5,6))
-temp_df <- merged_df4 %>% select(SITE, MOMID, TYPE_VISIT, M06_SPHB_LBORRES, M08_CBC_HB_LBORRES)
+# Group by 'SITE' and count occurrences for each measurement variable
+# This is the total number of observations across all 5 time points 
+hb_counts <- merged_df5 %>%
+  group_by(SITE, TYPE_VISIT) %>%
+  summarize(SPHB_N = sum(!is.na(M06_SPHB_LBORRES)), 
+                         CBC_N = sum(!is.na(M08_CBC_HB_LBORRES))
+  )
 ```
+
 
 Set all -7, 77, -5, 55, etc to NA
 ```{r echo=FALSE}
 CONVERT_NA <- TRUE
 if(CONVERT_NA ==TRUE){
   tic <- Sys.time()
-  merged_df4 <- merged_df4 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
+  merged_df5 <- merged_df5 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
     mutate_all(function(d) {
       if_else(d=="1907-07-07", NA, d)
     })
   
-  merged_df4 <- merged_df4 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
+  merged_df5 <- merged_df5 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
     mutate_all(function(d) {
       if_else(d==-7, NA, d)
     })
   
-  merged_df4 <- merged_df4 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
+  merged_df5 <- merged_df5 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
     mutate_all(function(d) {
       if_else(d==77, NA, d)
     })
   
   # -5 IS MISSING FOR CONTINUOUS
-  merged_df4 <- merged_df4 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
+  merged_df5 <- merged_df5 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
     mutate_all(function(d) {
       if_else(d==-5, NA, d) 
     })
   
   # 55 IS MISSING FOR CATEGORICAL
-  merged_df4 <- merged_df4 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
+  merged_df5 <- merged_df5 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
     mutate_all(function(d) {
       if_else(d==55, NA, d) 
     })
   
   # 55:55 IS MISSING FOR TIME
-  merged_df4 <- merged_df4 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
+  merged_df5 <- merged_df5 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
     mutate_all(function(d) {
       if_else(d=='55:55', NA, d)
     })
@@ -314,32 +524,32 @@ time_diff
 
 Compute difference between SphB and CBC at each time point
 ```{r}
-merged_df4 <- merged_df4 %>% 
+merged_df5 <- merged_df5 %>% 
   mutate(diff_hb = M06_SPHB_LBORRES - M08_CBC_HB_LBORRES)
 
-temp_df <- merged_df4 %>% select(SITE, MOMID, TYPE_VISIT, M06_SPHB_LBORRES, M08_CBC_HB_LBORRES, diff_hb)
+temp_df <- merged_df5 %>% select(SITE, MOMID, TYPE_VISIT, M06_SPHB_LBORRES, M08_CBC_HB_LBORRES, diff_hb)
 ```
 
 FACTORIZE TYPE_VISIT VARIABLE:
 ```{r}
-merged_df4$TYPE_VISIT <- factor(merged_df4$TYPE_VISIT)
-merged_df4$TYPE_VISIT <- relevel(merged_df4$TYPE_VISIT, ref = "1")
-levels(merged_df4$TYPE_VISIT)
+merged_df5$TYPE_VISIT <- factor(merged_df5$TYPE_VISIT)
+merged_df5$TYPE_VISIT <- relevel(merged_df5$TYPE_VISIT, ref = "1")
+levels(merged_df5$TYPE_VISIT)
 ```
 
 COMPUTE MATERNAL AGE CATEGORIES:
 ```{r}
-merged_df4$M00_BRTHDAT <- as.Date(merged_df4$M00_BRTHDAT)
-merged_df4$M02_SCRN_OBSSTDAT <- as.Date(merged_df4$M02_SCRN_OBSSTDAT)
+merged_df5$M00_BRTHDAT <- as.Date(merged_df5$M00_BRTHDAT)
+merged_df5$M02_SCRN_OBSSTDAT <- as.Date(merged_df5$M02_SCRN_OBSSTDAT)
 
 #Age
-merged_df4 <- merged_df4 %>% 
+merged_df5 <- merged_df5 %>% 
   mutate(
     mom_age_enroll = if_else(
       (!is.na(M02_SCRN_OBSSTDAT) & !is.na(M00_BRTHDAT)), ((as.numeric(M02_SCRN_OBSSTDAT) - as.numeric(M00_BRTHDAT)) %/% 365),
       if_else(!is.na(M00_ESTIMATED_AGE), M00_ESTIMATED_AGE, as.numeric(NA))))
 
-merged_df4 <- merged_df4 %>% 
+merged_df5 <- merged_df5 %>% 
   mutate(
     #age below 18
     age_lt_18 = case_when(
@@ -348,14 +558,12 @@ merged_df4 <- merged_df4 %>%
       TRUE ~ NA_real_
     ))
 
-temp.df <- merged_df4 %>% select(SITE, MOMID, M02_SCRN_OBSSTDAT, M00_BRTHDAT, M00_ESTIMATED_AGE, mom_age_enroll, age_lt_18)
+temp.df <- merged_df5 %>% select(SITE, MOMID, M02_SCRN_OBSSTDAT, M00_BRTHDAT, M00_ESTIMATED_AGE, mom_age_enroll, age_lt_18)
 ```
 
 CALCULATE BMI:
 ```{r}
-temp.df <- merged_df4 %>% filter(MOMID == 'AA-4424') %>% select(SITE, MOMID, TYPE_VISIT, M05_WEIGHT_PERES, M05_HEIGHT_PERES, mat_bmi_enroll)
-
-merged_df4 <- merged_df4 %>% 
+merged_df5 <- merged_df5 %>% 
   group_by(MOMID) %>%
   mutate(mat_bmi_enroll = ifelse(
     TYPE_VISIT==1,
@@ -365,7 +573,7 @@ merged_df4 <- merged_df4 %>%
     NA_real_ # Default value if TYPE_VISIT!=1
     ))
 
-merged_df4 <- merged_df4 %>%
+merged_df5 <- merged_df5 %>%
   mutate(bmi_enroll_cat = case_when(
       mat_bmi_enroll < 18.5 ~ 1, #UNDERWEIGHT
       mat_bmi_enroll >= 18.5 & mat_bmi_enroll < 25 ~ 2, # NORMAL WEIGHT
@@ -374,10 +582,37 @@ merged_df4 <- merged_df4 %>%
       TRUE ~ NA_real_ # DEFAULT VALUE 
       ))
 
-temp.df <- merged_df4 %>% 
+
+table(merged_df5$bmi_enroll_cat)
+merged_df5$bmi_enroll_cat <- factor(merged_df5$bmi_enroll_cat)
+str(merged_df5$bmi_enroll_cat)
+merged_df5$bmi_enroll_cat <- relevel(merged_df5$bmi_enroll_cat, ref = "2")
+temp.df <- merged_df5 %>% 
   select(SITE, MOMID, TYPE_VISIT, M05_WEIGHT_PERES, M05_HEIGHT_PERES, mat_bmi_enroll, bmi_enroll_cat)
 
+temp.df <- merged_df5 %>% filter(MOMID == 'AA-4424') %>% select(SITE, MOMID, TYPE_VISIT, M05_WEIGHT_PERES, M05_HEIGHT_PERES, mat_bmi_enroll)
 ```
+
+MID UPPER ARM CIRCUMFERENCE (MUAC) - proxy for BMI in pregnancy
+HAVE MUAC MEASUREMENTS AT EACH TIMEPOINT. 
+```{r}
+# Normal/healthy MUAC >23
+#TODO I am looking at this at every time point currently, should this be done just at enrollment? 
+merged_df5 <- merged_df5 %>%
+  mutate(MUAC = ifelse(M05_MUAC_PERES <= 23, 0,
+                       ifelse(M05_MUAC_PERES > 23, 1, as.numeric(NA))
+    ))
+
+merged_df5$MUAC <- factor(merged_df5$MUAC)
+levels(merged_df5$MUAC)
+table(merged_df5$MUAC, useNA = "always")
+merged_df5$MUAC <- relevel(merged_df5$MUAC, ref = "0")
+
+
+temp.df <- merged_df5 %>% select(SITE, MOMID, TYPE_VISIT, M05_MUAC_PERES, MUAC)
+```
+
+
 
 CALCULATE PLASMA EXPANSION VOLUME
 Kaplan-Hakim formula:
@@ -385,17 +620,33 @@ PV (cPV) = (1-hematocrit)*[a +(b*weight in kg)]
 a=1,530 in males; a=864 in females
 b=41 in males; b=47.9 in females
 ```{r}
-merged_df4$pv_a <- 864 # a=1,530 in males; a=864 in females
-merged_df4$pv_b <- 47.9 # b=41 in males; b=47.9 in females
+merged_df5$pv_a <- 864 # a=1,530 in males; a=864 in females
+merged_df5$pv_b <- 47.9 # b=41 in males; b=47.9 in females
 
-merged_df4 <- merged_df4 %>% 
-  mutate(
-    (PV = (1-M08_CBC_HCT_LBORRES)*(pv_a + (pv_b * M05_WEIGHT_PERES)))
+merged_df5 <- merged_df5 %>% 
+  mutate(PV = (1-(M08_CBC_HCT_LBORRES/100))*(pv_a + (pv_b * M05_WEIGHT_PERES)) # Hematocrit is a percentage. Weight in KG
     )
+
+temp.df <- merged_df5 %>% select(SITE, MOMID, TYPE_VISIT, M08_CBC_HCT_LBORRES, M05_WEIGHT_PERES, PV)
 ```
 
+TOBACCO USE:
 ```{r}
-ggplot(data = merged_df4) +
+table(merged_df5$M03_CHEW_OECOCCUR, useNA = "always")
+```
+
+
+
+NUTRITIONAL STATUS
+```{r}
+merged_df5$M04_IRON_ORAL_CMOCCUR
+```
+
+************************
+******* FIGURES ********
+************************
+```{r}
+ggplot(data = merged_df5) +
   geom_point(aes(x=M08_CBC_HB_LBORRES, y=M06_SPHB_LBORRES, 
                  color=SITE), 
              alpha = 0.4, size=1) + 
@@ -403,20 +654,21 @@ ggplot(data = merged_df4) +
   ylim(6,17) +
   xlim(7,17)
 
-ggplot(data = merged_df4) +
+ggplot(data = merged_df5) +
   geom_hex(aes(x=M08_CBC_HB_LBORRES, y=M06_SPHB_LBORRES)) + 
   geom_abline(slope = 1) +
   ylim(0,25)
 ```
 
 ```{r}
-mean_cbc <- merged_df4 %>%
+mean_hb <- merged_df5 %>%
   group_by(TYPE_VISIT, SITE) %>%
-  summarise(mean_cbc = mean(M08_CBC_HB_LBORRES, na.rm=TRUE))
+  summarise(mean_cbc = mean(M08_CBC_HB_LBORRES, na.rm=TRUE),
+            mean_sphb = mean(M06_SPHB_LBORRES, na.rm=TRUE))
 ```
 
 ```{r}
-typevisit_analysis <- merged_df4 %>% 
+typevisit_analysis <- merged_df5 %>% 
   mutate(cbc_bin = cut(M08_CBC_HB_LBORRES, breaks = seq(0,23, by = 0.5)))
 
 table(typevisit_analysis$cbc_bin)
@@ -426,26 +678,59 @@ mean_cbc_bin <- typevisit_analysis %>%
   summarise(mean_diff = mean(M06_SPHB_LBORRES - M08_CBC_HB_LBORRES, na.rm=TRUE))
 ```
 
+Box Plots:
 ```{r}
-merged_df4 %>% ggplot() +
+# CBC: 
+merged_df5 %>% ggplot() +
   geom_boxplot(aes(x=TYPE_VISIT, y = M08_CBC_HB_LBORRES)) + 
-  geom_point(aes(x=TYPE_VISIT, y = M08_CBC_HB_LBORRES), alpha=0.2) 
+  geom_point(aes(x=TYPE_VISIT, y = M08_CBC_HB_LBORRES), alpha=0.2) + 
+    theme_bw() +
+  ylim(0,25)
+  
+# Stratified by site
+merged_df5 %>% ggplot() +
+  geom_boxplot(aes(x=TYPE_VISIT, y = M08_CBC_HB_LBORRES)) + 
+  geom_point(aes(x=TYPE_VISIT, y = M08_CBC_HB_LBORRES), alpha=0.2) + 
+    theme_bw() +
+  ylim(0,25) + 
+  facet_grid(vars(SITE), scales = "free") +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) + 
+  theme(legend.position = "right") 
+
+
+#######################################
+
+# SpHB:
+merged_df5 %>% ggplot() +
+  geom_boxplot(aes(x=TYPE_VISIT, y = M06_SPHB_LBORRES)) + 
+  geom_point(aes(x=TYPE_VISIT, y = M06_SPHB_LBORRES), alpha=0.2) +
+  ylim(5,20)
+
+# Stratified by Site
+merged_df5 %>% ggplot() +
+  geom_boxplot(aes(x=TYPE_VISIT, y = M06_SPHB_LBORRES)) + 
+  geom_point(aes(x=TYPE_VISIT, y = M06_SPHB_LBORRES), alpha=0.2) +
+  ylim(5,20) +
+  theme_bw() +
+  facet_grid(vars(SITE), scales = "free") +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) + 
+  theme(legend.position = "right") 
 ```
 
+************************
+******* MODELS ********
+************************
+
 Linear Mixed Modeling
+# Specify random intercepts for MOMID and SITE (allows for individual variations withing MOMID and different intercepts for each SITE)
 ```{r}
-# Fit a linear mixed model
-# specify random intercepts for MOMID and SITE (allows for individual variations withing MOMID and different intercepts for each SITE)
-mixed_model <- lmer(diff_hb ~ TYPE_VISIT + (1 | MOMID) + (1 | SITE), data = merged_df4)
+# IMPACT OF TYPE_VISIT - I DON'T THINK THIS MODEL MAKES SENSE. 
+# mixed_model <- lmer(diff_hb ~ TYPE_VISIT + (1 | MOMID) + (1 | SITE), data = merged_df5)
 
-# LOOKING AT THE IMPACT OF SITE: 
-mixed_model <- lmer(diff_hb ~ SITE + (1 | MOMID), data = merged_df4)
-
-# LOOKING AT THE IMPACT OF MATERNAL AGE: 
-mixed_model <- lmer(diff_hb ~ M00_ESTIMATED_AGE + (1 | MOMID) + (1 | SITE), data = merged_df4)
-
-# LOOKING AT THE IMPACT OF MATERNAL BMI AT ENROLLMENT: 
-mixed_model <- lmer(diff_hb ~ Mat_BMI_enroll + (1 | MOMID) + (1 | SITE), data = merged_df4)
+# IMPACT OF SITE: 
+mixed_model <- lmer(diff_hb ~ SITE + (1 | MOMID), data = merged_df5)
 
 # Get the model summary
 summary(mixed_model)
@@ -466,6 +751,125 @@ upper_CI <- exp(fixed_effects + 1.96 * SE)
 
 # Display the Relative Risk and 95% CI
 results <- data.frame(Relative_Risk = RR, Lower_CI = lower_CI, Upper_CI = upper_CI)
-results
+round(results, 3)
+extract_eq(mixed_model)
+```
+
+
+```{r}
+# IMPACT OF MATERNAL AGE: 
+mixed_model <- lmer(diff_hb ~ age_lt_18 + (1 | MOMID) + (1 | SITE), data = merged_df5)
+
+
+# Get the model summary
+summary(mixed_model)
+
+# Extract fixed effects coefficients
+fixed_effects <- fixef(mixed_model)
+fixed_effects
+
+# Compute Relative Risk
+RR <- exp(fixed_effects)
+
+# Get the standard errors of the fixed effects
+SE <- sqrt(diag(vcov(mixed_model)))
+
+# Compute 95% Confidence Interval for RR
+lower_CI <- exp(fixed_effects - 1.96 * SE)
+upper_CI <- exp(fixed_effects + 1.96 * SE)
+
+# Display the Relative Risk and 95% CI
+results <- data.frame(Relative_Risk = RR, Lower_CI = lower_CI, Upper_CI = upper_CI)
+round(results, 3)
+
+
+extract_eq(mixed_model)
+```
+
+BMI: 
+```{r}
+# IMPACT OF MATERNAL BMI AT ENROLLMENT: 
+mixed_model <- lmer(diff_hb ~ bmi_enroll_cat + (1 | MOMID) + (1 | SITE), data = merged_df5)
+
+# Get the model summary
+summary(mixed_model)
+
+# Extract fixed effects coefficients
+fixed_effects <- fixef(mixed_model)
+fixed_effects
+
+# Compute Relative Risk
+RR <- exp(fixed_effects)
+
+# Get the standard errors of the fixed effects
+SE <- sqrt(diag(vcov(mixed_model)))
+
+# Compute 95% Confidence Interval for RR
+lower_CI <- exp(fixed_effects - 1.96 * SE)
+upper_CI <- exp(fixed_effects + 1.96 * SE)
+
+# Display the Relative Risk and 95% CI
+results <- data.frame(Relative_Risk = RR, Lower_CI = lower_CI, Upper_CI = upper_CI)
+print(round(results, 3))
+
+
+extract_eq(mixed_model)
+
+```
+
+```{r}
+# IMPACT OF MATERNAL MUAC
+mixed_model <- lmer(diff_hb ~ MUAC + (1 | MOMID) + (1 | SITE), data = merged_df5)
+
+# Get the model summary
+summary(mixed_model)
+
+# Extract fixed effects coefficients
+fixed_effects <- fixef(mixed_model)
+fixed_effects
+
+# Compute Relative Risk
+RR <- exp(fixed_effects)
+
+# Get the standard errors of the fixed effects
+SE <- sqrt(diag(vcov(mixed_model)))
+
+# Compute 95% Confidence Interval for RR
+lower_CI <- exp(fixed_effects - 1.96 * SE)
+upper_CI <- exp(fixed_effects + 1.96 * SE)
+
+# Display the Relative Risk and 95% CI
+results <- data.frame(Relative_Risk = RR, Lower_CI = lower_CI, Upper_CI = upper_CI)
+round(results, 3)
+
+extract_eq(mixed_model)
+```
+
+```{r}
+# IMPACT OF MATERNAL PLASMA EXPANSION VOLUME: 
+mixed_model <- lmer(diff_hb ~ PV + (1 | MOMID) + (1 | SITE), data = merged_df5)
+
+# Get the model summary
+summary(mixed_model)
+
+# Extract fixed effects coefficients
+fixed_effects <- fixef(mixed_model)
+fixed_effects
+
+# Compute Relative Risk
+RR <- exp(fixed_effects)
+
+# Get the standard errors of the fixed effects
+SE <- sqrt(diag(vcov(mixed_model)))
+
+# Compute 95% Confidence Interval for RR
+lower_CI <- exp(fixed_effects - 1.96 * SE)
+upper_CI <- exp(fixed_effects + 1.96 * SE)
+
+# Display the Relative Risk and 95% CI
+results <- data.frame(Relative_Risk = RR, Lower_CI = lower_CI, Upper_CI = upper_CI)
+round(results, 3)
+
+extract_eq(mixed_model)
 ```
 
