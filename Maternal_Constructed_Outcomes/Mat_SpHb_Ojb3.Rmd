@@ -90,6 +90,13 @@ if (exists("mnh00")) {
   "MNH00 dataframe doesn't exist"
 }
 
+if (exists("mnh01")) {
+  mnh01 <- mnh01 %>% 
+    mutate(M01_TYPE_VISIT = 1)
+} else{
+  "MNH01 dataframe doesn't exist"
+}
+
 if (exists("mnh02")) {
   mnh02 <- mnh02 %>% 
     mutate(M02_TYPE_VISIT = 1)
@@ -170,6 +177,7 @@ enrolled_ids_vec <- as.vector(mnh02$PREGID)
 
 Rename TYPE_VISIT variables:
 ```{r}
+mnh01 <- mnh01 %>% rename(TYPE_VISIT = M01_TYPE_VISIT)
 mnh02 <- mnh02 %>% rename(TYPE_VISIT = M02_TYPE_VISIT)
 mnh03 <- mnh03 %>% rename(TYPE_VISIT = M03_TYPE_VISIT)
 mnh04 <- mnh04 %>% rename(TYPE_VISIT = M04_TYPE_VISIT)
@@ -181,6 +189,13 @@ mnh12 <- mnh12 %>% rename(TYPE_VISIT = M12_TYPE_VISIT)
 
 Clean up the data frames: 
 ```{r}
+
+mnh01 <- mnh01 %>%
+  filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
+  drop_na(MOMID, PREGID) %>%
+  distinct (MOMID, PREGID, SITE, TYPE_VISIT, .keep_all = TRUE)
+
+
 mnh02 <- mnh02 %>%
   filter(MOMID!="") %>% #Moved filter to the end so we can create all the variables with TYPE_VISIT at the end of the var name before rows get dropped out
   drop_na(MOMID, PREGID) %>%
@@ -214,6 +229,7 @@ mnh12 <- mnh12 %>%
 
 Drop TYPE_VISIT in MNH02 and in MNH03 (b/c  TYPE_VISIT=1 for all)
 ```{r}
+mnh01 <- mnh01 %>% select(-TYPE_VISIT)
 mnh02 <- mnh02 %>% select(-TYPE_VISIT)
 mnh03 <- mnh03 %>% select(-TYPE_VISIT)
 ```
@@ -239,12 +255,22 @@ Vars needed:
 
 ```{r}
 ######################
+### MNH01 SUBSET ####
+###         ####
+######################
+mnh01_subset <- mnh01 %>%
+  select(SITE, MOMID, PREGID, M01_US_OHOSTDAT, M01_US_GA_WKS_AGE_FTS1, M01_US_GA_WKS_AGE_FTS2, 
+         M01_US_GA_WKS_AGE_FTS3, M01_US_GA_WKS_AGE_FTS4, GA_US_DAYS_FTS1, 
+         GA_US_DAYS_FTS2, GA_US_DAYS_FTS3, GA_US_DAYS_FTS4, M01_GA_LMP_WEEKS_SCORRES) 
+
+######################
 ### MNH03 SUBSET ####
 ###      SES     ####
 ######################
 
 mnh03_subset <- mnh03 %>%
-  select(SITE, MOMID, PREGID, M03_SD_OBSSTDAT, M03_CHEW_OECOCCUR) 
+  select(SITE, MOMID, PREGID, M03_SD_OBSSTDAT, M03_CHEW_OECOCCUR, M03_SMOKE_OECOCCUR, 
+         M03_SMOKE_OECOCCUR, M03_CHEW_BNUT_OECOCCUR) 
 
 ###########################
 ### MNH04 SUBSET ####
@@ -274,7 +300,7 @@ mnh06_subset <- mnh06 %>%
   select(SITE, MOMID, PREGID, TYPE_VISIT, M06_DIAG_VSDAT, 
          #Form completion Date, Time, Person ID
          M06_FORMCOMPLDAT_MNH06, M06_FORMCOMPLTIM_MNH06, M06_FORMCOMPLID_MNH06, 
-         M06_SPHB_LBORRES,
+         M06_SPHB_LBORRES, M06_HB_POC_LBORRES, # first one is Masimo, POC is point of care Hemocue test. 
          # Malaria, HIV, Helminth
          M06_MALARIA_POC_LBORRES, M06_HIV_POC_LBORRES, 
          # HIV POC
@@ -527,7 +553,7 @@ Compute difference between SphB and CBC at each time point
 merged_df5 <- merged_df5 %>% 
   mutate(diff_hb = M06_SPHB_LBORRES - M08_CBC_HB_LBORRES)
 
-temp_df <- merged_df5 %>% select(SITE, MOMID, TYPE_VISIT, M06_SPHB_LBORRES, M08_CBC_HB_LBORRES, diff_hb)
+temp.df <- merged_df5 %>% select(SITE, MOMID, TYPE_VISIT, M06_SPHB_LBORRES, M08_CBC_HB_LBORRES, diff_hb)
 ```
 
 FACTORIZE TYPE_VISIT VARIABLE:
@@ -559,6 +585,39 @@ merged_df5 <- merged_df5 %>%
     ))
 
 temp.df <- merged_df5 %>% select(SITE, MOMID, M02_SCRN_OBSSTDAT, M00_BRTHDAT, M00_ESTIMATED_AGE, mom_age_enroll, age_lt_18)
+```
+
+
+***TOBACCO USE:***
+```{r}
+# Do you smoke cig: M03_SMOKE_OECOCCUR
+# In the last month, did you chew tobacco: M03_CHEW_OECOCCUR
+# In the last month, did you chew betel nut: M03_CHEW_BNUT_OECOCCUR
+
+table(merged_df5$M03_SMOKE_OECOCCUR, useNA = "always")
+table(merged_df5$M03_CHEW_OECOCCUR, useNA = "always")
+table(merged_df5$M03_CHEW_BNUT_OECOCCUR, useNA = "always")
+
+merged_df5 <- merged_df5 %>% 
+  mutate(tobacco_use = case_when((!is.na(M03_SMOKE_OECOCCUR) &  M03_SMOKE_OECOCCUR==1) | 
+                                    (!is.na(M03_CHEW_OECOCCUR) & M03_CHEW_OECOCCUR==1) | 
+                                    (!is.na(M03_CHEW_BNUT_OECOCCUR) & M03_CHEW_BNUT_OECOCCUR==1) ~ 1,
+                                 
+                                 ((!is.na(M03_SMOKE_OECOCCUR) & M03_SMOKE_OECOCCUR==0) & 
+                                    (!is.na(M03_CHEW_OECOCCUR) & M03_CHEW_OECOCCUR==0) & 
+                                    (!is.na(M03_CHEW_BNUT_OECOCCUR) & M03_CHEW_BNUT_OECOCCUR==0)) ~ 0,
+                                 
+                                 TRUE ~ as.numeric(NA)))
+    
+temp.df <- merged_df5 %>% select(SITE, MOMID, PREGID, 
+                                 M03_SMOKE_OECOCCUR, M03_CHEW_OECOCCUR, M03_CHEW_BNUT_OECOCCUR, tobacco_use)
+
+table(merged_df5$tobacco_use, useNA = "always")
+
+merged_df5$tobacco_use <- factor(merged_df5$tobacco_use)
+levels(merged_df5$tobacco_use)
+merged_df5$tobacco_use <- relevel(merged_df5$tobacco_use, ref="0")
+
 ```
 
 CALCULATE BMI:
@@ -608,13 +667,11 @@ levels(merged_df5$MUAC)
 table(merged_df5$MUAC, useNA = "always")
 merged_df5$MUAC <- relevel(merged_df5$MUAC, ref = "0")
 
-
 temp.df <- merged_df5 %>% select(SITE, MOMID, TYPE_VISIT, M05_MUAC_PERES, MUAC)
 ```
 
+***PLASMA EXPANSION VOLUME***
 
-
-CALCULATE PLASMA EXPANSION VOLUME
 Kaplan-Hakim formula:
 PV (cPV) = (1-hematocrit)*[a +(b*weight in kg)] 
 a=1,530 in males; a=864 in females
@@ -630,17 +687,203 @@ merged_df5 <- merged_df5 %>%
 temp.df <- merged_df5 %>% select(SITE, MOMID, TYPE_VISIT, M08_CBC_HCT_LBORRES, M05_WEIGHT_PERES, PV)
 ```
 
-TOBACCO USE:
-```{r}
-table(merged_df5$M03_CHEW_OECOCCUR, useNA = "always")
-```
 
-
-
-NUTRITIONAL STATUS
+***NUTRITIONAL STATUS***
 ```{r}
 merged_df5$M04_IRON_ORAL_CMOCCUR
 ```
+
+*********************************
+********************************
+*********************************
+***ANEMIA STATUS***
+
+Create anemia levels for each ANC Visit
+WHO Hb thresholds g/dl:
+Mild: 10.0-10.9
+Moderate: 7.0-9.9
+Severe: <7
+Normal: >=11.0
+Excess Hb: >13
+
+NOTE: all the visits can have the same definition since this is long data. 
+```{r}
+
+# NOTE: That I am using the same threshold for all the time points. 
+merged_df5 <- merged_df5 %>% 
+  mutate(MAT_ANEMIA_MEAS= case_when((!is.na(M08_CBC_HB_LBORRES) & 
+                                        M08_CBC_HB_LBORRES>=10 & M08_CBC_HB_LBORRES<11) ~ "mild",
+                                      (is.na(M08_CBC_HB_LBORRES) & !is.na(M06_HB_POC_LBORRES) & 
+                                        M06_HB_POC_LBORRES>=10 & M06_HB_POC_LBORRES<11) ~ "mild",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES) & 
+                                        M08_CBC_HB_LBORRES>=7 & M08_CBC_HB_LBORRES<10) ~ "moderate",
+                                      (is.na(M08_CBC_HB_LBORRES) & !is.na(M06_HB_POC_LBORRES) & 
+                                        M06_HB_POC_LBORRES>=7 & M06_HB_POC_LBORRES<10) ~ "moderate",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES) & 
+                                        M08_CBC_HB_LBORRES>=0 & M08_CBC_HB_LBORRES<7) ~ "severe",
+                                      (is.na(M08_CBC_HB_LBORRES) & !is.na(M06_HB_POC_LBORRES) & 
+                                        M06_HB_POC_LBORRES>=0 & M06_HB_POC_LBORRES<7) ~ "severe",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES) & 
+                                        M08_CBC_HB_LBORRES>=11 & M08_CBC_HB_LBORRES<=13) ~ "normal",
+                                      (is.na(M08_CBC_HB_LBORRES) & !is.na(M06_HB_POC_LBORRES) & 
+                                        M06_HB_POC_LBORRES>=11 & M06_HB_POC_LBORRES<=13) ~ "normal",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES) & 
+                                        M08_CBC_HB_LBORRES>13 & M08_CBC_HB_LBORRES<15) ~ "high hb 13-<15g/dl",
+                                      (is.na(M08_CBC_HB_LBORRES) & !is.na(M06_HB_POC_LBORRES) & 
+                                        M06_HB_POC_LBORRES>13 & M06_HB_POC_LBORRES<15) ~ "high hb 13-<15g/dl",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES) & M08_CBC_HB_LBORRES>=15)  ~ "high hb >=15g/dl",
+                                      (is.na(M08_CBC_HB_LBORRES) & !is.na(M06_HB_POC_LBORRES) & 
+                                      M06_HB_POC_LBORRES>=15) ~ "high hb >=15g/dl",
+                                      
+                                      TRUE ~ as.character(NA)))
+
+
+
+temp.df <- merged_df5 %>% 
+  select(MOMID, SITE, TYPE_VISIT, MAT_ANEMIA_MEAS, M08_CBC_HB_LBORRES, M06_HB_POC_LBORRES)
+
+sum(merged_df5$M08_CBC_HB_LBORRES %in% c(-5, -7))
+
+table(MAT_ANEMIA_MEAS = merged_df5$MAT_ANEMIA_MEAS, useNA = "always", SITE = merged_df5$SITE)
+round(prop.table(table(merged_df5$MAT_ANEMIA_MEAS, useNA = "always", merged_df5$SITE), margin=2)*100,2) 
+
+
+merged_df5 <- merged_df5 %>%
+  mutate(HIGH_HB_gt15 = case_when(MAT_ANEMIA_MEAS=="high hb >=15g/dl" ~ 1, TRUE ~0))
+
+merged_df5$MAT_ANEMIA_MEAS <- factor(merged_df5$MAT_ANEMIA_MEAS) 
+merged_df5$MAT_ANEMIA_MEAS <- relevel(merged_df5$MAT_ANEMIA_MEAS, ref="normal")
+str(merged_df5$MAT_ANEMIA_MEAS)
+```
+
+*********************************************************
+*********************************************************
+*********************************************************
+***GESTATIONAL AGE AT ASSESSMENT AT AT FIRST ANC VISIT***
+*********************************************************
+*********************************************************
+*********************************************************
+
+# CREATE BOE AND EDD_BOE (BOE = just at enrollment)
+```{r}
+merged_df5 <- merged_df5 %>%
+  mutate(M01_US_OHOSTDAT = ymd(M01_US_OHOSTDAT))
+
+# momid <- mnh02_df %>% select(MOMID, SCRNID, PREGID, SITE)
+# mnh01_constructed_df <- left_join()
+mnh01_constructed_df <- mnh01_df %>%
+  # only want participants who are enrolled
+  filter(PREGID %in% enrolled_ids_vec) %>% 
+  
+  ## only want the first ultrasound visit -- take the earliest date for each participant
+  # group_by(SITE, MOMID, PREGID) %>%
+  # arrange(M01_US_OHOSTDAT) %>%
+  # slice(1) %>%
+  # filter(M01_TYPE_VISIT == 1) %>% 
+  # select a subset of variables
+  
+  # select(SITE, MOMID,PREGID, M01_US_OHOSTDAT_1,
+  #        M01_US_GA_WKS_AGE_FTS1_1, M01_US_GA_WKS_AGE_FTS2_1,
+  #        M01_US_GA_WKS_AGE_FTS3_1, M01_US_GA_WKS_AGE_FTS4_1,
+  #        M01_US_GA_DAYS_AGE_FTS1_1, M01_US_GA_DAYS_AGE_FTS2_1,
+  #        M01_US_GA_DAYS_AGE_FTS3_1, M01_US_GA_DAYS_AGE_FTS4_1,
+  #        M01_GA_LMP_WEEKS_SCORRES_1, M01_GA_LMP_DAYS_SCORRES_1) 
+  
+  mutate(M01_US_OHOSTDAT_1 = ymd(M01_US_OHOSTDAT_1)) %>%
+  
+
+  # filter out any ultrasound visit dates that are 07-07-1907
+  filter(M01_US_OHOSTDAT_1 != ymd("1907-07-07")) %>%   
+  # calculate us ga in days with reported ga in wks + days. if ga is -7 or -5, replace with NA
+  mutate(GA_US_DAYS_FTS1_1 =  ifelse(M01_US_GA_WKS_AGE_FTS1_1!= -7 & M01_US_GA_DAYS_AGE_FTS1_1 != -7 & M01_US_GA_WKS_AGE_FTS1_1 != -5 & M01_US_GA_DAYS_AGE_FTS1_1 != -5,  (M01_US_GA_WKS_AGE_FTS1_1 * 7 + M01_US_GA_DAYS_AGE_FTS1_1), NA), 
+         GA_US_DAYS_FTS2_1 =  ifelse(M01_US_GA_WKS_AGE_FTS2_1!= -7 & M01_US_GA_DAYS_AGE_FTS2_1 != -7 & M01_US_GA_WKS_AGE_FTS2_1 != -5 & M01_US_GA_WKS_AGE_FTS2_1 != -5,  (M01_US_GA_WKS_AGE_FTS2_1 * 7 + M01_US_GA_DAYS_AGE_FTS2_1), NA),
+         GA_US_DAYS_FTS3_1 =  ifelse(M01_US_GA_WKS_AGE_FTS3_1!= -7 & M01_US_GA_DAYS_AGE_FTS3_1 != -7 & M01_US_GA_WKS_AGE_FTS3_1 != -5 & M01_US_GA_WKS_AGE_FTS3_1 != -5,  (M01_US_GA_WKS_AGE_FTS3_1 * 7 + M01_US_GA_DAYS_AGE_FTS3_1), NA),
+         GA_US_DAYS_FTS4_1 =  ifelse(M01_US_GA_WKS_AGE_FTS4_1!= -7 & M01_US_GA_DAYS_AGE_FTS4_1 != -7 & M01_US_GA_WKS_AGE_FTS4_1 != -5 & M01_US_GA_WKS_AGE_FTS4_1 != -5,  (M01_US_GA_WKS_AGE_FTS4_1 * 7 + M01_US_GA_DAYS_AGE_FTS4_1), NA)) %>% 
+  #  pull the largest GA for multiple fetuses + convert to weeks
+  mutate(US_GA_DAYS = pmax(GA_US_DAYS_FTS1_1, GA_US_DAYS_FTS2_1, GA_US_DAYS_FTS3_1, GA_US_DAYS_FTS4_1, na.rm = TRUE)) %>% ## where GA_US_DAYS_FTSx is the reported GA by ultrasound (added together M01_US_GA_WKS_AGE_FTSx and M01_US_GA_DAYS_AGE_FTSx to get a single estimate in days)
+  mutate(US_GA_WKS = floor(US_GA_DAYS/7)) %>% 
+  #  convert ga by LMP to days and wks
+  # on US meaturement for all 4 babies. 
+  # For LMP we just have info on one baby.
+  mutate(LMP_GA_DAYS =  ifelse(M01_GA_LMP_WEEKS_SCORRES_1 != -7 & M01_GA_LMP_DAYS_SCORRES_1 != -7,  (M01_GA_LMP_WEEKS_SCORRES_1 * 7 + M01_GA_LMP_DAYS_SCORRES_1), NA)) %>% 
+  mutate(LMP_GA_WKS = floor(LMP_GA_DAYS/7)) %>%
+  ## generate indicator variable for missing US 
+  mutate(MISSING_BOTH_US_LMP = ifelse((US_GA_WKS < 0 & LMP_GA_WKS < 0) | 
+                                        (is.na(US_GA_WKS) & is.na(LMP_GA_WKS)), 1, 0)) %>% 
+  #  calculate the difference in days between reported LMP and reported US
+  mutate(GA_DIFF_DAYS = LMP_GA_DAYS-US_GA_DAYS) %>%
+  #  obtain best obstetric estimate in weeks
+  mutate(BOE_GA_WKS = case_when(LMP_GA_WKS %/% 7 < 9 ~
+                                  if_else(abs(GA_DIFF_DAYS) <= 5,
+                                          LMP_GA_WKS,
+                                          US_GA_WKS),
+                                LMP_GA_WKS %/% 7 < 16 ~
+                                  if_else(abs(GA_DIFF_DAYS) <=7,
+                                          LMP_GA_WKS, US_GA_WKS),
+                                LMP_GA_WKS %/% 7 >= 16 ~
+                                  if_else(abs(GA_DIFF_DAYS) <=10,
+                                          LMP_GA_WKS, US_GA_WKS),
+                                TRUE ~ US_GA_WKS)) %>%
+  mutate(BOE_GA_DAYS = BOE_GA_WKS*7) %>%
+ 
+   # generate indicator variable if LMP or US was used (where 1 = US and 2 = LMP)
+  mutate(BOE_METHOD = ifelse(BOE_GA_WKS == US_GA_WKS, 1, 
+                             ifelse(BOE_GA_WKS == LMP_GA_WKS, 2, 55))) %>%
+ 
+   # generate EDD_BOE based on BOE 
+  # "zero out" GA and obtain the estimated "date of conception" 
+  mutate(EST_CONCEP_DATE = M01_US_OHOSTDAT_1 - BOE_GA_DAYS) %>% 
+  # add 280 days to EST_CONCEP_DATE to generate EDD based on BOE 
+  mutate(EDD_BOE = EST_CONCEP_DATE + 280)
+
+mnh01_constructed_df2 <- mnh01_constructed_df %>%
+  select(MOMID, PREGID, SITE, 
+         GA_US_DAYS_FTS1_1, GA_US_DAYS_FTS2_1, GA_US_DAYS_FTS3_1, GA_US_DAYS_FTS4_1,
+         US_GA_DAYS, US_GA_WKS, LMP_GA_DAYS, LMP_GA_WKS, MISSING_BOTH_US_LMP, GA_DIFF_DAYS, 
+         BOE_GA_WKS, BOE_GA_DAYS, BOE_METHOD, US_GA_DAYS,
+         EST_CONCEP_DATE, EDD_BOE)
+```
+
+# MERGED EST CONCEPTION DATE, EDD_BOE, BOE_GA vars here with merged_df5
+```{r}
+merged_df5 <- left_join(merged_df5, mnh01_constructed_df2, 
+                       by = c("MOMID", "SITE", "PREGID"))
+```
+
+# GA AT ENROLLMENT
+```{r}
+# EXTRACT GA AT ENROLLMENT:
+# CREATE MERGED FILE FIRST. 
+merged_df5 <- merged_df5 %>%
+  rowwise() %>%
+  mutate(DIFFDAYS = as.numeric(difftime(M02_SCRN_OBSSTDAT_1, M01_US_OHOSTDAT_1, units = "days"))) %>% # EXTRACT THE DIFFERENCE IN NUM OF DAYS B/W SCREENING US AND ENROLLMENT VISIT
+  # MNH02 is being used as definitive enrollment. 
+  # MNH01 visit 1 is when US is done. 
+  mutate(DIFFDAYS = ifelse(DIFFDAYS < 0,0,DIFFDAYS)) %>% #IF THE DIFF IS NEG, REPLACE WITH 0 (JUST USE DATE OF ULTRASOUND SCREENING)
+   mutate(GA_ENROLL_WKS = floor(as.numeric((DIFFDAYS + US_GA_DAYS)/7)), #TODO Stacie had this as GA_US_DAYS_1
+         GA_ENROLL_DAYS = floor(as.numeric(DIFFDAYS + US_GA_DAYS))) #TODO Stacie had this as GA_US_DAYS_1
+
+#TODO STACIE SAID SHE USED GA_US_DAYS IN THE MONITORING REPORT AND IN MATERNAL_WIDE FILE HAS US_GA_DAYS - SAME THING
+
+  # mutate(GA_ENROLL_WKS = floor(as.numeric((DIFFDAYS + GA_US_DAYS_1)/7)), #TODO Stacie had this as GA_US_DAYS_1
+  #        GA_ENROLL_DAYS = floor(as.numeric(DIFFDAYS + GA_US_DAYS_1))) #TODO Stacie had this as GA_US_DAYS_1
+
+```
+
+***TIME BETWEEN SPHB AND CBC COLLECTION***
+```{r}
+# M06_FORMCOMPLTIM_MNH06
+# Do we have a time in MNH08? 
+```
+
+*********************************
+********************************
+*********************************
 
 ************************
 ******* FIGURES ********
@@ -730,7 +973,7 @@ Linear Mixed Modeling
 # mixed_model <- lmer(diff_hb ~ TYPE_VISIT + (1 | MOMID) + (1 | SITE), data = merged_df5)
 
 # IMPACT OF SITE: 
-mixed_model <- lmer(diff_hb ~ SITE + (1 | MOMID), data = merged_df5)
+mixed_model <- lmer(diff_hb ~ (1| SITE) + (1 | MOMID), data = merged_df5)
 
 # Get the model summary
 summary(mixed_model)
@@ -755,10 +998,41 @@ round(results, 3)
 extract_eq(mixed_model)
 ```
 
-
+MATERNAL AGE < 18 OR >=18
 ```{r}
 # IMPACT OF MATERNAL AGE: 
 mixed_model <- lmer(diff_hb ~ age_lt_18 + (1 | MOMID) + (1 | SITE), data = merged_df5)
+
+
+# Get the model summary
+summary(mixed_model)
+
+# Extract fixed effects coefficients
+fixed_effects <- fixef(mixed_model)
+fixed_effects
+
+# Compute Relative Risk
+RR <- exp(fixed_effects)
+
+# Get the standard errors of the fixed effects
+SE <- sqrt(diag(vcov(mixed_model)))
+
+# Compute 95% Confidence Interval for RR
+lower_CI <- exp(fixed_effects - 1.96 * SE)
+upper_CI <- exp(fixed_effects + 1.96 * SE)
+
+# Display the Relative Risk and 95% CI
+results <- data.frame(Relative_Risk = RR, Lower_CI = lower_CI, Upper_CI = upper_CI)
+round(results, 3)
+
+
+extract_eq(mixed_model)
+```
+
+***TOBACCO USE:***
+```{r}
+# IMPACT OF Tobacco use: 
+mixed_model <- lmer(diff_hb ~ tobacco_use + (1 | MOMID) + (1 | SITE), data = merged_df5)
 
 
 # Get the model summary
@@ -845,9 +1119,24 @@ round(results, 3)
 extract_eq(mixed_model)
 ```
 
+STANDARDIZING PV FIRST: 
+```{r}
+# Qing comment: 
+# The PV coefficient is 0.001058 with a SE on the scale of e-5. It is very small in the mixed model below.
+# Try standardized PV instead (center at 0 with variance=1)? The interpretation would be for one SD change in PV values.
+
+# This new variable will now have a mean of 0 and variance of 1.
+merged_df5$PV_standardized <- scale(merged_df5$PV)
+# merged_df5$PV_standardized
+
+```
+
 ```{r}
 # IMPACT OF MATERNAL PLASMA EXPANSION VOLUME: 
 mixed_model <- lmer(diff_hb ~ PV + (1 | MOMID) + (1 | SITE), data = merged_df5)
+
+# STANDARDIZED PV
+mixed_model <- lmer(diff_hb ~ PV_standardized + (1 | MOMID) + (1 | SITE), data = merged_df5)
 
 # Get the model summary
 summary(mixed_model)
@@ -861,7 +1150,7 @@ RR <- exp(fixed_effects)
 
 # Get the standard errors of the fixed effects
 SE <- sqrt(diag(vcov(mixed_model)))
-
+SE
 # Compute 95% Confidence Interval for RR
 lower_CI <- exp(fixed_effects - 1.96 * SE)
 upper_CI <- exp(fixed_effects + 1.96 * SE)
@@ -872,4 +1161,71 @@ round(results, 3)
 
 extract_eq(mixed_model)
 ```
+
+PV ggplot:
+```{r}
+ggplot(merged_df5, aes(x=PV)) +
+  geom_histogram(color="lightblue")+
+  geom_density(color="darkblue", size=1) +
+  labs(title = "Distribution of Plasma Expansion Volume across all 3 sites", x= "PV", Y = "Density")
+  
+
+ggplot(merged_df5, aes(x=PV)) +
+  geom_histogram(color="lightblue")+
+  geom_density(color="darkblue", size=1) +
+  labs(title = "Distribution of Plasma Expansion Volume per site", x= "PV", Y = "Density") + 
+  theme_bw() +
+  ylim(0,750) + 
+  facet_grid(vars(SITE), scales = "free") +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) + 
+  theme(legend.position = "right") 
+
+```
+
+***ANEMIA SEVERITY***
+```{r}
+
+# IMPACT OF MATERNAL ANEMIA SEVERITY ACROSS 5 TIMEPOINTS: 
+mixed_model <- lmer(diff_hb ~ MAT_ANEMIA_MEAS + (1 | MOMID) + (1 | SITE), data = merged_df5)
+
+# Get the model summary
+summary(mixed_model)
+
+# Extract fixed effects coefficients
+fixed_effects <- fixef(mixed_model)
+fixed_effects
+
+# Compute Relative Risk
+RR <- exp(fixed_effects)
+
+# Get the standard errors of the fixed effects
+SE <- sqrt(diag(vcov(mixed_model)))
+SE
+# Compute 95% Confidence Interval for RR
+lower_CI <- exp(fixed_effects - 1.96 * SE)
+upper_CI <- exp(fixed_effects + 1.96 * SE)
+
+# Display the Relative Risk and 95% CI
+results <- data.frame(Relative_Risk = RR, Lower_CI = lower_CI, Upper_CI = upper_CI)
+round(results, 3)
+
+extract_eq(mixed_model)
+
+```
+
+```{r}
+ggplot(data = merged_df5) +
+  geom_point(aes(x=diff_hb, y=M08_CBC_HB_LBORRES, 
+                 color=SITE), 
+             alpha = 0.4, size=1) 
+
+
+ggplot(data = merged_df5) +
+  geom_hex(aes(x=M08_CBC_HB_LBORRES, y=M06_SPHB_LBORRES)) + 
+  geom_abline(slope = 1) +
+  ylim(0,25)
+
+```
+
 
