@@ -31,9 +31,9 @@ library(ggvenn)
 library(wesanderson)
 ```
 
-OVERT diabetes = check if a women at enrollment has been diagnosed using hba1c.
-GDM: Among women who have an ANC28 and have a GA_AT_VISI>20. 
-WOMEN WHO WERE ENROLLED >18 WEEKS WILL NOT HAVE AN ANC20 VISIT FORM BUT THEY SHOULD HAVE ANC28
+# OVERT diabetes = check if a women at enrollment has been diagnosed using hba1c.
+# GDM: Among women who have an ANC28 and have a GA_AT_VISI>20. 
+# WOMEN WHO WERE ENROLLED >18 WEEKS WILL NOT HAVE AN ANC20 VISIT FORM BUT THEY SHOULD HAVE ANC28
 
 ```{r}
 # merged_df <- readRDS('../data_out/merged_df.RDS')
@@ -178,9 +178,10 @@ Look at:
 temp.df <- diabetes_df3 %>% select(MOMID, SITE, M08_HBA1C_PRCNT_1) %>% filter(SITE=="Pakistan") 
 # MEASURED # 
 ############
+
 temp.df <- diabetes_df3 %>% 
-  select(MOMID, SITE, M08_HBA1C_PRCNT_1, M08_BGLUC_PRETEST_MMOLL_LBORRES_3, 
-         M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3, M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3)
+  select(MOMID, SITE, M08_HBA1C_PRCNT_1, M08_HBA1C_LBORRES_1, M08_BGLUC_PRETEST_MMOLL_LBORRES_3, 
+         M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3, M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3) %>% filter(SITE=="Ghana")
 
 diabetes_df3 <- diabetes_df3 %>% 
   #dplyr::filter(SITE=="Pakistan") %>%
@@ -211,8 +212,6 @@ temp.df <- diabetes_df3 %>% filter(SITE=="Ghana") %>% select(MOMID, SITE, M08_MA
 
 ########################################################################################
 ```
-
-
 
 # SUBSET OF VARIABLES THAT MAKE GEST_DIAB_MEAS
 ```{r}
@@ -274,7 +273,9 @@ diabetes_df <- diabetes_df %>% filter(!is.na(M08_LBSTDAT_3)) %>%
                                  M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3==-7) ~ as.numeric(NA),
          TRUE ~ as.numeric(0)))
 
-temp.df <- diabetes_df %>% select(MOMID, SITE, M08_BGLUC_PRETEST_MMOLL_LBORRES_3, M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3, M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3)
+temp.df <- diabetes_df %>% select(MOMID, SITE, M08_BGLUC_PRETEST_MMOLL_LBORRES_3, M08_BGLUC_PRETEST_MMOLL_LBORRES_4,
+                                  M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3, M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_4, 
+                                  M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3, M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_4)
 table(diabetes_df$OGTT_2hr, diabetes_df$SITE, useNA = "always")
 round(prop.table(table(diabetes_df$OGTT_2hr, diabetes_df$SITE, useNA = "always"), margin=2)*100,2)
 
