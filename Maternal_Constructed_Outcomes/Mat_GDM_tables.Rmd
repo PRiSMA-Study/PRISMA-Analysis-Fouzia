@@ -245,19 +245,19 @@ diabetes_table <- df %>%
     "Hyperglycemia = Yes " = 
       paste0(sum(GEST_DIAB_MEAS == 1, na.rm = TRUE),
              " (",
-             format(round(sum(GEST_DIAB_MEAS == 1, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3), # this is among those who have passed the ANC28 window. I could do this as those who have completed the form. 
+             format(round(sum(GEST_DIAB_MEAS==1, na.rm = TRUE)/sum(!is.na(GEST_DIAB_MEAS))*100,2), nsmall=2, digits=3), # this is among those who have passed the ANC28 window. I could do this as those who have completed the form. #was using n() to divide here before removing missing. 
              ")"),
     
     "Hyperglycemia = No " = 
       paste0(sum(GEST_DIAB_MEAS == 0, na.rm = TRUE),
              " (",
-             format(round(sum(GEST_DIAB_MEAS == 0, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             format(round(sum(GEST_DIAB_MEAS == 0, na.rm = TRUE)/sum(!is.na(GEST_DIAB_MEAS))*100,2), nsmall=2, digits=3), #was using n() to divide here before removing missing. 
              ")"),
     
         "Hyperglycemia = Missing " = 
       paste0(sum(is.na(GEST_DIAB_MEAS)),
              " (",
-             format(round(sum(is.na(GEST_DIAB_MEAS))/n()*100,2), nsmall=2, digits=3),
+             format(round(sum(is.na(GEST_DIAB_MEAS))/n()*100,2), nsmall=2, digits=3), #was using n() to divide here before removing missing. 
              ")")) %>%
 
   t() %>% as.data.frame() %>% 
@@ -301,7 +301,7 @@ diabetes_table <- df %>%
      "Overt Diabetes = Yes " =
       paste0(sum(OVERT_DIA == 1, na.rm = TRUE),
              " (",
-             format(round(sum(OVERT_DIA == 1, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3),
+             format(round(sum(OVERT_DIA == 1, na.rm = TRUE)/n()*100,2), nsmall=2, digits=3), # divided by n() before
              ")"),
 
          "Overt Diabetes = No " =
