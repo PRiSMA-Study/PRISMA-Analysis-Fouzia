@@ -23,7 +23,7 @@ OBJECTIVE 3 RISK FACTORS TO ASSESS:
 ●	Malaria status (Kenya site only),
 ●	Helminth infection status (Kenya site only),
 
-
+###NOTE: Kenya is not doing CBC at every visit for PRISMA except at enrollment b/c it's expensive.  But they are doing it at every visit for REMAPP.  So, I should subset to ppl who are in ReMAPP and see how many have gone past VISIT 10 - that will give me a true sense of how many ppl have made it past.
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -48,9 +48,9 @@ library(equatiomatic) # for creating equations from models
 
 Import data: 
 ```{r}
-path_to_data <-  'D:/Users/fouziafarooq/Documents/PRISMA_constructed-outcomes/data/2023-12-15/'# - for AWS data
+path_to_data <-  'D:/Users/fouziafarooq/Documents/PRISMA_constructed-outcomes/data/2024-01-26/'# - for AWS data
 
-UploadDate = "2023-12-15"
+UploadDate = "2024-01-26"
 uploadDate <- as.Date(UploadDate, format = "%Y-%m-%d")
 ```
 
@@ -187,6 +187,19 @@ mnh08 <- mnh08 %>% rename(TYPE_VISIT = M08_TYPE_VISIT)
 mnh12 <- mnh12 %>% rename(TYPE_VISIT = M12_TYPE_VISIT)
 ```
 
+In MNH01, **Zambia doesn't have MOMID and PREGID** so have to merge with MNH02. 
+```{r}
+temp.df <- mnh01 %>% filter(SITE=="Zambia") %>% select(MOMID, PREGID, SCRNID, M01_US_GA_DAYS_AGE_FTS1)
+mnh01 <- mnh01 %>% select(-MOMID, -PREGID) # First remove MOMID and PREGID from mnh01. 
+mnh01 <- left_join(mnh01, 
+                   mnh02 %>% select(SCRNID, MOMID, PREGID, SITE),
+                   by = c("SCRNID", "SITE"))
+
+mnh01 <- mnh01 %>% 
+  select(SITE, SCRNID, MOMID, PREGID, everything())
+
+```
+
 Clean up the data frames: 
 ```{r}
 
@@ -256,12 +269,13 @@ Vars needed:
 ```{r}
 ######################
 ### MNH01 SUBSET ####
-###         ####
-######################
+###      GA     ####
+#####################
 mnh01_subset <- mnh01 %>%
-  select(SITE, MOMID, PREGID, M01_US_OHOSTDAT, M01_US_GA_WKS_AGE_FTS1, M01_US_GA_WKS_AGE_FTS2, 
-         M01_US_GA_WKS_AGE_FTS3, M01_US_GA_WKS_AGE_FTS4, GA_US_DAYS_FTS1, 
-         GA_US_DAYS_FTS2, GA_US_DAYS_FTS3, GA_US_DAYS_FTS4, M01_GA_LMP_WEEKS_SCORRES) 
+  select(SITE, SCRNID, MOMID, PREGID, M01_US_OHOSTDAT, M01_US_GA_WKS_AGE_FTS1, M01_US_GA_WKS_AGE_FTS2,
+         M01_US_GA_WKS_AGE_FTS3, M01_US_GA_WKS_AGE_FTS4, M01_US_GA_DAYS_AGE_FTS1,
+         M01_US_GA_DAYS_AGE_FTS2, M01_US_GA_DAYS_AGE_FTS3, M01_US_GA_DAYS_AGE_FTS4, M01_GA_LMP_WEEKS_SCORRES,
+         M01_GA_LMP_DAYS_SCORRES)
 
 ######################
 ### MNH03 SUBSET ####
@@ -278,9 +292,13 @@ mnh03_subset <- mnh03 %>%
 ###########################
 
 mnh04_subset <- mnh04 %>% 
-  select(SITE, MOMID, PREGID, TYPE_VISIT, M04_ANC_OBSSTDAT, TYPE_VISIT, 
-         # HIV diagnosis since last visit
-         M04_HIV_MHOCCUR,
+  select(SITE, MOMID, PREGID, TYPE_VISIT, M04_ANC_OBSSTDAT, TYPE_VISIT,
+         # HIV diagnosis 
+         M04_HIV_MHOCCUR, #HIV at this visit
+         M04_HIV_EVER_MHOCCUR, # EVER BEEN DIAGNOSED WITH HIV
+         # MALARIA 
+         M04_MALARIA_EVER_MHOCCUR, #EVER BEEN DIAGNOSED WITH MALARIA SINCE LAST VISIT.
+         # NUTRITIONAL STATUS
          M04_FOLIC_ACID_CMOCCUR, M04_IRON_ORAL_CMOCCUR, M04_IFA_CMOCCUR, M04_CALCIUM_CMOCCUR,
          M04_VITAMIN_A_CMOCCUR, M04_ZINC_CMOCCUR, M04_MICRONUTRIENT_CMOCCUR) # FOLIC ACID, IRON, IFA, CALCIUM, 
 # vA, zINC, MULTIPLE MICRONUTRIENT SUPP (MMN). DID YOU RECEIVE ANY OF THESE AT THIS VISIT? 
@@ -301,10 +319,12 @@ mnh06_subset <- mnh06 %>%
          #Form completion Date, Time, Person ID
          M06_FORMCOMPLDAT_MNH06, M06_FORMCOMPLTIM_MNH06, M06_FORMCOMPLID_MNH06, 
          M06_SPHB_LBORRES, M06_HB_POC_LBORRES, # first one is Masimo, POC is point of care Hemocue test. 
-         # Malaria, HIV, Helminth
-         M06_MALARIA_POC_LBORRES, M06_HIV_POC_LBORRES, 
          # HIV POC
-         M06_HIV_POC_LBORRES)
+         M06_HIV_POC_LBORRES,
+         # Malaria,
+         M06_MALARIA_POC_LBORRES)
+         # Helminth)
+
 
 ##########################
 ###    MNH08 SUBSET   ###
@@ -350,9 +370,9 @@ mnh08_subset <- mnh08_subset %>%
          next_scheduled_visit_type = if_else(scheduled == 'scheduled', as.numeric(NA), next_scheduled_visit_type)) %>% 
   arrange(MOMID, PREGID, M08_LBSTDAT)
 
-temp_df <- mnh08_subset %>% select(SITE, MOMID, PREGID, M08_LBSTDAT, TYPE_VISIT) %>% 
+temp.df <- mnh08_subset %>% select(SITE, MOMID, PREGID, M08_LBSTDAT, TYPE_VISIT) %>% 
   group_by(SITE, MOMID, PREGID)
-temp_df <- mnh08_subset %>% select(SITE, MOMID, PREGID, M08_LBSTDAT, TYPE_VISIT, scheduled, visit_seq, prior_scheduled_visit_type, next_scheduled_visit_type) %>% 
+temp.df <- mnh08_subset %>% select(SITE, MOMID, PREGID, M08_LBSTDAT, TYPE_VISIT, scheduled, visit_seq, prior_scheduled_visit_type, next_scheduled_visit_type) %>% 
   filter(TYPE_VISIT %in% c(13, 14))
 ```
 
@@ -416,6 +436,10 @@ Merge MNH02_03, MNH00, MNH04, MNH05, MNH08, MNH06 together:
 merged_df <- left_join(mnh02_03, mnh00, 
                        by = c("SITE", "SCRNID"))
 
+merged_df <- left_join(merged_df, mnh01_subset, 
+                       by = c("SITE", "MOMID", "PREGID"))
+
+
 merged_df2 <- left_join(merged_df, mnh04_subset, 
                         by = c("SITE", "MOMID", "PREGID"))
 
@@ -475,6 +499,9 @@ merged_df5 <- merged_df5 %>%
   filter(SITE %in% c("Pakistan", "Kenya", "Zambia"))
 
 
+# TRYING TO SEE IF I NEED TO KEEP TYPE_VISIT==13.  BUT KEEP IN MIND SOME VISIT==13 WILL BE BETWEEN VSITIS THAT WE ARE NOT INCLUDING HERE. SO I WILL HAVE TO ACCOUNT FOR THE TYPE_VISIT THAT WE ARE INTERSTED IN AND TYPE_VISIT 13 THAT ARE ASSOCIATED WITH THOSE. 
+temp.df <- merged_df5 %>% select(SITE, MOMID, PREGID, TYPE_VISIT, M06_SPHB_LBORRES, M08_CBC_HB_LBORRES) %>% 
+  filter(SITE=="Pakistan") %>% filter(TYPE_VISIT %in% c(1,2,3,5,10, 13))
 
 participant_count <- merged_df5 %>% 
   filter(TYPE_VISIT==10) %>% 
@@ -484,12 +511,15 @@ participant_count <- merged_df5 %>%
  # summarise(count = n_distinct(MOMID))
 ```
 
+# FILTER CERTAIN VISIT TYPES:
 ```{r}
 #Since I only am doing analysis on a few time points (<20, 20, 28, 36 and 6 wk PP (only Pak had week 32 data also)) --> I can just filter this first. 
 # For now, I can leave UNSCHEDULED VISITS out.
+temp.df <- merged_df5 %>% select(SITE, MOMID, PREGID, TYPE_VISIT, 
+                                 M06_DIAG_VSDAT, M06_SPHB_LBORRES, M08_LBSTDAT, M08_CBC_HB_LBORRES) %>% filter(SITE=="Kenya")
 
 merged_df5 <- merged_df5 %>% filter(TYPE_VISIT %in% c(1,2,3,5,10))
-temp_df <- merged_df5 %>% select(SITE, MOMID, TYPE_VISIT, M06_SPHB_LBORRES, M08_CBC_HB_LBORRES)
+temp.df <- merged_df5 %>% select(SITE, MOMID, TYPE_VISIT, M06_SPHB_LBORRES, M08_CBC_HB_LBORRES)
 ```
 
 First do some crosstabs: 
@@ -513,28 +543,34 @@ if(CONVERT_NA ==TRUE){
     mutate_all(function(d) {
       if_else(d=="1907-07-07", NA, d)
     })
-  
-  merged_df5 <- merged_df5 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
+  # -7
+  merged_df5 <- merged_df5 %>% 
     mutate_all(function(d) {
       if_else(d==-7, NA, d)
     })
-  
-  merged_df5 <- merged_df5 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
+  # 77
+  merged_df5 <- merged_df5 %>% 
     mutate_all(function(d) {
       if_else(d==77, NA, d)
     })
   
   # -5 IS MISSING FOR CONTINUOUS
-  merged_df5 <- merged_df5 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
+  merged_df5 <- merged_df5 %>%  
     mutate_all(function(d) {
       if_else(d==-5, NA, d) 
     })
   
   # 55 IS MISSING FOR CATEGORICAL
-  merged_df5 <- merged_df5 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
+  merged_df5 <- merged_df5 %>%  
     mutate_all(function(d) {
       if_else(d==55, NA, d) 
     })
+  
+    # 99 IS 'DON'T KNOW' - SHOULD JUST BE TURNED INTO A 0???
+  # merged_df5 <- merged_df5 %>%  
+  #   mutate_all(function(d) {
+  #     if_else(d==99, NA, d) 
+  #   })
   
   # 55:55 IS MISSING FOR TIME
   merged_df5 <- merged_df5 %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter. 
@@ -548,20 +584,208 @@ time_diff <- toc-tic
 time_diff
 ```
 
-Compute difference between SphB and CBC at each time point
+FACTORIZE VARIABLES:
 ```{r}
-merged_df5 <- merged_df5 %>% 
-  mutate(diff_hb = M06_SPHB_LBORRES - M08_CBC_HB_LBORRES)
-
-temp.df <- merged_df5 %>% select(SITE, MOMID, TYPE_VISIT, M06_SPHB_LBORRES, M08_CBC_HB_LBORRES, diff_hb)
-```
-
-FACTORIZE TYPE_VISIT VARIABLE:
-```{r}
+# TYPE_VISIT
 merged_df5$TYPE_VISIT <- factor(merged_df5$TYPE_VISIT)
 merged_df5$TYPE_VISIT <- relevel(merged_df5$TYPE_VISIT, ref = "1")
 levels(merged_df5$TYPE_VISIT)
+
+# SITE
+merged_df5$SITE <- factor(merged_df5$SITE)
+merged_df5$SITE <- relevel(merged_df5$SITE, ref = "Pakistan")
+levels(merged_df5$SITE)
 ```
+
+*******************************************************************************
+*******************************************************************************
+*************GESTATIONAL AGE AT ASSESSMENT AT AT FIRST ANC VISIT***************
+*******************************************************************************
+*******************************************************************************
+
+# CREATE BOE AND EDD_BOE (BOE = just at enrollment)
+```{r}
+merged_df5 <- merged_df5 %>%
+  mutate(M01_US_OHOSTDAT = ymd(M01_US_OHOSTDAT))
+
+# momid <- mnh02_df %>% select(MOMID, SCRNID, PREGID, SITE)
+# mnh01_constructed_df <- left_join()
+mnh01_constructed_df <- merged_df5 %>%
+  # only want participants who are enrolled
+  filter(PREGID %in% enrolled_ids_vec) %>% 
+  
+  ## only want the first ultrasound visit -- take the earliest date for each participant
+  # group_by(SITE, MOMID, PREGID) %>%
+  # arrange(M01_US_OHOSTDAT) %>%
+  # slice(1) %>%
+  # filter(M01_TYPE_VISIT == 1) %>% 
+  # select a subset of variables
+  
+  # select(SITE, MOMID,PREGID, M01_US_OHOSTDAT,
+  #        M01_US_GA_WKS_AGE_FTS1, M01_US_GA_WKS_AGE_FTS2,
+  #        M01_US_GA_WKS_AGE_FTS3, M01_US_GA_WKS_AGE_FTS4,
+  #        M01_US_GA_DAYS_AGE_FTS1, M01_US_GA_DAYS_AGE_FTS2,
+  #        M01_US_GA_DAYS_AGE_FTS3, M01_US_GA_DAYS_AGE_FTS4,
+  #        M01_GA_LMP_WEEKS_SCORRES, M01_GA_LMP_DAYS_SCORRES) 
+  
+  mutate(M01_US_OHOSTDAT = ymd(M01_US_OHOSTDAT)) %>%
+  
+
+  # filter out any ultrasound visit dates that are 07-07-1907
+  filter(M01_US_OHOSTDAT != ymd("1907-07-07")) %>%   
+  # calculate us ga in days with reported ga in wks + days. if ga is -7 or -5, replace with NA
+  mutate(GA_US_DAYS_FTS1 =  ifelse(M01_US_GA_WKS_AGE_FTS1!= -7 & M01_US_GA_DAYS_AGE_FTS1 != -7 & M01_US_GA_WKS_AGE_FTS1 != -5 & M01_US_GA_DAYS_AGE_FTS1 != -5,  (M01_US_GA_WKS_AGE_FTS1 * 7 + M01_US_GA_DAYS_AGE_FTS1), NA), 
+         GA_US_DAYS_FTS2 =  ifelse(M01_US_GA_WKS_AGE_FTS2!= -7 & M01_US_GA_DAYS_AGE_FTS2 != -7 & M01_US_GA_WKS_AGE_FTS2 != -5 & M01_US_GA_WKS_AGE_FTS2 != -5,  (M01_US_GA_WKS_AGE_FTS2 * 7 + M01_US_GA_DAYS_AGE_FTS2), NA),
+         GA_US_DAYS_FTS3 =  ifelse(M01_US_GA_WKS_AGE_FTS3!= -7 & M01_US_GA_DAYS_AGE_FTS3 != -7 & M01_US_GA_WKS_AGE_FTS3 != -5 & M01_US_GA_WKS_AGE_FTS3 != -5,  (M01_US_GA_WKS_AGE_FTS3 * 7 + M01_US_GA_DAYS_AGE_FTS3), NA),
+         GA_US_DAYS_FTS4 =  ifelse(M01_US_GA_WKS_AGE_FTS4!= -7 & M01_US_GA_DAYS_AGE_FTS4 != -7 & M01_US_GA_WKS_AGE_FTS4 != -5 & M01_US_GA_WKS_AGE_FTS4 != -5,  (M01_US_GA_WKS_AGE_FTS4 * 7 + M01_US_GA_DAYS_AGE_FTS4), NA)) %>% 
+  #  pull the largest GA for multiple fetuses + convert to weeks
+  mutate(US_GA_DAYS = pmax(GA_US_DAYS_FTS1, GA_US_DAYS_FTS2, GA_US_DAYS_FTS3, GA_US_DAYS_FTS4, na.rm = TRUE)) %>% ## where GA_US_DAYS_FTSx is the reported GA by ultrasound (added together M01_US_GA_WKS_AGE_FTSx and M01_US_GA_DAYS_AGE_FTSx to get a single estimate in days)
+  mutate(US_GA_WKS = floor(US_GA_DAYS/7)) %>% 
+  #  convert ga by LMP to days and wks
+  # on US meaturement for all 4 babies. 
+  # For LMP we just have info on one baby.
+  mutate(LMP_GA_DAYS =  ifelse(M01_GA_LMP_WEEKS_SCORRES != -7 & M01_GA_LMP_DAYS_SCORRES != -7,  (M01_GA_LMP_WEEKS_SCORRES * 7 + M01_GA_LMP_DAYS_SCORRES), NA)) %>% 
+  mutate(LMP_GA_WKS = floor(LMP_GA_DAYS/7)) %>%
+  ## generate indicator variable for missing US 
+  mutate(MISSING_BOTH_US_LMP = ifelse((US_GA_WKS < 0 & LMP_GA_WKS < 0) | 
+                                        (is.na(US_GA_WKS) & is.na(LMP_GA_WKS)), 1, 0)) %>% 
+  #  calculate the difference in days between reported LMP and reported US
+  mutate(GA_DIFF_DAYS = LMP_GA_DAYS-US_GA_DAYS) %>%
+  #  obtain best obstetric estimate in weeks
+  mutate(BOE_GA_WKS = case_when(LMP_GA_WKS %/% 7 < 9 ~
+                                  if_else(abs(GA_DIFF_DAYS) <= 5,
+                                          LMP_GA_WKS,
+                                          US_GA_WKS),
+                                LMP_GA_WKS %/% 7 < 16 ~
+                                  if_else(abs(GA_DIFF_DAYS) <=7,
+                                          LMP_GA_WKS, US_GA_WKS),
+                                LMP_GA_WKS %/% 7 >= 16 ~
+                                  if_else(abs(GA_DIFF_DAYS) <=10,
+                                          LMP_GA_WKS, US_GA_WKS),
+                                TRUE ~ US_GA_WKS)) %>%
+  mutate(BOE_GA_DAYS = BOE_GA_WKS*7) %>%
+ 
+   # generate indicator variable if LMP or US was used (where 1 = US and 2 = LMP)
+  mutate(BOE_METHOD = ifelse(BOE_GA_WKS == US_GA_WKS, 1, 
+                             ifelse(BOE_GA_WKS == LMP_GA_WKS, 2, 55))) %>%
+ 
+   # generate EDD_BOE based on BOE 
+  # "zero out" GA and obtain the estimated "date of conception" 
+  mutate(EST_CONCEP_DATE = M01_US_OHOSTDAT - BOE_GA_DAYS) %>% 
+  # add 280 days to EST_CONCEP_DATE to generate EDD based on BOE 
+  mutate(EDD_BOE = EST_CONCEP_DATE + 280)
+
+mnh01_constructed_df2 <- mnh01_constructed_df %>%
+  select(MOMID, PREGID, SITE, TYPE_VISIT,
+         GA_US_DAYS_FTS1, GA_US_DAYS_FTS2, GA_US_DAYS_FTS3, GA_US_DAYS_FTS4,
+         US_GA_DAYS, US_GA_WKS, LMP_GA_DAYS, LMP_GA_WKS, MISSING_BOTH_US_LMP, GA_DIFF_DAYS, 
+         BOE_GA_WKS, BOE_GA_DAYS, BOE_METHOD, US_GA_DAYS,
+         EST_CONCEP_DATE, EDD_BOE)
+
+temp.df <- mnh01_constructed_df %>%
+  select(MOMID, PREGID, SITE, TYPE_VISIT,
+         M01_US_OHOSTDAT,
+         M01_US_GA_WKS_AGE_FTS1, M01_US_GA_WKS_AGE_FTS2, M01_US_GA_WKS_AGE_FTS3, M01_US_GA_WKS_AGE_FTS4,
+         GA_US_DAYS_FTS1, GA_US_DAYS_FTS2, GA_US_DAYS_FTS3, GA_US_DAYS_FTS4,
+         US_GA_DAYS, US_GA_WKS, LMP_GA_DAYS, LMP_GA_WKS, MISSING_BOTH_US_LMP, GA_DIFF_DAYS, 
+         BOE_GA_WKS, BOE_GA_DAYS, BOE_METHOD, US_GA_DAYS,
+         EST_CONCEP_DATE, EDD_BOE) %>% filter(SITE=="Zambia")
+
+```
+
+# MERGED EST CONCEPTION DATE, EDD_BOE, BOE_GA vars here with merged_df5
+```{r}
+merged_df5 <- left_join(merged_df5, mnh01_constructed_df2, 
+                       by = c("MOMID", "SITE", "PREGID", "TYPE_VISIT"))
+```
+
+# GA AT ENROLLMENT: 
+```{r}
+# EXTRACT GA AT ENROLLMENT:
+# CREATE MERGED FILE FIRST. 
+merged_df5 <- merged_df5 %>%
+  rowwise() %>%
+  mutate(DIFFDAYS = as.numeric(difftime(M02_SCRN_OBSSTDAT, M01_US_OHOSTDAT, units = "days"))) %>% # EXTRACT THE DIFFERENCE IN NUM OF DAYS B/W SCREENING US AND ENROLLMENT VISIT
+  # MNH02 is being used as definitive enrollment. 
+  # MNH01 visit 1 is when US is done. 
+  mutate(DIFFDAYS = ifelse(DIFFDAYS < 0,0,DIFFDAYS)) %>% #IF THE DIFF IS NEG, REPLACE WITH 0 (JUST USE DATE OF ULTRASOUND SCREENING)
+   mutate(GA_ENROLL_WKS = floor(as.numeric((DIFFDAYS + US_GA_DAYS)/7)), #TODO Stacie had this as GA_US_DAYS
+         GA_ENROLL_DAYS = floor(as.numeric(DIFFDAYS + US_GA_DAYS))) #TODO Stacie had this as GA_US_DAYS
+
+# STACIE SAID SHE USED GA_US_DAYS IN THE MONITORING REPORT AND IN MATERNAL_WIDE FILE HAS US_GA_DAYS - SAME THING
+
+temp.df <- merged_df5 %>% select(SITE, MOMID, PREGID, TYPE_VISIT, GA_ENROLL_WKS)
+```
+
+# CALC. GA AT VISIT. THIS IS CALCULATED IN DAYS!
+```{r}
+# XX_GA_AT_VISIT_X can have NAs
+
+merged_df5 <- merged_df5 %>%
+  rowwise() %>%
+  mutate(M04_GA_AT_VISIT = as.Date(M04_ANC_OBSSTDAT) - EST_CONCEP_DATE) #DATE OF VISIT - CONCEPTION DATE = GA AT VISIT.
+
+merged_df5$M04_GA_AT_VISIT <- as.numeric(merged_df5$M04_GA_AT_VISIT)
+
+# CONVERTING GA TO WEEKS AT EACH VISIT
+merged_df5 <- merged_df5 %>%
+  mutate(M04_GA_AT_VISIT_WKS = floor(M04_GA_AT_VISIT/7))
+
+temp.df <- merged_df5 %>% select(SITE, MOMID, TYPE_VISIT, GA_ENROLL_DAYS, GA_ENROLL_WKS, M04_GA_AT_VISIT, M04_GA_AT_VISIT_WKS, M04_ANC_OBSSTDAT, EST_CONCEP_DATE)
+
+
+temp.df <- merged_df5 %>%
+  select(MOMID, SITE, TYPE_VISIT, GA_ENROLL_WKS, GA_ENROLL_DAYS, M04_GA_AT_VISIT, M04_GA_AT_VISIT_WKS, M04_ANC_OBSSTDAT, 
+         EST_CONCEP_DATE, M01_US_OHOSTDAT, BOE_GA_DAYS)  %>% filter(SITE=="Zambia") %>% filter(TYPE_VISIT %in% c(1,2))
+
+temp.df <- merged_df5 %>%
+  select(MOMID, SITE, TYPE_VISIT, GA_ENROLL_WKS, GA_ENROLL_DAYS, M04_GA_AT_VISIT, M04_GA_AT_VISIT_WKS, M04_ANC_OBSSTDAT, 
+         EST_CONCEP_DATE, M01_US_OHOSTDAT, BOE_GA_DAYS)  %>% filter(SITE=="Kenya")
+
+summary(temp.df$M04_GA_AT_VISIT_WKS)
+
+## LOOKING TO SEE HOW MANY WOMEN HAVE EXTREMELY LARGE GA IN WEEKS.
+high_ga <- merged_df5 %>% select(SITE, MOMID, PREGID, TYPE_VISIT,
+                                GA_ENROLL_WKS, GA_ENROLL_DAYS, M04_GA_AT_VISIT, 
+                                M04_GA_AT_VISIT_WKS, M04_ANC_OBSSTDAT, 
+                                EST_CONCEP_DATE, M01_US_OHOSTDAT, BOE_GA_DAYS) %>% filter(M04_GA_AT_VISIT_WKS>50)
+
+```
+
+
+LET'S CREATE AN INDICATOR VARIABLE WHEN GA<18 WEEKS (B/C THESE WOMEN SHOULD HAVE ANC<20 AND ANC20 VISITS THEN)
+```{r}
+merged_df5 <- merged_df5 %>% 
+  mutate(GA_ENROLL_LT18 = if_else(GA_ENROLL_WKS<=17,1,0))
+
+temp.df <- merged_df5 %>% select(SITE, MOMID, TYPE_VISIT, GA_ENROLL_WKS, GA_ENROLL_DAYS, M04_GA_AT_VISIT, M04_GA_AT_VISIT_WKS, GA_ENROLL_LT18, M06_SPHB_LBORRES, M08_CBC_HB_LBORRES)
+```
+
+WHAT I NOW WANT TO DO IS: 
+- I DON'T HAVE TO WORRY ABOUT REPLACING GA AT VISIT 2 WHEN GA AT ENROLLMENT IS >=18 B/C THOSE ROWS DON'T EVEN EXISIT.  WE WON'T HAVE FORMS COMPLETED THEN SO NO 'GA_AT_VISIT' WILL BE CALCULATED. 
+- NEED TO DO: REPLACE ALL GA_AT_VIST WHERE TYPE_VISIT==1 TO GA_AT_ENROLL B/C THESE ARE A LITTLE OFF SINCE THEY'RE NOT CALCULATED THE SAME WAY GA_AT_ENROLL IS. 
+
+***NOTE: GA IS NOT CALCULATED AT VISIT 10 - IT'S ALL NA*** THIS IS GREAT! 
+```{r}
+merged_df5 <- merged_df5 %>% 
+  mutate(M04_GA_AT_VISIT_WKS = if_else(TYPE_VISIT==1, GA_ENROLL_WKS, M04_GA_AT_VISIT_WKS))
+
+temp.df <- merged_df5 %>% 
+  select(SITE, MOMID, TYPE_VISIT, GA_ENROLL_WKS, GA_ENROLL_DAYS, M04_GA_AT_VISIT, M04_GA_AT_VISIT_WKS, GA_ENROLL_LT18, M06_SPHB_LBORRES, M08_CBC_HB_LBORRES) %>% filter(SITE=="Zambia")
+
+## CONVERT REALLY LARGE GA IN WEEKS TO NA.
+merged_df5 <- merged_df5 %>% 
+  mutate(M04_GA_AT_VISIT_WKS = if_else(M04_GA_AT_VISIT_WKS>60 | M04_GA_AT_VISIT_WKS<0, as.numeric(NA), M04_GA_AT_VISIT_WKS))
+
+temp.df <- merged_df5 %>% 
+  select(SITE, MOMID, TYPE_VISIT, GA_ENROLL_WKS, GA_ENROLL_DAYS, M04_GA_AT_VISIT, M04_GA_AT_VISIT_WKS, GA_ENROLL_LT18, M06_SPHB_LBORRES, M08_CBC_HB_LBORRES) %>% filter(SITE=="Zambia")
+```
+
+********************************************
+********************************************
+******************END GA********************
+********************************************
+********************************************
 
 COMPUTE MATERNAL AGE CATEGORIES:
 ```{r}
@@ -688,9 +912,9 @@ temp.df <- merged_df5 %>% select(SITE, MOMID, TYPE_VISIT, M08_CBC_HCT_LBORRES, M
 ```
 
 
-***NUTRITIONAL STATUS***
+***NUTRITIONAL STATUS*** ERS SAID TO HOLD OFF ON THIS.
 ```{r}
-merged_df5$M04_IRON_ORAL_CMOCCUR
+# merged_df5$M04_IRON_ORAL_CMOCCUR
 ```
 
 *********************************
@@ -761,117 +985,52 @@ merged_df5$MAT_ANEMIA_MEAS <- relevel(merged_df5$MAT_ANEMIA_MEAS, ref="normal")
 str(merged_df5$MAT_ANEMIA_MEAS)
 ```
 
-*********************************************************
-*********************************************************
-*********************************************************
-***GESTATIONAL AGE AT ASSESSMENT AT AT FIRST ANC VISIT***
-*********************************************************
-*********************************************************
-*********************************************************
-
-# CREATE BOE AND EDD_BOE (BOE = just at enrollment)
+***HIV STATUS (ZAMBIA AND KENYA SITES ONLY)***
+THIS IS DONE AT ENROLLMENT AND AT ANC-36 (34+ WKS)
+MNH06, MNH04
 ```{r}
-merged_df5 <- merged_df5 %>%
-  mutate(M01_US_OHOSTDAT = ymd(M01_US_OHOSTDAT))
+Zambia_Kenya_df <- merged_df5 %>%
+  filter(SITE %in% c("Zambia", "Kenya"))
 
-# momid <- mnh02_df %>% select(MOMID, SCRNID, PREGID, SITE)
-# mnh01_constructed_df <- left_join()
-mnh01_constructed_df <- mnh01_df %>%
-  # only want participants who are enrolled
-  filter(PREGID %in% enrolled_ids_vec) %>% 
-  
-  ## only want the first ultrasound visit -- take the earliest date for each participant
-  # group_by(SITE, MOMID, PREGID) %>%
-  # arrange(M01_US_OHOSTDAT) %>%
-  # slice(1) %>%
-  # filter(M01_TYPE_VISIT == 1) %>% 
-  # select a subset of variables
-  
-  # select(SITE, MOMID,PREGID, M01_US_OHOSTDAT_1,
-  #        M01_US_GA_WKS_AGE_FTS1_1, M01_US_GA_WKS_AGE_FTS2_1,
-  #        M01_US_GA_WKS_AGE_FTS3_1, M01_US_GA_WKS_AGE_FTS4_1,
-  #        M01_US_GA_DAYS_AGE_FTS1_1, M01_US_GA_DAYS_AGE_FTS2_1,
-  #        M01_US_GA_DAYS_AGE_FTS3_1, M01_US_GA_DAYS_AGE_FTS4_1,
-  #        M01_GA_LMP_WEEKS_SCORRES_1, M01_GA_LMP_DAYS_SCORRES_1) 
-  
-  mutate(M01_US_OHOSTDAT_1 = ymd(M01_US_OHOSTDAT_1)) %>%
-  
+## HIV VARS:
+# HIV_EVER_MHOCCUR
+# HIV_MHOCCUR
+table(Zambia_Kenya_df$M04_HIV_EVER_MHOCCUR, useNA = "always")
+table(Zambia_Kenya_df$M04_HIV_MHOCCUR, useNA = "always")
 
-  # filter out any ultrasound visit dates that are 07-07-1907
-  filter(M01_US_OHOSTDAT_1 != ymd("1907-07-07")) %>%   
-  # calculate us ga in days with reported ga in wks + days. if ga is -7 or -5, replace with NA
-  mutate(GA_US_DAYS_FTS1_1 =  ifelse(M01_US_GA_WKS_AGE_FTS1_1!= -7 & M01_US_GA_DAYS_AGE_FTS1_1 != -7 & M01_US_GA_WKS_AGE_FTS1_1 != -5 & M01_US_GA_DAYS_AGE_FTS1_1 != -5,  (M01_US_GA_WKS_AGE_FTS1_1 * 7 + M01_US_GA_DAYS_AGE_FTS1_1), NA), 
-         GA_US_DAYS_FTS2_1 =  ifelse(M01_US_GA_WKS_AGE_FTS2_1!= -7 & M01_US_GA_DAYS_AGE_FTS2_1 != -7 & M01_US_GA_WKS_AGE_FTS2_1 != -5 & M01_US_GA_WKS_AGE_FTS2_1 != -5,  (M01_US_GA_WKS_AGE_FTS2_1 * 7 + M01_US_GA_DAYS_AGE_FTS2_1), NA),
-         GA_US_DAYS_FTS3_1 =  ifelse(M01_US_GA_WKS_AGE_FTS3_1!= -7 & M01_US_GA_DAYS_AGE_FTS3_1 != -7 & M01_US_GA_WKS_AGE_FTS3_1 != -5 & M01_US_GA_WKS_AGE_FTS3_1 != -5,  (M01_US_GA_WKS_AGE_FTS3_1 * 7 + M01_US_GA_DAYS_AGE_FTS3_1), NA),
-         GA_US_DAYS_FTS4_1 =  ifelse(M01_US_GA_WKS_AGE_FTS4_1!= -7 & M01_US_GA_DAYS_AGE_FTS4_1 != -7 & M01_US_GA_WKS_AGE_FTS4_1 != -5 & M01_US_GA_WKS_AGE_FTS4_1 != -5,  (M01_US_GA_WKS_AGE_FTS4_1 * 7 + M01_US_GA_DAYS_AGE_FTS4_1), NA)) %>% 
-  #  pull the largest GA for multiple fetuses + convert to weeks
-  mutate(US_GA_DAYS = pmax(GA_US_DAYS_FTS1_1, GA_US_DAYS_FTS2_1, GA_US_DAYS_FTS3_1, GA_US_DAYS_FTS4_1, na.rm = TRUE)) %>% ## where GA_US_DAYS_FTSx is the reported GA by ultrasound (added together M01_US_GA_WKS_AGE_FTSx and M01_US_GA_DAYS_AGE_FTSx to get a single estimate in days)
-  mutate(US_GA_WKS = floor(US_GA_DAYS/7)) %>% 
-  #  convert ga by LMP to days and wks
-  # on US meaturement for all 4 babies. 
-  # For LMP we just have info on one baby.
-  mutate(LMP_GA_DAYS =  ifelse(M01_GA_LMP_WEEKS_SCORRES_1 != -7 & M01_GA_LMP_DAYS_SCORRES_1 != -7,  (M01_GA_LMP_WEEKS_SCORRES_1 * 7 + M01_GA_LMP_DAYS_SCORRES_1), NA)) %>% 
-  mutate(LMP_GA_WKS = floor(LMP_GA_DAYS/7)) %>%
-  ## generate indicator variable for missing US 
-  mutate(MISSING_BOTH_US_LMP = ifelse((US_GA_WKS < 0 & LMP_GA_WKS < 0) | 
-                                        (is.na(US_GA_WKS) & is.na(LMP_GA_WKS)), 1, 0)) %>% 
-  #  calculate the difference in days between reported LMP and reported US
-  mutate(GA_DIFF_DAYS = LMP_GA_DAYS-US_GA_DAYS) %>%
-  #  obtain best obstetric estimate in weeks
-  mutate(BOE_GA_WKS = case_when(LMP_GA_WKS %/% 7 < 9 ~
-                                  if_else(abs(GA_DIFF_DAYS) <= 5,
-                                          LMP_GA_WKS,
-                                          US_GA_WKS),
-                                LMP_GA_WKS %/% 7 < 16 ~
-                                  if_else(abs(GA_DIFF_DAYS) <=7,
-                                          LMP_GA_WKS, US_GA_WKS),
-                                LMP_GA_WKS %/% 7 >= 16 ~
-                                  if_else(abs(GA_DIFF_DAYS) <=10,
-                                          LMP_GA_WKS, US_GA_WKS),
-                                TRUE ~ US_GA_WKS)) %>%
-  mutate(BOE_GA_DAYS = BOE_GA_WKS*7) %>%
- 
-   # generate indicator variable if LMP or US was used (where 1 = US and 2 = LMP)
-  mutate(BOE_METHOD = ifelse(BOE_GA_WKS == US_GA_WKS, 1, 
-                             ifelse(BOE_GA_WKS == LMP_GA_WKS, 2, 55))) %>%
- 
-   # generate EDD_BOE based on BOE 
-  # "zero out" GA and obtain the estimated "date of conception" 
-  mutate(EST_CONCEP_DATE = M01_US_OHOSTDAT_1 - BOE_GA_DAYS) %>% 
-  # add 280 days to EST_CONCEP_DATE to generate EDD based on BOE 
-  mutate(EDD_BOE = EST_CONCEP_DATE + 280)
+temp.df <- Zambia_Kenya_df %>% 
+  select(SITE, MOMID, PREGID, TYPE_VISIT, M04_HIV_EVER_MHOCCUR, M04_HIV_MHOCCUR, M06_HIV_POC_LBORRES) # THESE 3 DON'T ALWAYS HAVE THE SAME ANSWER
 
-mnh01_constructed_df2 <- mnh01_constructed_df %>%
-  select(MOMID, PREGID, SITE, 
-         GA_US_DAYS_FTS1_1, GA_US_DAYS_FTS2_1, GA_US_DAYS_FTS3_1, GA_US_DAYS_FTS4_1,
-         US_GA_DAYS, US_GA_WKS, LMP_GA_DAYS, LMP_GA_WKS, MISSING_BOTH_US_LMP, GA_DIFF_DAYS, 
-         BOE_GA_WKS, BOE_GA_DAYS, BOE_METHOD, US_GA_DAYS,
-         EST_CONCEP_DATE, EDD_BOE)
+# IF HIV POC IS THERE, TAKE THAT TEST RESULT TO BE THE TRUTH.  THEN LOOK AT THE OTHER 2 VARS.
+Zambia_Kenya_df <- Zambia_Kenya_df %>%
+  mutate(HIV_inf  = case_when(!is.na(M06_HIV_POC_LBORRES) & M06_HIV_POC_LBORRES==0 ~ 0,
+                              is.na(M06_HIV_POC_LBORRES) & (M04_HIV_MHOCCUR == 0 & M04_HIV_EVER_MHOCCUR==0) ~ 0,
+                              is.na(M06_HIV_POC_LBORRES) & is.na(M04_HIV_EVER_MHOCCUR) & M04_HIV_MHOCCUR == 0 ~ 0,
+                              M04_HIV_EVER_MHOCCUR==99 | M04_HIV_MHOCCUR==99 ~ 0,
+                              
+                              !is.na(M06_HIV_POC_LBORRES) & M06_HIV_POC_LBORRES==1 ~ 1,
+                              is.na(M06_HIV_POC_LBORRES) & (M04_HIV_MHOCCUR == 1 | M04_HIV_EVER_MHOCCUR==1) ~ 1,
+                              
+                              TRUE ~ as.numeric(NA)))
+
+table(Zambia_Kenya_df$HIV_inf, useNA = "always")
+
+temp.df <- Zambia_Kenya_df %>% 
+  select(SITE, MOMID, PREGID, TYPE_VISIT, HIV_inf, M04_HIV_EVER_MHOCCUR, M04_HIV_MHOCCUR, M06_HIV_POC_LBORRES) # THESE 3 DON'T ALWAYS HAVE THE SAME ANSWER
 ```
 
-# MERGED EST CONCEPTION DATE, EDD_BOE, BOE_GA vars here with merged_df5
+
+***MALARIA STATUS (KENYA SITE ONLY)***
+THIS IS DONE AT ENROLLMENT AND AT ANC-36 (34+ WKS)
 ```{r}
-merged_df5 <- left_join(merged_df5, mnh01_constructed_df2, 
-                       by = c("MOMID", "SITE", "PREGID"))
+Kenya_df <- merged_df5 %>%
+  filter(SITE == "Kenya")
 ```
 
-# GA AT ENROLLMENT
+HELMINTH STATUS (KENYA SITE ONLY)
+THIS IS DONE AT ENROLLMENT, ANC 20  AND ANC32 ONLY FOR REMAPP AIM3. THIS IS CROSS SECTIONAL:
+  --EXPLAINED IN PRISMA-REMAPP-LABORATORY TESTING SCHEDULE
 ```{r}
-# EXTRACT GA AT ENROLLMENT:
-# CREATE MERGED FILE FIRST. 
-merged_df5 <- merged_df5 %>%
-  rowwise() %>%
-  mutate(DIFFDAYS = as.numeric(difftime(M02_SCRN_OBSSTDAT_1, M01_US_OHOSTDAT_1, units = "days"))) %>% # EXTRACT THE DIFFERENCE IN NUM OF DAYS B/W SCREENING US AND ENROLLMENT VISIT
-  # MNH02 is being used as definitive enrollment. 
-  # MNH01 visit 1 is when US is done. 
-  mutate(DIFFDAYS = ifelse(DIFFDAYS < 0,0,DIFFDAYS)) %>% #IF THE DIFF IS NEG, REPLACE WITH 0 (JUST USE DATE OF ULTRASOUND SCREENING)
-   mutate(GA_ENROLL_WKS = floor(as.numeric((DIFFDAYS + US_GA_DAYS)/7)), #TODO Stacie had this as GA_US_DAYS_1
-         GA_ENROLL_DAYS = floor(as.numeric(DIFFDAYS + US_GA_DAYS))) #TODO Stacie had this as GA_US_DAYS_1
-
-#TODO STACIE SAID SHE USED GA_US_DAYS IN THE MONITORING REPORT AND IN MATERNAL_WIDE FILE HAS US_GA_DAYS - SAME THING
-
-  # mutate(GA_ENROLL_WKS = floor(as.numeric((DIFFDAYS + GA_US_DAYS_1)/7)), #TODO Stacie had this as GA_US_DAYS_1
-  #        GA_ENROLL_DAYS = floor(as.numeric(DIFFDAYS + GA_US_DAYS_1))) #TODO Stacie had this as GA_US_DAYS_1
 
 ```
 
@@ -910,6 +1069,98 @@ mean_hb <- merged_df5 %>%
             mean_sphb = mean(M06_SPHB_LBORRES, na.rm=TRUE))
 ```
 
+CBC ggplot:
+```{r}
+summary(merged_df5$M08_CBC_HB_LBORRES)
+ggplot(merged_df5, aes(x=M08_CBC_HB_LBORRES)) +
+  geom_histogram(color="lightblue")+
+  geom_density(color="darkblue", size=1) +
+  labs(title = "Distribution of CBC across all sites", x= "CBC (mg/dl)", Y = "Density")
+  
+
+ggplot(merged_df5, aes(x=M08_CBC_HB_LBORRES)) +
+  geom_histogram(color="lightblue")+
+  geom_density(color="darkblue", size=1) +
+  labs(title = "Distribution of CBC per site", x= "CBC (mg/dl)", Y = "Density") + 
+  theme_bw() +
+ # ylim(0,750) + 
+  facet_grid(vars(SITE), scales = "free") +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) + 
+  theme(legend.position = "right") 
+```
+
+
+SpHb ggplot:
+```{r}
+summary(merged_df5$M06_SPHB_LBORRES)
+
+ggplot(merged_df5, aes(x=M06_SPHB_LBORRES)) +
+  geom_histogram(color="lightblue")+
+  geom_density(color="darkblue", size=1) +
+  labs(title = "Distribution of SpHb across all sites", x= "CBC (mg/dl)", Y = "Density")
+  
+sphb_df <- merged_df5 %>% 
+  filter(M06_SPHB_LBORRES>=35) %>%
+  select(SITE, MOMID, PREGID, TYPE_VISIT, M06_SPHB_LBORRES, M08_CBC_HB_LBORRES)
+
+ggplot(merged_df5, aes(x=M06_SPHB_LBORRES)) +
+  geom_histogram(color="lightblue")+
+  geom_density(color="darkblue", size=1) +
+  labs(title = "Distribution of SpHb per site", x= "SpHb (mg/dl)", Y = "Density") + 
+  theme_bw() +
+ # ylim(0,250) + 
+  facet_grid(vars(SITE), scales = "free") +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) + 
+  theme(legend.position = "right") 
+```
+
+```{r}
+sphb_wo_outlier_df <- merged_df5 %>%
+  filter(M06_SPHB_LBORRES<35) # ZAMBIA HAS 3 OBSERVATIONS THAT ARE GREATER THAN 35. This also removes NA rows.
+```
+
+SpHb ggplot: After removing outliers. 
+```{r}
+summary(sphb_wo_outlier_df$M06_SPHB_LBORRES) # SUMMARY
+
+ggplot(sphb_wo_outlier_df, aes(x=M06_SPHB_LBORRES)) +
+  geom_histogram(color="lightblue")+
+  geom_density(color="darkblue", size=1) +
+  labs(title = "Distribution of SpHb across all sites", x= "SpHb (mg/dl)", Y = "Density")
+  
+sphb_df <- sphb_wo_outlier_df %>% 
+  filter(M06_SPHB_LBORRES>25) %>%
+  select(SITE, MOMID, PREGID, M06_SPHB_LBORRES, M08_CBC_HB_LBORRES)
+
+ggplot(sphb_wo_outlier_df, aes(x=M06_SPHB_LBORRES)) +
+  geom_histogram(color="lightblue")+
+  geom_density(color="darkblue", size=1) +
+  labs(title = "Distribution of SpHb per site", x= "SpHb (mg/dl)", Y = "Density") + 
+  theme_bw() +
+ # ylim(0,250) + 
+  facet_grid(vars(SITE), scales = "free") +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) + 
+  theme(legend.position = "right") 
+```
+
+SETTING OUTLIER DATA TO MERGED_DF5
+```{r}
+merged_df5 <- sphb_wo_outlier_df
+```
+
+****************************************************************
+***Compute difference between SpHb and CBC at each time point***
+****************************************************************
+```{r}
+merged_df5 <- merged_df5 %>% 
+  mutate(diff_hb = M06_SPHB_LBORRES - M08_CBC_HB_LBORRES)
+
+temp.df <- merged_df5 %>% select(SITE, MOMID, TYPE_VISIT, M06_SPHB_LBORRES, M08_CBC_HB_LBORRES, diff_hb)
+```
+
 ```{r}
 typevisit_analysis <- merged_df5 %>% 
   mutate(cbc_bin = cut(M08_CBC_HB_LBORRES, breaks = seq(0,23, by = 0.5)))
@@ -921,7 +1172,7 @@ mean_cbc_bin <- typevisit_analysis %>%
   summarise(mean_diff = mean(M06_SPHB_LBORRES - M08_CBC_HB_LBORRES, na.rm=TRUE))
 ```
 
-Box Plots:
+***Box Plots:***
 ```{r}
 # CBC: 
 merged_df5 %>% ggplot() +
@@ -962,9 +1213,48 @@ merged_df5 %>% ggplot() +
   theme(legend.position = "right") 
 ```
 
-************************
-******* MODELS ********
-************************
+```{r}
+ggplot(data = merged_df5) +
+  geom_point(aes(y=diff_hb, x=M08_CBC_HB_LBORRES, 
+                 color=SITE), 
+             alpha = 0.4, size=1) 
+
+
+ggplot(data = merged_df5) +
+  geom_hex(aes(x=M08_CBC_HB_LBORRES, y=M06_SPHB_LBORRES)) + 
+  geom_abline(slope = 1) +
+  ylim(0,25)
+
+```
+
+```{r}
+ggplot(merged_df5, aes(x=diff_hb)) +
+  geom_histogram(color="lightblue")+
+  geom_density(color="darkblue", size=1) +
+  labs(title = "Distribution of the difference in Hb", x= "Hb difference (mg/dl)", Y = "Density")
+  
+
+ggplot(merged_df5, aes(x=diff_hb)) +
+  geom_histogram(color="lightblue")+
+  geom_density(color="darkblue", size=1) +
+  labs(title = "Distribution of the difference in Hb per site", x= "Hb difference (mg/dl)", Y = "Density") + 
+  theme_bw() +
+ # ylim(0,250) + 
+  facet_grid(vars(SITE), scales = "free") +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) + 
+  theme(legend.position = "right") 
+
+#TODO: compute %age where the difference between Sphb and CBC is 0. These two perfectly align here.
+```
+
+************************************************************************
+************************************************************************
+************************************************************************
+********************** LINEAR MIXED MODELS *****************************
+************************************************************************
+************************************************************************
+************************************************************************
 
 Linear Mixed Modeling
 # Specify random intercepts for MOMID and SITE (allows for individual variations withing MOMID and different intercepts for each SITE)
@@ -972,61 +1262,126 @@ Linear Mixed Modeling
 # IMPACT OF TYPE_VISIT - I DON'T THINK THIS MODEL MAKES SENSE. 
 # mixed_model <- lmer(diff_hb ~ TYPE_VISIT + (1 | MOMID) + (1 | SITE), data = merged_df5)
 
-# IMPACT OF SITE: 
+# QING SUGGESTED: GIVEN THAT WE ONLY HAVE 3 SITES, MODELING SITE AS A FIXED COVARIATE MAY BE COMPUTATIONALLY BETTER.--> run (a)
+
+# a. Fixed effect on SITE:
+mixed_model <- lmer(diff_hb ~ SITE + (1 | MOMID), data = merged_df5)
+
+
+# b. RANDOM EFFECT ON SITE: 
 mixed_model <- lmer(diff_hb ~ (1| SITE) + (1 | MOMID), data = merged_df5)
 
-# Get the model summary
+## Get the model summary
 summary(mixed_model)
 
-# Extract fixed effects coefficients
+## Extract fixed effects coefficients
 fixed_effects <- fixef(mixed_model)
-fixed_effects
 
-# Compute Relative Risk
-RR <- exp(fixed_effects)
-
-# Get the standard errors of the fixed effects
+## STANDARD ERRORS:
 SE <- sqrt(diag(vcov(mixed_model)))
 
-# Compute 95% Confidence Interval for RR
-lower_CI <- exp(fixed_effects - 1.96 * SE)
-upper_CI <- exp(fixed_effects + 1.96 * SE)
+# COMPUTE 95% CI FOR BETAS:
+lower_CI <- fixed_effects - 1.96 * SE
+upper_CI <- fixed_effects + 1.96 * SE
 
-# Display the Relative Risk and 95% CI
-results <- data.frame(Relative_Risk = RR, Lower_CI = lower_CI, Upper_CI = upper_CI)
-round(results, 3)
+
+## Display the Beta and 95% CI
+results_site <- data.frame(Beta = fixed_effects, Lower_CI = lower_CI, Upper_CI = upper_CI)
+
+# individual dataframes
+results_site <- results_site[-1,] %>% # this removes the intercept row
+  mutate(`Unadjusted β (95%CI)` = paste0(round(Beta,3), " (", round(Lower_CI,3), ", ", round(Upper_CI,3), ")")) %>%
+  select(-Beta, -Lower_CI, -Upper_CI)
+
+## COMPUTE THE NUMBER OF ROWS THAT ARE IN THE UNADJUSTED DF SO THAT THE ADJUSTED WILL DROP THE ROW THAT HAS THE ADJUSTING RISK FACTOR:
+n_vars <- nrow(results_site)
+
+
+## DISPLAY EQUATION (have to copy this in a new clean .Rmd file to see the eq.):
 extract_eq(mixed_model)
+
+###################
+# ADJUSTED MODEL #
+###################
+
+## a. FIXED EFFECT ON SITE + ADJUSTED FOR CBC
+mixed_model_adj <- lmer(diff_hb ~ SITE + (1 | MOMID) + M08_CBC_HB_LBORRES, data = merged_df5)
+
+## MODEL SUMMARY:
+summary(mixed_model_adj)
+
+## Extract fixed effects coefficients Adjusted
+fixed_effects_adj <- fixef(mixed_model_adj)
+
+## STANDARD ERROR:
+SE_adj <- sqrt(diag(vcov(mixed_model_adj))) # ADJ
+
+## 95% CONFIDENCE INTERVALS:
+lower_CI_adj <- fixed_effects_adj - 1.96 * SE_adj # ADJ
+upper_CI_adj <- fixed_effects_adj + 1.96 * SE_adj # ADJ
+
+## DISPLAY BETA AND 95%CI IN A DATAFRAME
+results_site_adj <- data.frame(Beta = fixed_effects_adj, Lower_CI = lower_CI_adj, Upper_CI = upper_CI_adj)
+
+## CLEAN UP DF BEFORE CBIND
+results_site_adj <- results_site_adj[-1,] %>% # this removes the intercept row
+  mutate(`Adjusted β (95%CI)` = paste0(round(Beta,3), " (", round(Lower_CI,3), ", ", round(Upper_CI,3), ")")) %>%
+  select(-Beta, -Lower_CI, -Upper_CI)
+
+## CBIND
+results_site_both <- cbind(results_site,
+                           head(results_site_adj, n_vars))
+
+##################################
+# RELATIVE RISK COMPUTATION INFO:
+##################################
+### IF I WANTED TO COMPUTE RELATVIE RISK, WHICH I DON'T NEED HERE SINCE OUTCOME IS CONTINUOUS. 
+
+# # Compute Relative Risk
+# RR <- exp(fixed_effects)
+# 
+# # Get the standard errors of the fixed effects
+# SE <- sqrt(diag(vcov(mixed_model)))
+# 
+# # Compute 95% Confidence Interval for RR
+# lower_CI <- exp(fixed_effects - 1.96 * SE)
+# upper_CI <- exp(fixed_effects + 1.96 * SE)
+# 
+# # Display the Relative Risk and 95% CI
+# results <- data.frame(Relative_Risk = RR, Lower_CI = lower_CI, Upper_CI = upper_CI)
+
 ```
 
 MATERNAL AGE < 18 OR >=18
 ```{r}
 # IMPACT OF MATERNAL AGE: 
 mixed_model <- lmer(diff_hb ~ age_lt_18 + (1 | MOMID) + (1 | SITE), data = merged_df5)
+mixed_model <- lmer(diff_hb ~ age_lt_18 + (1 | MOMID) + SITE, data = merged_df5) # SITE AS FIXED EFFECT. ESTIMATES FOR AGE ARE VERY SIMILAR TO ABOVE. DON'T NEED TO DO FIXED EFFECT ON SITE HERE. 
+
+# ADJUSTED FOR CBC
+mixed_model <- lmer(diff_hb ~ age_lt_18 + (1 | MOMID) + (1 | SITE) + M08_CBC_HB_LBORRES, data = merged_df5)
 
 
 # Get the model summary
 summary(mixed_model)
 
-# Extract fixed effects coefficients
+## Extract fixed effects coefficients
 fixed_effects <- fixef(mixed_model)
 fixed_effects
 
-# Compute Relative Risk
-RR <- exp(fixed_effects)
-
-# Get the standard errors of the fixed effects
+## STANDARD ERRORS:
 SE <- sqrt(diag(vcov(mixed_model)))
 
-# Compute 95% Confidence Interval for RR
-lower_CI <- exp(fixed_effects - 1.96 * SE)
-upper_CI <- exp(fixed_effects + 1.96 * SE)
+# COMPUTE 95% CI FOR BETAS:
+lower_CI <- fixed_effects - 1.96 * SE
+upper_CI <- fixed_effects + 1.96 * SE
 
-# Display the Relative Risk and 95% CI
-results <- data.frame(Relative_Risk = RR, Lower_CI = lower_CI, Upper_CI = upper_CI)
+## Display the Relative Risk and 95% CI
+results <- data.frame(Beta = fixed_effects, Lower_CI = lower_CI, Upper_CI = upper_CI)
+
 round(results, 3)
-
-
 extract_eq(mixed_model)
+
 ```
 
 ***TOBACCO USE:***
@@ -1034,89 +1389,90 @@ extract_eq(mixed_model)
 # IMPACT OF Tobacco use: 
 mixed_model <- lmer(diff_hb ~ tobacco_use + (1 | MOMID) + (1 | SITE), data = merged_df5)
 
+mixed_model <- lmer(diff_hb ~ tobacco_use + (1 | MOMID) + (1 | SITE) + M08_CBC_HB_LBORRES, data = merged_df5) # ADJUSTED
 
 # Get the model summary
 summary(mixed_model)
 
-# Extract fixed effects coefficients
+## Extract fixed effects coefficients
 fixed_effects <- fixef(mixed_model)
 fixed_effects
 
-# Compute Relative Risk
-RR <- exp(fixed_effects)
-
-# Get the standard errors of the fixed effects
+## STANDARD ERRORS:
 SE <- sqrt(diag(vcov(mixed_model)))
 
-# Compute 95% Confidence Interval for RR
-lower_CI <- exp(fixed_effects - 1.96 * SE)
-upper_CI <- exp(fixed_effects + 1.96 * SE)
+# COMPUTE 95% CI FOR BETAS:
+lower_CI <- fixed_effects - 1.96 * SE
+upper_CI <- fixed_effects + 1.96 * SE
 
-# Display the Relative Risk and 95% CI
-results <- data.frame(Relative_Risk = RR, Lower_CI = lower_CI, Upper_CI = upper_CI)
+## Display the Relative Risk and 95% CI
+results <- data.frame(Beta = fixed_effects, Lower_CI = lower_CI, Upper_CI = upper_CI)
+
 round(results, 3)
-
-
 extract_eq(mixed_model)
+
 ```
 
-BMI: 
+***BMI:*** 
 ```{r}
 # IMPACT OF MATERNAL BMI AT ENROLLMENT: 
 mixed_model <- lmer(diff_hb ~ bmi_enroll_cat + (1 | MOMID) + (1 | SITE), data = merged_df5)
 
+# ADJUSTED
+mixed_model <- lmer(diff_hb ~ bmi_enroll_cat + (1 | MOMID) + (1 | SITE) + M08_CBC_HB_LBORRES, data = merged_df5)
+
 # Get the model summary
 summary(mixed_model)
 
-# Extract fixed effects coefficients
+## Extract fixed effects coefficients
 fixed_effects <- fixef(mixed_model)
 fixed_effects
 
-# Compute Relative Risk
-RR <- exp(fixed_effects)
-
-# Get the standard errors of the fixed effects
+## STANDARD ERRORS:
 SE <- sqrt(diag(vcov(mixed_model)))
 
-# Compute 95% Confidence Interval for RR
-lower_CI <- exp(fixed_effects - 1.96 * SE)
-upper_CI <- exp(fixed_effects + 1.96 * SE)
+# COMPUTE 95% CI FOR BETAS:
+lower_CI <- fixed_effects - 1.96 * SE
+upper_CI <- fixed_effects + 1.96 * SE
 
-# Display the Relative Risk and 95% CI
-results <- data.frame(Relative_Risk = RR, Lower_CI = lower_CI, Upper_CI = upper_CI)
-print(round(results, 3))
+## Display the Relative Risk and 95% CI
+results <- data.frame(Beta = fixed_effects, Lower_CI = lower_CI, Upper_CI = upper_CI)
 
-
+round(results, 3)
 extract_eq(mixed_model)
 
 ```
 
+MUAC
 ```{r}
 # IMPACT OF MATERNAL MUAC
 mixed_model <- lmer(diff_hb ~ MUAC + (1 | MOMID) + (1 | SITE), data = merged_df5)
 
+mixed_model <- lmer(diff_hb ~ MUAC + (1 | MOMID) + (1 | SITE) + M08_CBC_HB_LBORRES, data = merged_df5) # ADJSUTED FOR CBC
+
 # Get the model summary
 summary(mixed_model)
 
-# Extract fixed effects coefficients
+## Extract fixed effects coefficients
 fixed_effects <- fixef(mixed_model)
 fixed_effects
 
-# Compute Relative Risk
-RR <- exp(fixed_effects)
-
-# Get the standard errors of the fixed effects
+## STANDARD ERRORS:
 SE <- sqrt(diag(vcov(mixed_model)))
 
-# Compute 95% Confidence Interval for RR
-lower_CI <- exp(fixed_effects - 1.96 * SE)
-upper_CI <- exp(fixed_effects + 1.96 * SE)
+# COMPUTE 95% CI FOR BETAS:
+lower_CI <- fixed_effects - 1.96 * SE
+upper_CI <- fixed_effects + 1.96 * SE
 
-# Display the Relative Risk and 95% CI
-results <- data.frame(Relative_Risk = RR, Lower_CI = lower_CI, Upper_CI = upper_CI)
+## Display the Relative Risk and 95% CI
+results <- data.frame(Beta = fixed_effects, Lower_CI = lower_CI, Upper_CI = upper_CI)
+
 round(results, 3)
-
 extract_eq(mixed_model)
+```
+
+```{r}
+
 ```
 
 STANDARDIZING PV FIRST: 
@@ -1131,35 +1487,63 @@ merged_df5$PV_standardized <- scale(merged_df5$PV)
 
 ```
 
+***PV Expansion***
 ```{r}
-# IMPACT OF MATERNAL PLASMA EXPANSION VOLUME: 
-mixed_model <- lmer(diff_hb ~ PV + (1 | MOMID) + (1 | SITE), data = merged_df5)
+##################
+# UNSTANDARIZED #
+#################
+mixed_model <- lmer(diff_hb ~ PV + (1 | MOMID) + (1 | SITE), data = merged_df5) # UNSTANDARDIZED
 
-# STANDARDIZED PV
-mixed_model <- lmer(diff_hb ~ PV_standardized + (1 | MOMID) + (1 | SITE), data = merged_df5)
+#################### 
+# STANDARDIZED PV #
+###################
+mixed_model <- lmer(diff_hb ~ PV_standardized + (1 | MOMID) + (1 | SITE), data = merged_df5) # STANDARDIZED
 
 # Get the model summary
 summary(mixed_model)
 
-# Extract fixed effects coefficients
+## Extract fixed effects coefficients
 fixed_effects <- fixef(mixed_model)
 fixed_effects
 
-# Compute Relative Risk
-RR <- exp(fixed_effects)
-
-# Get the standard errors of the fixed effects
+## STANDARD ERRORS:
 SE <- sqrt(diag(vcov(mixed_model)))
-SE
-# Compute 95% Confidence Interval for RR
-lower_CI <- exp(fixed_effects - 1.96 * SE)
-upper_CI <- exp(fixed_effects + 1.96 * SE)
 
-# Display the Relative Risk and 95% CI
-results <- data.frame(Relative_Risk = RR, Lower_CI = lower_CI, Upper_CI = upper_CI)
-round(results, 3)
+# COMPUTE 95% CI FOR BETAS:
+lower_CI <- fixed_effects - 1.96 * SE
+upper_CI <- fixed_effects + 1.96 * SE
 
-extract_eq(mixed_model)
+## Display the Relative Risk and 95% CI
+results_PV <- data.frame(Beta = fixed_effects, Lower_CI = lower_CI, Upper_CI = upper_CI)
+
+round(results_PV, 3)
+
+################
+# ADJUSTED MODEL
+################
+
+# STANDARDIZED PV
+mixed_model_adj <- lmer(diff_hb ~ PV_standardized + (1 | MOMID) + (1 | SITE) + M08_CBC_HB_LBORRES, data = merged_df5) # STANDARDIZED
+
+# Get the model summary
+summary(mixed_model_adj)
+
+## Extract fixed effects coefficients
+fixed_effects_adj <- fixef(mixed_model_adj)
+
+## STANDARD ERRORS:
+SE_adj <- sqrt(diag(vcov(mixed_model_adj)))
+
+# COMPUTE 95% CI FOR BETAS:
+lower_CI_adj <- fixed_effects_adj - 1.96 * SE_adj
+upper_CI_adj <- fixed_effects_adj + 1.96 * SE_adj
+
+## Display the Relative Risk and 95% CI
+results_PV_adj <- data.frame(Beta = fixed_effects_adj, Lower_CI = lower_CI_adj, Upper_CI = upper_CI_adj)
+
+round(results_PV_adj, 3)
+
+
 ```
 
 PV ggplot:
@@ -1180,52 +1564,223 @@ ggplot(merged_df5, aes(x=PV)) +
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank()) + 
   theme(legend.position = "right") 
-
 ```
+
 
 ***ANEMIA SEVERITY***
 ```{r}
-
 # IMPACT OF MATERNAL ANEMIA SEVERITY ACROSS 5 TIMEPOINTS: 
 mixed_model <- lmer(diff_hb ~ MAT_ANEMIA_MEAS + (1 | MOMID) + (1 | SITE), data = merged_df5)
 
 # Get the model summary
 summary(mixed_model)
 
-# Extract fixed effects coefficients
+## Extract fixed effects coefficients
 fixed_effects <- fixef(mixed_model)
-fixed_effects
 
-# Compute Relative Risk
-RR <- exp(fixed_effects)
-
-# Get the standard errors of the fixed effects
+## STANDARD ERRORS:
 SE <- sqrt(diag(vcov(mixed_model)))
-SE
-# Compute 95% Confidence Interval for RR
-lower_CI <- exp(fixed_effects - 1.96 * SE)
-upper_CI <- exp(fixed_effects + 1.96 * SE)
 
-# Display the Relative Risk and 95% CI
-results <- data.frame(Relative_Risk = RR, Lower_CI = lower_CI, Upper_CI = upper_CI)
-round(results, 3)
+# COMPUTE 95% CI FOR BETAS:
+lower_CI <- fixed_effects - 1.96 * SE
+upper_CI <- fixed_effects + 1.96 * SE
 
-extract_eq(mixed_model)
+## Display the Relative Risk and 95% CI
+results_anemia <- data.frame(Beta = fixed_effects, Lower_CI = lower_CI, Upper_CI = upper_CI)
 
+round(results_anemia, 3)
+
+
+#############
+# ADJUSTED #
+############
+
+mixed_model_adj <- lmer(diff_hb ~ MAT_ANEMIA_MEAS + (1 | MOMID) + (1 | SITE) + M08_CBC_HB_LBORRES, data = merged_df5)
+
+# Get the model summary
+summary(mixed_model_adj)
+
+## Extract fixed effects coefficients
+fixed_effects_adj <- fixef(mixed_model_adj)
+
+## STANDARD ERRORS:
+SE_adj <- sqrt(diag(vcov(mixed_model_adj)))
+
+# COMPUTE 95% CI FOR BETAS:
+lower_CI_adj <- fixed_effects_adj - 1.96 * SE_adj
+upper_CI_adj <- fixed_effects_adj + 1.96 * SE_adj
+
+## Display the Relative Risk and 95% CI
+results_anemia_adj <- data.frame(Beta = fixed_effects_adj, Lower_CI = lower_CI_adj, Upper_CI = upper_CI_adj)
+
+round(results_anemia_adj, 3)
 ```
 
+
+***GA AT EACH VISIT***
 ```{r}
-ggplot(data = merged_df5) +
-  geom_point(aes(x=diff_hb, y=M08_CBC_HB_LBORRES, 
-                 color=SITE), 
-             alpha = 0.4, size=1) 
+# IMPACT GA THROUGH PREGNANCY: 
+mixed_model <- lmer(diff_hb ~ M04_GA_AT_VISIT_WKS + (1 | MOMID) + (1 | SITE), data = merged_df5)
+
+# Get the model summary
+summary(mixed_model)
+
+## Extract fixed effects coefficients
+fixed_effects <- fixef(mixed_model)
+
+## STANDARD ERRORS:
+SE <- sqrt(diag(vcov(mixed_model)))
+
+# COMPUTE 95% CI FOR BETAS:
+lower_CI <- fixed_effects - 1.96 * SE
+upper_CI <- fixed_effects + 1.96 * SE
+
+## Display the Relative Risk and 95% CI
+results_ga_visits <- data.frame(Beta = fixed_effects, Lower_CI = lower_CI, Upper_CI = upper_CI)
+
+round(results_ga_visits, 3)
 
 
-ggplot(data = merged_df5) +
-  geom_hex(aes(x=M08_CBC_HB_LBORRES, y=M06_SPHB_LBORRES)) + 
-  geom_abline(slope = 1) +
-  ylim(0,25)
+################
+# ADJUSTED MODEL
+################
 
+mixed_model_adj <- lmer(diff_hb ~ M04_GA_AT_VISIT_WKS + (1 | MOMID) + (1 | SITE) + M08_CBC_HB_LBORRES, data = merged_df5) # STANDARDIZED
+
+# Get the model summary
+summary(mixed_model_adj)
+
+## Extract fixed effects coefficients
+fixed_effects_adj <- fixef(mixed_model_adj)
+
+## STANDARD ERRORS:
+SE_adj <- sqrt(diag(vcov(mixed_model_adj)))
+
+# COMPUTE 95% CI FOR BETAS:
+lower_CI_adj <- fixed_effects_adj - 1.96 * SE_adj
+upper_CI_adj <- fixed_effects_adj + 1.96 * SE_adj
+
+## Display the Relative Risk and 95% CI
+results_ga_visits_adj <- data.frame(Beta = fixed_effects_adj, Lower_CI = lower_CI_adj, Upper_CI = upper_CI_adj)
+
+round(results_ga_visits_adj, 3)
+```
+
+***GA at each VISIT ggplot:***
+```{r}
+summary(merged_df5$M04_GA_AT_VISIT_WKS)
+ggplot(merged_df5, aes(x=M04_GA_AT_VISIT_WKS)) +
+  geom_histogram(color="lightblue")+
+  geom_density(color="darkblue", size=1) +
+  labs(title = "Distribution of Gestational Age Across all 3 Sites", x= "GA at visit (Weeks)", Y = "Density")
+  
+
+ggplot(merged_df5, aes(x=M04_GA_AT_VISIT_WKS)) +
+  geom_histogram(color="lightblue")+
+  geom_density(color="darkblue", size=1) +
+  labs(title = "Distribution of Gestational Age per site", x= "GA at visit (weeks)", Y = "Density") + 
+  theme_bw() +
+  ylim(0,750) + 
+  facet_grid(vars(SITE), scales = "free") +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) + 
+  theme(legend.position = "right") 
+```
+
+***STANDARIZED GA_AT_VISIT_WKS***
+```{r}
+merged_df5$M04_GA_AT_VISIT_WKS_std  <- scale(merged_df5$M04_GA_AT_VISIT_WKS)
+```
+
+***GA at each VISIT STANDARDIZED ggplot:*** - not sure if i need to standardized - #TODO ask Qing
+```{r}
+# summary(merged_df5$M04_GA_AT_VISIT_WKS_std)
+# 
+# ggplot(merged_df5, aes(x=M04_GA_AT_VISIT_WKS_std)) +
+#   geom_histogram(color="lightblue")+
+#   geom_density(color="darkblue", size=1) +
+#   labs(title = "Distribution of Gestational Age Across all 3 Sites", x= "GA at visit (Weeks)", Y = "Density")
+#   
+# 
+# ggplot(merged_df5, aes(x=M04_GA_AT_VISIT_WKS_std)) +
+#   geom_histogram(color="lightblue")+
+#   geom_density(color="darkblue", size=1) +
+#   labs(title = "Distribution of Gestational Age per site", x= "GA at visit (weeks)", Y = "Density") + 
+#   theme_bw() +
+#   ylim(0,750) + 
+#   facet_grid(vars(SITE), scales = "free") +
+#   theme(panel.grid.major = element_blank(),
+#         panel.grid.minor = element_blank()) + 
+#   theme(legend.position = "right") 
 ```
 
 
+***GA AT ENROLLMENT VISIT***
+```{r}
+# IMPACT GA THROUGH PREGNANCY: 
+mixed_model <- lmer(diff_hb ~ GA_ENROLL_WKS + (1 | MOMID) + (1 | SITE), data = merged_df5)
+
+# Get the model summary
+summary(mixed_model)
+
+## Extract fixed effects coefficients
+fixed_effects <- fixef(mixed_model)
+
+## STANDARD ERRORS:
+SE <- sqrt(diag(vcov(mixed_model)))
+
+# COMPUTE 95% CI FOR BETAS:
+lower_CI <- fixed_effects - 1.96 * SE
+upper_CI <- fixed_effects + 1.96 * SE
+
+## Display the Relative Risk and 95% CI
+results_ga_enroll <- data.frame(Beta = fixed_effects, Lower_CI = lower_CI, Upper_CI = upper_CI)
+
+round(results_ga_enroll, 3)
+
+
+################
+# ADJUSTED MODEL
+################
+
+mixed_model_adj <- lmer(diff_hb ~ GA_ENROLL_WKS + (1 | MOMID) + (1 | SITE) + M08_CBC_HB_LBORRES, data = merged_df5) # STANDARDIZED
+
+# Get the model summary
+summary(mixed_model_adj)
+
+## Extract fixed effects coefficients
+fixed_effects_adj <- fixef(mixed_model_adj)
+
+## STANDARD ERRORS:
+SE_adj <- sqrt(diag(vcov(mixed_model_adj)))
+
+# COMPUTE 95% CI FOR BETAS:
+lower_CI_adj <- fixed_effects_adj - 1.96 * SE_adj
+upper_CI_adj <- fixed_effects_adj + 1.96 * SE_adj
+
+## Display the Relative Risk and 95% CI
+results_ga_enroll_adj <- data.frame(Beta = fixed_effects_adj, Lower_CI = lower_CI_adj, Upper_CI = upper_CI_adj)
+
+round(results_ga_enroll_adj, 3)
+```
+
+***GA at ENROLLMENT ggplot:***
+```{r}
+summary(merged_df5$GA_ENROLL_WKS)
+ggplot(merged_df5, aes(x=GA_ENROLL_WKS)) +
+  geom_histogram(color="lightblue")+
+  geom_density(color="darkblue", size=1) +
+  labs(title = "Distribution of Gestational Age at Enrollment Across all 3 Sites", x= "GA at enrollment (Weeks)", Y = "Density")
+  
+
+ggplot(merged_df5, aes(x=GA_ENROLL_WKS)) +
+  geom_histogram(color="lightblue")+
+  geom_density(color="darkblue", size=1) +
+  labs(title = "Distribution of Gestational Age at Enrollment per site", x= "GA at enrollment (weeks)", Y = "Density") + 
+  theme_bw() +
+  ylim(0,750) + 
+  facet_grid(vars(SITE), scales = "free") +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) + 
+  theme(legend.position = "right") 
+```
