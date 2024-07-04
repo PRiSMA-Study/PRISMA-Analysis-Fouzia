@@ -1,0 +1,236 @@
+---
+title: "<span style='font-size: 18px'> <span style='text-align: center'> GWG (Issued: 2024 July 5)"
+output:
+  pdf_document:
+    toc: no
+    toc_depth: 4
+    latex_engine: xelatex
+    keep_tex: true
+include-in-header:
+- \usepackage{ booktabs,longtable}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, out.width = "100%") 
+knitr::opts_chunk$set(out.width = "100%", fig.align = "center")
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+#*****************************************************************************
+#* PRISMA GWG Aim 1 
+#* Drafted: July 01, 2024
+#* Last updated: July 01, 2024
+#*****************************************************************************
+library(knitr)
+library(tidyverse)
+library(reshape2)
+library(lubridate)
+library(kableExtra)
+library(emo)
+library(naniar)
+library(RColorBrewer)
+library(gt) ## for table gen
+library(webshot2)  ## for table gen
+
+#****************************************************************************
+#0. # READ FILES
+#****************************************************************************
+# Define the path to the folder containing the CSV files
+UploadDate = "2024-06-14"
+folder_path <- paste0("D:/Users/fouziafarooq/Documents/PRISMA_ANALYSIS/GWG/data/Stacked Data/", UploadDate)
+
+gwg_df <- read.csv(paste0("data_out/df_w_GWGvars-n-Outcomes_uploaded_", UploadDate, ".csv"))
+
+path_to_save <- "data_out/"
+
+# 
+tb_theme1 <- function(matrix){
+  tb <- matrix %>%
+    gt(
+      rownames_to_stub = TRUE
+    ) %>%
+    opt_align_table_header(align = "left") %>%
+    tab_spanner(
+      label = "Sites"
+      # columns = c(-Total)
+    ) %>%
+    opt_stylize(style = 6, color = 'gray') %>%
+    tab_style(
+      style = list(
+        cell_fill(color = "#317773"),
+        cell_text(weight = "bold"),
+        cell_text(v_align = "middle"),
+        cell_text(color = "white", size = px(18))
+      ),
+      locations = list(
+        cells_title()
+      )
+    ) %>%
+    tab_style(
+      style = list(
+        cell_fill(color = "#E2D1F9"),
+        cell_text(color = "black", size = px(18)),
+        cell_text(v_align = "middle")
+      ),
+      locations = list(
+        cells_stubhead(),
+        cells_column_spanners(),
+        cells_column_labels()
+      )
+    ) %>%
+    tab_style(
+      style = list(
+        cell_fill(color = "#F0F0F0"),
+        cell_text(v_align = "middle", size = px(18))
+      ),
+      locations = list(
+        cells_stub()
+      )
+    ) %>%
+    tab_style(
+      style = list(
+        cell_text(align = "center", size = px(18))
+      ),
+      locations = list(
+        cells_column_labels(columns = everything())
+      )
+    ) %>%
+    tab_style(
+      style = list(
+        cell_text(align = "center", size = px(18))
+      ),
+      locations = list(
+        cells_body(columns = everything())
+      )
+    ) %>%
+    fmt_markdown(columns = everything()) %>%
+    tab_options(table.width = pct(100)) %>%
+    cols_width(1 ~ px(300))
+}
+ 
+
+# Function to extract and format legend horizontally
+g_legend <- function(p) {
+  tmp <- ggplot_gtable(ggplot_build(p))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend_gtable <- tmp$grobs[[leg]]
+  
+  # Arrange legend components horizontally
+  legend_gtable$widths <- unit(rep(1, ncol(legend_gtable)), "null")
+  legend_gtable$grobs <- legend_gtable$grobs[order(legend_gtable$layout$l)]
+  
+  return(legend_gtable)
+}
+
+
+# setwd(paste0(path_to_save))
+```
+
+**Includes data from synapse last updated:** 2024 June 14 
+
+\tableofcontents
+
+\newpage
+
+## 1. Summary
+
+### Table 1. Summary of some outcomes based on BMI categories.
+**Denominator:** All women with singleton pregnancies who have visit 1 and visit 5 weight. 
+
+
+
+
+
+```{r}
+## Put definitions here:
+inf_outcomes_table <- gwg_df %>%
+   rowwise() %>% 
+  group_by(SITE) %>% 
+  summarise(
+     "Low birthweight <2500g (PRISMA or facility measured), n (%)" = paste0(
+      format(sum(LBW2500_ANY == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(LBW2500_ANY == 1, na.rm = TRUE)/n()*100, 2), nsmall = 0, digits = 2),
+      ")")
+     
+     )  %>%
+  t() %>% as.data.frame() %>% 
+  `colnames<-`(c(.[1,])) %>% 
+  slice(-1) %>% 
+        add_column(
+      .before = 1,
+    "Total" = gwg_df %>%
+        plyr::summarise(
+          
+    "Low birthweight <2500g (PRISMA or facility measured), n (%)" = paste0(
+      format(sum(LBW2500_ANY == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(LBW2500_ANY == 1, na.rm = TRUE)/dim(gwg_df)[1]*100, 2), nsmall = 0, digits = 2),
+      ")")
+    
+  ) %>%
+        t() %>%
+        as.data.frame() %>%
+      `colnames<-`(c(.[1,])) %>% unlist()
+)
+
+```
+
+
+```{r}
+
+infantoutcomes_combined <- bind_rows(inf_outcomes_table) %>% select("Total", "Ghana", "India-CMC","India-SAS", "Kenya", "Pakistan")
+
+infantoutcomes_output <-  infantoutcomes_combined %>% 
+  select(-Total) 
+
+# replace NA with 0s (this likely means there is not yet data)
+infantoutcomes_combined[is.na(infantoutcomes_combined)] <- paste0("0 (0)")
+
+infantoutcomes_output <- tb_theme1(infantoutcomes_combined) %>% 
+  tab_header(
+    title = md("**Table 1**")
+  )  %>% 
+tab_footnote(
+    footnote = html("<span style='font-size: 18px'><sup>a</sup> Denominator is all live births with MNH09 and MNH11 filled out AND have passed the risk period with a visit OR died within the risk period (risk period: age = 28days).</span>")
+ ) %>% 
+  ## remove infant deaths for now - add back in when we have data 
+ #  tab_footnote(
+ #    footnote = html("<span style='font-size: 18px'><sup>b</sup>Denominator is all live births with MNH09 and MNH11 filled out AND have passed the risk period with a visit (risk period: age = 365days).</span>")
+ # ) %>% 
+  tab_footnote(
+    footnote = html("<span style='font-size: 18px'><sup>b</sup> Denominator is all livebirths and stillbirths.</span>")
+ ) %>% 
+  tab_footnote(
+    footnote = html("<span style='font-size: 18px'><sup>c</sup> Denominator is all infants with a fetal loss reported in MNH04 `(PRG_DSDECOD)` or birth outcome in MNH09 `(BIRTH_DSTERM_INF1)`.</span>")
+ ) %>% 
+  tab_footnote(
+    footnote = html("<span style='font-size: 18px'><sup>d</sup> 
+All infants with a TcB measurement taken at <14 weeks of life.</span>")
+ ) %>% 
+  tab_footnote(
+    footnote = html("<span style='font-size: 18px'><sup>e</sup> 
+All infants with a jaundice assessment at <14 weeks of life.</span>")
+ ) %>% 
+  tab_footnote(
+    footnote = html("<span style='font-size: 18px'><sup>f</sup> Denominator is all livebirths aged 0-59 days.</span>")
+ ) 
+
+infantoutcomes_summary <-infantoutcomes_combined
+# save data set of summary table to add to monitoring report
+save(infantoutcomes_summary, file= paste0("data_out/infant-table_uploaded_",UploadDate, ".RData", sep = ""))
+
+
+```
+
+```{r, out.width = '100%'}
+infantoutcomes_output<- infantoutcomes_output %>% gtsave("infantoutcomes_output.png", expand = 10)
+knitr::include_graphics("infantoutcomes_output.png")
+```
+
+
+\newpage
+
+
+
+
+

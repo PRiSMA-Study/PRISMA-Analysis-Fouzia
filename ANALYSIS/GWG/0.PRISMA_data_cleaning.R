@@ -1,0 +1,266 @@
+# Date: June 25, 2024
+# Author: Fouzia Farooq
+
+# THIS FILE CREATES BOE VARIABLES THAT I CAN RUN EVERYTIME WITH NEW DATASET: 
+
+
+library(tidyverse)
+library(lubridate)
+library(naniar)
+library(writexl) # only for writing excel files
+
+rm(list = ls())
+dir.create("data_out")
+
+UploadDate = "2024-06-14"
+
+#****************************************************************************
+#0. # READ FILES
+#****************************************************************************
+# Define the path to the folder containing the CSV files
+folder_path <- paste0("D:/Users/fouziafarooq/Documents/PRISMA_ANALYSIS/GWG/data/Stacked Data/", UploadDate)
+
+# Get a list of all CSV files in the folder
+csv_files <- list.files(path = folder_path, pattern = "*.csv", full.names = TRUE)
+
+# Loop through each CSV file
+for (file in csv_files) {
+  # Extract the base name of the file (without the path)
+  base_name <- basename(file)
+  
+  # Extract the part of the name before the underscore
+  name_prefix <- str_split(base_name, "_")[[1]][1]
+  
+  # Read the CSV file into a data frame
+  data_frame <- read.csv(file)
+  
+  # Assign the data frame to a variable with the extracted name
+  assign(name_prefix, data_frame)
+}
+
+# Optional: List all variables in the environment to verify
+ls()
+
+#****************************************************************************
+# CREATE A DATASET OF ENROLLED WOMEN
+#****************************************************************************
+mnh02 <- mnh02 %>% 
+  mutate(ELIGIBLE = case_when(M02_AGE_IEORRES == 1 & M02_PC_IEORRES == 1 & M02_CATCHMENT_IEORRES == 1 &
+                       M02_CATCH_REMAIN_IEORRES == 1  & (M02_SCRN_RETURN != 0 | is.na(M02_SCRN_RETURN)) ~ 1,
+                     M02_AGE_IEORRES == 0 | M02_PC_IEORRES == 0 | M02_CATCHMENT_IEORRES == 0 |
+                       M02_CATCH_REMAIN_IEORRES == 0  ~ 0,
+                     TRUE ~ 99),
+CONSENT = case_when(!is.na(M02_CONSENT_IEORRES) ~ M02_CONSENT_IEORRES,
+                    TRUE ~ 99),
+ENROLL = case_when(M02_CONSENT_IEORRES == 1 & !is.na(M02_FORMCOMPLDAT_MNH02) & ELIGIBLE == 1 ~ 1,## MAY7 UPDATES: (M02_SCRN_RETURN == 1 | is.na(M02_SCRN_RETURN) to account for particpants who returned for screening and/or sites not using the variable
+                   ELIGIBLE == 0 | M02_CONSENT_IEORRES == 0 | M02_CONSENT_IEORRES == 77 ~ 0,
+                   TRUE ~ 77)) %>%
+  ## Assign denominators
+  mutate(ENROLL_DENOM = case_when(ENROLL == 1 ~ 1,
+                                  TRUE ~ 0)) 
+temp.df <- mnh02 %>% 
+  select(SITE, MOMID, PREGID, ENROLL)
+
+table(mnh02$ENROLL, useNA = "always")
+
+mnh02 %>% distinct (MOMID, PREGID, SITE, ENROLL, .keep_all = TRUE) %>%
+  count(ENROLL)
+
+mnh02_enrolled <- mnh02 %>% 
+  filter(ENROLL ==1)
+
+mnh02_enrolled %>% distinct (MOMID, PREGID, SITE, ENROLL, .keep_all = TRUE) %>%
+  count(ENROLL)
+
+mnh02_enrolled <- mnh02_enrolled %>% 
+  mutate(TYPE_VISIT=1)
+
+#****************************************************************************
+# SUBSET MNH02
+#****************************************************************************
+mnh02_enrolled <- mnh02_enrolled %>%
+  select(SITE, SCRNID, MOMID, PREGID, TYPE_VISIT, ENROLL, ENROLL_DENOM, M02_SCRN_OBSSTDAT)
+
+
+#****************************************************************************
+# CREATING A VECTOR OF ENROLLED WOMEN:
+#****************************************************************************
+# Step 1: Extract MOMIDs from MERGED_DF
+SCRNID_vector <- mnh02_enrolled %>% 
+  pull(SCRNID) %>% 
+  unique()
+
+# Step 2: Filter mnh05 based on MOMIDs vector
+mnh01_filtered <- mnh01 %>%
+  filter(SCRNID %in% SCRNID_vector)
+
+
+#****************************************************************************
+# SUBSET MNH01
+#****************************************************************************
+mnh01_filtered2 <- mnh01_filtered %>%
+  select(SITE, SCRNID, MOMID, PREGID, M01_TYPE_VISIT,
+         M01_US_OHOSTDAT, 
+         M01_US_GA_DAYS_AGE_FTS1, M01_US_GA_DAYS_AGE_FTS2, 
+         M01_US_GA_DAYS_AGE_FTS3, M01_US_GA_DAYS_AGE_FTS4,
+         M01_US_GA_WKS_AGE_FTS1, M01_US_GA_WKS_AGE_FTS2, 
+         M01_US_GA_WKS_AGE_FTS3, M01_US_GA_WKS_AGE_FTS4, 
+         M01_GA_LMP_WEEKS_SCORRES,M01_GA_LMP_DAYS_SCORRES)
+
+#****************************************************************************
+# MERGE MNH01 ONTO MNH02 ENROLLED WOMEN:
+#****************************************************************************
+# MNH00 and MNH01 don't have MOMID and PREGID in Kenya and Zambia. Merge it in from MNH02. 
+# THERE ARE NA'S AND THEN THERE ARE "" IN ZAMBIA MOMID AND PREGID
+# Keep an eye on the SITE variable.
+
+mnh01_filtered2 <- mnh01_filtered2 %>%
+  rename(TYPE_VISIT = M01_TYPE_VISIT)
+
+# MNH01 PREGID and MOMID have to be removed b/c Zambia MNH01 doesn't have these. 
+mnh01_filtered2 <- mnh01_filtered2 %>% select(-PREGID, -MOMID)
+
+mnh01_02 <- full_join(mnh01_filtered2, mnh02_enrolled,
+                      by = c("SCRNID", "SITE", "TYPE_VISIT")) %>% 
+  relocate(SITE, MOMID, PREGID, TYPE_VISIT, ENROLL)
+
+# Propagate MOMID to rows with matching SCRNID
+mnh01_02 <- mnh01_02 %>%
+  group_by(SCRNID) %>%
+  arrange(TYPE_VISIT) %>% 
+  mutate(MOMID = first(na.omit(MOMID)),
+         PREGID = first(na.omit(PREGID))) %>%
+  ungroup()
+
+
+ mnh01_02 %>% distinct (MOMID, PREGID, SITE, ENROLL, .keep_all = TRUE) %>%
+  count(ENROLL)
+
+mnh01_02_distinct <- mnh01_02 %>% distinct (MOMID, PREGID, SITE, ENROLL, .keep_all = TRUE) 
+
+temp.df <- mnh01_02_distinct %>% 
+  select(SITE, MOMID, PREGID, TYPE_VISIT, ENROLL)
+
+# mnh01_02 <- mnh01_02 %>%
+#   mutate(ENROLL = 1)
+
+mnh01_02 %>% distinct (MOMID, PREGID, SITE, ENROLL, .keep_all = TRUE) %>%
+  count(ENROLL)
+
+#****************************************************************************
+# MERGE in MNH05:
+#****************************************************************************
+# CLEAN UP MNH05 FIRST AND SUBSET TO THE RIGHT MOMID BEFORE MERGING ON. 
+# Step 1: Extract MOMIDs from MERGED_DF
+momids_vector <- mnh02_enrolled %>% 
+  pull(MOMID) %>% 
+  unique()
+
+# Step 2: Filter mnh05 based on MOMIDs vector
+mnh05_filtered <- mnh05 %>%
+  filter(MOMID %in% momids_vector) %>%
+  relocate(SITE, MOMID, PREGID, M05_TYPE_VISIT)
+
+mnh01_02_05 <- full_join(mnh01_02, mnh05_filtered %>% 
+                          select(MOMID, PREGID, SITE, M05_TYPE_VISIT, M05_ANT_PEDAT, M05_WEIGHT_PERES, M05_WEIGHT_PEPERF, M05_HEIGHT_PERES),
+                        by = c("MOMID", "PREGID", "SITE", "TYPE_VISIT" = "M05_TYPE_VISIT"))
+
+#****************************************************************************
+# CLEAN in MNH06:
+#****************************************************************************
+# CLEAN UP MNH06 FIRST AND SUBSET TO THE RIGHT MOMID BEFORE MERGING ON. 
+
+mnh06_filtered <- mnh06 %>%
+  filter(MOMID %in% momids_vector) %>%
+  relocate(SITE, MOMID, PREGID, M06_TYPE_VISIT, M06_SINGLETON_PERES)
+
+#****************************************************************************
+# create singleton dataframe:
+#****************************************************************************
+singleton_momids <- mnh06_filtered %>%
+  filter(M06_TYPE_VISIT==1) %>%
+  filter(M06_SINGLETON_PERES==1) %>%
+  select(SITE, MOMID, PREGID)
+
+#****************************************************************************
+# MERGE the MNH01_02_05 dataset onto this singleton dataset.
+#****************************************************************************
+mnh01_02_05_singleton <- left_join(singleton_momids, mnh01_02_05,
+                             by=c("SITE", "MOMID", "PREGID"))
+
+mnh01_02_05_singleton %>% distinct (MOMID, PREGID, SITE, ENROLL, .keep_all = TRUE) %>%
+  count(ENROLL)
+
+#*nrow()#****************************************************************************
+# REMOVE NA ROWS ON MISSING MOMID:
+#****************************************************************************
+mnh01_02_05_singleton <- mnh01_02_05_singleton %>%
+  filter(!is.na(MOMID))
+
+
+merged_df <- mnh01_02_05_singleton %>%
+  relocate(SITE, MOMID, PREGID, TYPE_VISIT, ENROLL)
+
+table(merged_df$ENROLL)
+#****************************************************************************
+# WRITE OUT THE FILE
+#****************************************************************************
+write.csv(merged_df, paste0("data_out/cleaned_merged_from_uploaded_", UploadDate, ".csv"))
+
+
+
+######################################################
+# IGNORE CODE BELOW!!!!
+
+# #######################
+# mnh00_02 <- left_join(mnh00, mnh02,
+#                       by = c("SCRNID", "SITE"))
+# 
+# mnh00_02 <- mnh00_02 %>% filter(PREGID !="")
+# 
+# mnh01 <- mnh01 %>% select(-PREGID, -MOMID)
+# 
+# mnh01_00_02 <- left_join(mnh01, mnh00_02,
+#                          by = c("SCRNID", "SITE"))
+# 
+# mnh01_00_02 <- mnh01_00_02 %>%
+#   relocate(SITE, SCRNID, MOMID, PREGID, M01_TYPE_VISIT, .before=everything())
+# 
+# 
+# mnh01_00_02 <- mnh01_00_02 %>% filter(PREGID !="")
+# 
+# merged_df <- mnh01_00_02
+# 
+# df_distinct <- merged_df %>% distinct(MOMID, .keep_all = TRUE)
+# 
+# 
+# 
+# 
+# merged_df <- merged_df %>% 
+#   mutate(ENROLLED_FF = ifelse(M02_AGE_IEORRES ==1 & M02_PC_IEORRES==1 & 
+#                                 M02_CATCHMENT_IEORRES==1 & M02_CATCH_REMAIN_IEORRES==1 & 
+#                                 M02_CONSENT_IEORRES==1, 1,0)) # THIS
+# 
+# table(merged_df$ENROLLED_FF, useNA = "always")
+# 
+# merged_df <- merged_df %>% filter(ENROLLED_FF ==1)
+# 
+# merged_df %>% distinct (MOMID, PREGID, SITE, ENROLLED_FF, .keep_all = TRUE) %>%
+#   count(ENROLLED_FF)
+# 
+# #****************************************************************************
+# # IDENTIFY DUPLICATES:
+# #****************************************************************************
+# duplicate_df <- merged_df %>% group_by(MOMID, PREGID, M01_TYPE_VISIT) %>%  filter(n()>1)
+# duplicate_df2 <- duplicate_df %>% distinct(MOMID, PREGID, M01_TYPE_VISIT) # There are n=15 women who have duplicate rows based on MOMID PREGID and TYPE_VISIT.
+# 
+# temp.df <- merged_df %>% filter(MOMID=="ZQf432b49d-d37e-40c9-bc0c-6e2cf79bafae")
+# write_xlsx(duplicate_df, paste0("data_out/duplicate momid_pregid_uploaded", UploadDate, '.xlsx'))
+# # NOTE: Stacie said: Not surprising unfortunately, although 13k+ duplicates seems worrisome
+# 
+# #****************************************************************************
+# # REMOVING DUPLICATES: TTHIS HAS MNH01, MNH02, MNH03.
+# #****************************************************************************
+# merged_df <- merged_df %>%
+#   distinct (MOMID, PREGID, SITE, M01_TYPE_VISIT, .keep_all = TRUE)
+
