@@ -6,6 +6,8 @@
 #****************************************************************************
 #TODO: THINGS TO DO AS OF 07/01/2024
 #* Need to change all 55, 77 etc to NA before giving dataset to Lili.
+#* #FF: Subset to enrolled women who have visit 1 and visit 5 weight data.
+#*     So those who have total weight gain and have singleton preg.
 #****************************************************************************
 
 library(lubridate)
@@ -23,15 +25,15 @@ library(writexl)
 rm(list = ls())
 dir.create("data_out")
 
-UploadDate = "2024-06-14"
+UploadDate = "2024-06-28"
 
 #****************************************************************************
 #0. # READ FILES
 #****************************************************************************
 # Define the path to the folder containing the CSV files
-folder_path <- paste0("D:/Users/fouziafarooq/Documents/PRISMA_ANALYSIS/GWG/data/Stacked Data/", UploadDate)
+folder_path <- paste0("D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/ANALYSIS/GWG/data/Stacked Data/", UploadDate)
 
-merged_df <- read.csv(paste0("data_out/merged_df_w_Outcomes_uploaded_", UploadDate, ".csv"))
+merged_df <- read.csv(paste0("ANALYSIS/GWG/data_out/merged_df_w_Outcomes_uploaded_", UploadDate, ".csv"))
 
 mnh01 <- read.csv(paste0(folder_path, "/mnh01_merged.csv"))
 mnh05 <- read.csv(paste0(folder_path, "/mnh05_merged.csv"))
@@ -89,7 +91,7 @@ merged_df3 <- merged_df2 %>%
   select(MOMID, PREGID, SITE, TYPE_VISIT, PREG_END, INFANTID, 
          PRETERMBIRTH_LT34, PRETERMBIRTH_LT37, 
          LBW2500_ANY, SGA_CAT, STILLBIRTH_22WK, 
-         INF_DTH_CAT, INF_ABOR_SPN,
+         INF_DTH, INF_ABOR_SPN,
          GA_ENROLL_WKS, GA_ENROLL_DAYS, BOE_GA_WKS, EST_CONCEP_DATE, EDD_BOE,
           M05_ANT_PEDAT, M05_WEIGHT_PERES, M05_WEIGHT_PEPERF, M05_HEIGHT_PERES)
 
@@ -107,7 +109,7 @@ weight_df <- merged_df4 %>%
   select(SITE, MOMID, PREGID, TYPE_VISIT, PREG_END, INFANTID, 
          PRETERMBIRTH_LT34, PRETERMBIRTH_LT37, 
          LBW2500_ANY, SGA_CAT, STILLBIRTH_22WK, 
-         INF_DTH_CAT, INF_ABOR_SPN,
+         INF_DTH, INF_ABOR_SPN,
          EST_CONCEP_DATE, M05_ANT_PEDAT, M05_GA_AT_VISIT, M05_WEIGHT_PERES, M05_HEIGHT_PERES) %>% 
   mutate(TYPE_VISIT_UPDATED = ifelse(TYPE_VISIT==13, NA, TYPE_VISIT)) %>% 
   group_by(MOMID, PREGID, SITE) %>%
@@ -159,7 +161,7 @@ weight_df <- weight_df %>%
 #* *******************************************************
 #* WRITE OUT A TEMP FILE TO START BUILDING OUT THE REPORT:
 #* *******************************************************
-write.csv(weight_df, paste0("data_out/df_w_GWGvars-n-Outcomes_uploaded_", UploadDate, ".csv"))
+write.csv(weight_df, paste0("ANALYSIS/GWG/data_out/df_w_GWGvars-n-Outcomes_uploaded_", UploadDate, ".csv"))
 
 
  

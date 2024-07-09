@@ -12,13 +12,13 @@ library(writexl) # only for writing excel files
 rm(list = ls())
 dir.create("data_out")
 
-UploadDate = "2024-06-14"
+UploadDate = "2024-06-28"
 
 #****************************************************************************
 #0. # READ FILES
 #****************************************************************************
 # Define the path to the folder containing the CSV files
-folder_path <- paste0("D:/Users/fouziafarooq/Documents/PRISMA_ANALYSIS/GWG/data/Stacked Data/", UploadDate)
+folder_path <- paste0("D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/ANALYSIS/GWG/data/Stacked Data/", UploadDate)
 
 # Get a list of all CSV files in the folder
 csv_files <- list.files(path = folder_path, pattern = "*.csv", full.names = TRUE)
@@ -165,6 +165,9 @@ mnh01_02_05 <- full_join(mnh01_02, mnh05_filtered %>%
                           select(MOMID, PREGID, SITE, M05_TYPE_VISIT, M05_ANT_PEDAT, M05_WEIGHT_PERES, M05_WEIGHT_PEPERF, M05_HEIGHT_PERES),
                         by = c("MOMID", "PREGID", "SITE", "TYPE_VISIT" = "M05_TYPE_VISIT"))
 
+# Zambia's data also exists!
+temp.df <- mnh01_02_05 %>%
+  select(MOMID, PREGID, SITE, TYPE_VISIT, M05_WEIGHT_PERES, M05_HEIGHT_PERES)
 #****************************************************************************
 # CLEAN in MNH06:
 #****************************************************************************
@@ -201,53 +204,17 @@ mnh01_02_05_singleton <- mnh01_02_05_singleton %>%
 merged_df <- mnh01_02_05_singleton %>%
   relocate(SITE, MOMID, PREGID, TYPE_VISIT, ENROLL)
 
-table(merged_df$ENROLL)
+table(merged_df$ENROLL) # 2024-06-28 data has n=9105 women enrolled and singleton.
 #****************************************************************************
 # WRITE OUT THE FILE
 #****************************************************************************
-write.csv(merged_df, paste0("data_out/cleaned_merged_from_uploaded_", UploadDate, ".csv"))
+write.csv(merged_df, paste0("ANALYSIS/GWG/data_out/cleaned_merged_from_uploaded_", UploadDate, ".csv"))
 
 
 
 ######################################################
 # IGNORE CODE BELOW!!!!
 
-# #######################
-# mnh00_02 <- left_join(mnh00, mnh02,
-#                       by = c("SCRNID", "SITE"))
-# 
-# mnh00_02 <- mnh00_02 %>% filter(PREGID !="")
-# 
-# mnh01 <- mnh01 %>% select(-PREGID, -MOMID)
-# 
-# mnh01_00_02 <- left_join(mnh01, mnh00_02,
-#                          by = c("SCRNID", "SITE"))
-# 
-# mnh01_00_02 <- mnh01_00_02 %>%
-#   relocate(SITE, SCRNID, MOMID, PREGID, M01_TYPE_VISIT, .before=everything())
-# 
-# 
-# mnh01_00_02 <- mnh01_00_02 %>% filter(PREGID !="")
-# 
-# merged_df <- mnh01_00_02
-# 
-# df_distinct <- merged_df %>% distinct(MOMID, .keep_all = TRUE)
-# 
-# 
-# 
-# 
-# merged_df <- merged_df %>% 
-#   mutate(ENROLLED_FF = ifelse(M02_AGE_IEORRES ==1 & M02_PC_IEORRES==1 & 
-#                                 M02_CATCHMENT_IEORRES==1 & M02_CATCH_REMAIN_IEORRES==1 & 
-#                                 M02_CONSENT_IEORRES==1, 1,0)) # THIS
-# 
-# table(merged_df$ENROLLED_FF, useNA = "always")
-# 
-# merged_df <- merged_df %>% filter(ENROLLED_FF ==1)
-# 
-# merged_df %>% distinct (MOMID, PREGID, SITE, ENROLLED_FF, .keep_all = TRUE) %>%
-#   count(ENROLLED_FF)
-# 
 # #****************************************************************************
 # # IDENTIFY DUPLICATES:
 # #****************************************************************************

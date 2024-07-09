@@ -12,28 +12,28 @@ library(writexl) # only for writing excel files
 rm(list = ls())
 dir.create("data_out")
 
-UploadDate = "2024-06-14"
+UploadDate = "2024-06-28"
 
 #****************************************************************************
 #0. # READ FILES
 #****************************************************************************
 # Define the path to the folder containing the CSV files
-folder_path <- paste0("D:/Users/fouziafarooq/Documents/PRISMA_ANALYSIS/GWG/data/Stacked Data/", UploadDate)
+folder_path <- paste0("D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/ANALYSIS/GWG/data/Stacked Data/", UploadDate)
 
 
-merged_df <- read.csv(paste0('data_out/cleaned_merged_from_uploaded_', UploadDate, ".csv"))
+merged_df <- read.csv(paste0('ANALYSIS/GWG/data_out/cleaned_merged_from_uploaded_', UploadDate, ".csv"))
 
 #****************************************************************************
 # PROCESSING OTHER MNH FILES.
 #****************************************************************************
-mnh09 <- read.csv('data/Stacked Data/2024-06-14/mnh09_merged.csv')
+mnh09 <- read.csv('ANALYSIS/GWG/data/Stacked Data/2024-06-28/mnh09_merged.csv')
 # First deduplicate MNH09
 mnh09 <- mnh09 %>%
   distinct (MOMID, PREGID, SITE, .keep_all = TRUE)
 
 
 # NOTE: Although MNH09 is VISIT 6, I don't need this information for the creation of the DOB variable.  
-# B/c I don't want extra rows, I am going to remove this infromation for now.
+# B/c I don't want extra rows, I am going to remove this information for now.
 
 #****************************************************************************
 # CREATE BOE
@@ -47,6 +47,8 @@ mnh09 <- mnh09 %>%
   # slice(1) %>%
   # filter(M01_TYPE_VISIT == 1) %>% 
   # select a subset of variables
+temp.df <- merged_df %>%
+  select(MOMID, PREGID, SITE, TYPE_VISIT, M05_WEIGHT_PERES, M05_HEIGHT_PERES)
 
 # Reset M02_SCRN_OBSSTDAT for other TYPE_VISITS. 
 merged_df <- merged_df %>% 
@@ -156,7 +158,7 @@ temp.df <- merged_df %>%
 #****************************************************************************
 # WRITE OUT THE FILE
 #****************************************************************************
-write.csv(merged_df, paste0("data_out/merged_df_BOE-calc_uploaded_", UploadDate, ".csv"))
+write.csv(merged_df, paste0("ANALYSIS/GWG/data_out/merged_df_BOE-calc_uploaded_", UploadDate, ".csv"))
 
 ################################## END! ######################################
 
