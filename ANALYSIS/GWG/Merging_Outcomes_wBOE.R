@@ -27,6 +27,11 @@ folder_path <- paste0("D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/AN
 
 merged_df <- read.csv('ANALYSIS/GWG/data_out/merged_df_BOE-calc_uploaded_2024-06-28.csv')
 
+temp.df <- merged_df %>% 
+  filter(SITE=="Zambia") %>% 
+  filter(TYPE_VISIT==5) %>%
+  select(SITE, MOMID, PREGID, TYPE_VISIT, M05_WEIGHT_PERES) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
+
 
 #****************************************************************************
 #0. # DON'T NEED TO READ THESE FILES EVERYTIME - THEY'R SAVED AS .RDA
@@ -162,9 +167,34 @@ merged_df4 <- merged_df3 %>%
   left_join(mat_infect_subset,  by = c("SITE", "MOMID", "PREGID")) %>%
   left_join(mat_nearmiss_subset,  by = c("SITE", "MOMID", "PREGID"))
 
+merged_df4 <- merged_df4 %>%
+  mutate(DIAB_GEST_ANY = if_else((DIAB_GEST_ANY==55 | DIAB_GEST_ANY==77), NA, DIAB_GEST_ANY),
+         DIAB_GEST_DX = if_else((DIAB_GEST_DX==55 | DIAB_GEST_DX==77), NA, DIAB_GEST_DX),
+         COMPLETE_ANC28 = if_else((COMPLETE_ANC28==55 | COMPLETE_ANC28==77), NA, COMPLETE_ANC28))
+
+merged_df4 <- merged_df4 %>%
+  mutate(HDP_GROUP = if_else((HDP_GROUP==55 | HDP_GROUP==77), NA, HDP_GROUP))
 
 temp.df <- merged_df4 %>%
   select(SITE, MOMID, PREGID, TYPE_VISIT, DIAB_GEST_ANY, DIAB_GEST_DX, COMPLETE_ANC28)
+
+
+#****************************************************************************
+#. Merge on demographics
+#****************************************************************************
+mat_demo_subset <- mat_demographics %>%
+  select(SITE, MOMID, PREGID, age18, married, marry_age, marry_status, chew_tobacco, chew_betelnut, smoke, drink, 
+         height_index, educated, school_yrs, bmi_enroll, bmi_index, muac,
+         ga_wks_enroll, folic, nulliparous, num_fetus, num_miscarriage, primigravida)
+
+
+merged_df5 <- merged_df4 %>% 
+  left_join(mat_demo_subset, by = c("SITE", "MOMID", "PREGID"))
+
+temp.df <- merged_df4 %>% 
+  filter(SITE=="Zambia") %>% 
+  filter(TYPE_VISIT==5) %>%
+  select(SITE, MOMID, PREGID, TYPE_VISIT, M05_WEIGHT_PERES) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
 
 
 #****************************************************************************
@@ -213,16 +243,22 @@ merged_df3 %>% distinct (MOMID, PREGID, SITE, INF_DTH, .keep_all = TRUE) %>%
 merged_df3 %>% distinct (MOMID, PREGID, SITE, INF_ABOR_SPN, .keep_all = TRUE) %>%
   count(INF_ABOR_SPN)
 
+
+
 #****************************************************************************
 # WRITE OUT THE FILE
 #****************************************************************************
-write.csv(merged_df4, paste0("ANALYSIS/GWG/data_out/merged_df_w_Outcomes_uploaded_", UploadDate, ".csv"))
+write.csv(merged_df5, paste0("ANALYSIS/GWG/data_out/merged_df_w_Outcomes_uploaded_", UploadDate, ".csv"))
 
 
+#****************************************************************************
+#0. # READ IN THE FILE I JUST CREATED - in case I need this to check:
+#****************************************************************************
+UploadDate = "2024-06-28"
+# Define the path to the folder containing the CSV files
+folder_path <- paste0("D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/ANALYSIS/GWG/data/Stacked Data/", UploadDate)
+getwd()
+merged_df <- read.csv(paste0('ANALYSIS/GWG/data_out/merged_df_w_Outcomes_uploaded_', UploadDate, '.csv'))
+                      
 
-
-########################
-# HDP:
-# No cHTN and No gHTN # 
-########################
 

@@ -1,5 +1,5 @@
 ---
-title: "<span style='font-size: 18px'> <span style='text-align: center'> GWG (Issued: 2024 July 5)"
+title: "<span style='font-size: 18px'> <span style='text-align: center'> GWG (Issued: 2024 July 10)"
 output:
   pdf_document:
     toc: no
@@ -18,27 +18,31 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 #*****************************************************************************
 #* PRISMA GWG Aim 1 
 #* Drafted: July 01, 2024
-#* Last updated: July 01, 2024
+#* Last updated: July 010, 2024
 #*****************************************************************************
 library(knitr)
 library(tidyverse)
 library(reshape2)
 library(lubridate)
 library(kableExtra)
-library(emo)
+#library(emo)
 library(naniar)
 library(RColorBrewer)
 library(gt) ## for table gen
 library(webshot2)  ## for table gen
+library(ggplot2)
+library(gridExtra)
 
 #****************************************************************************
 #0. # READ FILES
 #****************************************************************************
 # Define the path to the folder containing the CSV files
-UploadDate = "2024-06-14"
-folder_path <- paste0("D:/Users/fouziafarooq/Documents/PRISMA_ANALYSIS/GWG/data/Stacked Data/", UploadDate)
+UploadDate = "2024-06-28"
+folder_path <- paste0("D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/ANALYSIS/GWG/", UploadDate)
+# folder_path <- paste0("D:/Users/xinyili/Documents/Analysis/Gestational Weight Gain/Stacked Data/", UploadDate)
 
-gwg_df <- read.csv(paste0("data_out/df_w_GWGvars-n-Outcomes_uploaded_", UploadDate, ".csv"))
+gwg_df <-read.csv(paste0('data_out/df_w_GWGvars-n-Outcomes_uploaded_', UploadDate, ".csv"))
+# gwg_df <-read.csv('D:/Users/xinyili/Documents/Analysis/Gestational Weight Gain/data_out/gwg_outcomes_uploaded_2024-06-28.csv')
 
 path_to_save <- "data_out/"
 
@@ -122,10 +126,17 @@ g_legend <- function(p) {
 }
 
 
-# setwd(paste0(path_to_save))
+gwg_inf <- gwg_df %>%
+  mutate(BMI4CAT=recode(BMI4CAT,
+                        '0'="Underweight",
+                        '1'="Normal",
+                        '2'="Overweight",
+                        '3'="Obese")) %>%
+  filter(BMI_FLAG==0 & TYPE_VISIT==1)
+table(gwg_inf$DENOM_VISIT_5, useNA = "always")
 ```
 
-**Includes data from synapse last updated:** 2024 June 14 
+**Includes data from synapse last updated:** 2024 June 28 
 
 \tableofcontents
 
@@ -133,38 +144,138 @@ g_legend <- function(p) {
 
 ## 1. Summary
 
-### Table 1. Summary of some outcomes based on BMI categories.
 **Denominator:** All women with singleton pregnancies who have visit 1 and visit 5 weight. 
-
-
-
-
 
 ```{r}
 ## Put definitions here:
-inf_outcomes_table <- gwg_df %>%
+inf_outcomes_table_sites <- gwg_inf %>%
    rowwise() %>% 
   group_by(SITE) %>% 
   summarise(
-     "Low birthweight <2500g (PRISMA or facility measured), n (%)" = paste0(
-      format(sum(LBW2500_ANY == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+        "Total number of women enrolledwith singleton pregnancies" = paste0(
+      format(sum(!is.na(DENOM_VISIT_5)), nsmall = 0, digits = 2)),
+      
+     "Total number of women with ANC-36 (Visit 5) data, n (%) ^a^ " = paste0(
+      format(sum(DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
       " (",
-      format(round(sum(LBW2500_ANY == 1, na.rm = TRUE)/n()*100, 2), nsmall = 0, digits = 2),
-      ")")
-     
-     )  %>%
+      format(round(sum(DENOM_VISIT_5 == 1, na.rm = TRUE)/n()*100, 2), nsmall = 0, digits = 2),
+      ")"),
+     # ADD A ROW TO TOTAL NUMBER OF LIVE BIRTHS WHO HAVE TYPE_VISIT==5 DATA ALSO
+    "Preterm birth <34 weeks, n (%) ^b^" = paste0(
+      format(sum(PRETERMBIRTH_LT34 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(PRETERMBIRTH_LT34 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    
+    "Preterm birth <37 weeks, n (%)" = paste0(
+      format(sum(PRETERMBIRTH_LT37 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(PRETERMBIRTH_LT37 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    
+    "Low birthweight <2500g (PRISMA or facility measured), n (%)" = paste0(
+      format(sum(LBW2500_ANY == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(LBW2500_ANY == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    
+    "Death prior to delivery of a fetus at 22 weeks of gestation, n (%)" = paste0(
+      format(sum(STILLBIRTH_22WK == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(STILLBIRTH_22WK == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    
+   "Death of a neonate or an infant up to 1 year of life and has passed the risk period (risk period = >365 days), n #(%)" = paste0(
+     format(sum(INF_DTH == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+     " (",
+     format(round(sum(INF_DTH == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+     ")"),
+   
+    "Fetal loss <20 weeks (miscarriage), n (%) ^c^" = paste0(
+      format(sum(INF_ABOR_SPN == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(INF_ABOR_SPN == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   
+    "SGA<3rd (small for gestational age below 3rd percentile),n (%)" = paste0(
+      format(sum(SGA_CAT == 11 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(SGA_CAT == 11 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   
+     "3rd<SGA<10th (small for gestational age between 3rd and 10th percentile),n (%)" = paste0(
+      format(sum(SGA_CAT == 12 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(SGA_CAT == 12 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   
+    "LGA>=90th (large for gestational age above 90th percentile),n (%)" = paste0(
+      format(sum(SGA_CAT == 14 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(SGA_CAT == 14 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"))  %>%
+  
   t() %>% as.data.frame() %>% 
   `colnames<-`(c(.[1,])) %>% 
   slice(-1) %>% 
         add_column(
       .before = 1,
-    "Total" = gwg_df %>%
+    "Total" = gwg_inf %>%
         plyr::summarise(
           
-    "Low birthweight <2500g (PRISMA or facility measured), n (%)" = paste0(
-      format(sum(LBW2500_ANY == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+           "Total number of women enrolled with singleton pregnancies" = paste0(
+      format(sum(!is.na(DENOM_VISIT_5), nsmall = 0, digits = 2))),
+          
+      "Total number of women with ANC-36 (Visit 5) data, n (%)" = paste0(
+      format(sum(DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
       " (",
-      format(round(sum(LBW2500_ANY == 1, na.rm = TRUE)/dim(gwg_df)[1]*100, 2), nsmall = 0, digits = 2),
+      format(round(sum(DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(!is.na(DENOM_VISIT_5))*100, 2), nsmall = 0, digits = 2),
+      ")"),
+          
+     "Preterm birth <34 weeks, n (%)" = paste0(
+      format(sum(PRETERMBIRTH_LT34 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(PRETERMBIRTH_LT34 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Preterm birth <37 weeks, n (%)" = paste0(
+      format(sum(PRETERMBIRTH_LT37 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(PRETERMBIRTH_LT37 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Low birthweight <2500g (PRISMA or facility measured), n (%)" = paste0(
+      format(sum(LBW2500_ANY == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(LBW2500_ANY == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   "Death prior to delivery of a fetus at 22 weeks of gestation, n (%)" = paste0(
+      format(sum(STILLBIRTH_22WK == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(STILLBIRTH_22WK == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   "Death of a neonate or an infant up to 1 year of life and has passed the risk period (risk period = >365 days), n (%)" = paste0(
+      format(sum(INF_DTH == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(INF_DTH == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   "Fetal loss <20 weeks (miscarriage), n (%)" = paste0(
+      format(sum(INF_ABOR_SPN == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(INF_ABOR_SPN == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   "SGA<3rd (small for gestational age below 3rd percentile), n (%)" = paste0(
+      format(sum(SGA_CAT == 11 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(SGA_CAT == 11 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   "3rd<SGA<10th (small for gestational age between 3rd and 10th percentile), n (%)" = paste0(
+      format(sum(SGA_CAT == 12 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(SGA_CAT == 12 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   "LGA>=90th (large for gestational age above 90th percentile), n (%)" = paste0(
+      format(sum(SGA_CAT == 14 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(SGA_CAT == 14 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
       ")")
     
   ) %>%
@@ -175,10 +286,11 @@ inf_outcomes_table <- gwg_df %>%
 
 ```
 
+### Table 1. Summary of infant outcomes stratified by site.
 
 ```{r}
 
-infantoutcomes_combined <- bind_rows(inf_outcomes_table) %>% select("Total", "Ghana", "India-CMC","India-SAS", "Kenya", "Pakistan")
+infantoutcomes_combined <- bind_rows(inf_outcomes_table_sites) %>% select("Total", "Ghana", "India-CMC","India-SAS", "Kenya", "Pakistan", "Zambia")
 
 infantoutcomes_output <-  infantoutcomes_combined %>% 
   select(-Total) 
@@ -188,49 +300,988 @@ infantoutcomes_combined[is.na(infantoutcomes_combined)] <- paste0("0 (0)")
 
 infantoutcomes_output <- tb_theme1(infantoutcomes_combined) %>% 
   tab_header(
-    title = md("**Table 1**")
+    title = md("**Table 1. Summary of infant outcomes stratified by site.**")
   )  %>% 
 tab_footnote(
-    footnote = html("<span style='font-size: 18px'><sup>a</sup> Denominator is all live births with MNH09 and MNH11 filled out AND have passed the risk period with a visit OR died within the risk period (risk period: age = 28days).</span>")
- ) %>% 
-  ## remove infant deaths for now - add back in when we have data 
- #  tab_footnote(
- #    footnote = html("<span style='font-size: 18px'><sup>b</sup>Denominator is all live births with MNH09 and MNH11 filled out AND have passed the risk period with a visit (risk period: age = 365days).</span>")
- # ) %>% 
+      footnote = html("<span style='font-size: 18px'><sup>a</sup> Subset of total number of women enrolled with singleton pregnancies.</span>")
+) %>%
+    tab_footnote(
+      footnote = html("<span style='font-size: 18px'><sup>b</sup> PTB<34 week not expceted because subsetted to women with ANC-36 visit.</span>")
+ )  %>%
   tab_footnote(
-    footnote = html("<span style='font-size: 18px'><sup>b</sup> Denominator is all livebirths and stillbirths.</span>")
- ) %>% 
-  tab_footnote(
-    footnote = html("<span style='font-size: 18px'><sup>c</sup> Denominator is all infants with a fetal loss reported in MNH04 `(PRG_DSDECOD)` or birth outcome in MNH09 `(BIRTH_DSTERM_INF1)`.</span>")
- ) %>% 
-  tab_footnote(
-    footnote = html("<span style='font-size: 18px'><sup>d</sup> 
-All infants with a TcB measurement taken at <14 weeks of life.</span>")
- ) %>% 
-  tab_footnote(
-    footnote = html("<span style='font-size: 18px'><sup>e</sup> 
-All infants with a jaundice assessment at <14 weeks of life.</span>")
- ) %>% 
-  tab_footnote(
-    footnote = html("<span style='font-size: 18px'><sup>f</sup> Denominator is all livebirths aged 0-59 days.</span>")
+    footnote = html("<span style='font-size: 18px'><sup>c</sup> Fetal death not expected among this subset.</span>")
  ) 
 
 infantoutcomes_summary <-infantoutcomes_combined
 # save data set of summary table to add to monitoring report
-save(infantoutcomes_summary, file= paste0("data_out/infant-table_uploaded_",UploadDate, ".RData", sep = ""))
-
+save(infantoutcomes_summary, file= paste0("data_out/infant-outcomes-sites_uploaded_",UploadDate, ".RData", sep = ""))
 
 ```
 
 ```{r, out.width = '100%'}
-infantoutcomes_output<- infantoutcomes_output %>% gtsave("infantoutcomes_output.png", expand = 10)
-knitr::include_graphics("infantoutcomes_output.png")
+infantoutcomes_output %>% gtsave("infantoutcomes_sites_output.png", expand = 10)
+knitr::include_graphics("infantoutcomes_sites_output.png")
+```
+
+\newpage
+
+```{r}
+temp.df <- gwg_inf %>%
+  select(SITE, MOMID, PREGID, IOM_ADEQUACY, DENOM_VISIT_5, PRETERMBIRTH_LT37)
+gwg_inf_iom <- gwg_inf %>%
+  filter(!is.na(IOM_ADEQUACY))
+
+# temp.df <- gwg_inf_iom %>%
+#   select(SITE, MOMID, PREGID, IOM_ADEQUACY, DENOM_VISIT_5)
+
+## Put definitions here:
+total_iom_data <- sum(gwg_inf_iom$IOM_ADEQUACY %in% c(0,1,2), na.rm = TRUE)
+
+inf_outcomes_table_IOM <- gwg_inf_iom %>%
+   rowwise() %>% 
+  group_by(IOM_ADEQUACY) %>% 
+  summarise(
+
+     "Total number of women with IOM Adequacy data, n (%) ^a^ " = paste0(
+      format(sum(IOM_ADEQUACY %in% c(0,1,2), na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(IOM_ADEQUACY %in% c(0,1,2), na.rm = TRUE)/total_iom_data*100, 2), nsmall = 0, digits = 2),
+      ")"),
+     
+    "Preterm birth <34 weeks, n (%) ^b^" = paste0(
+      format(sum(PRETERMBIRTH_LT34 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(PRETERMBIRTH_LT34 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    
+    "Preterm birth <37 weeks, n (%)" = paste0(
+      format(sum(PRETERMBIRTH_LT37 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(PRETERMBIRTH_LT37 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    
+    "Low birthweight <2500g (PRISMA or facility measured), n (%)" = paste0(
+      format(sum(LBW2500_ANY == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(LBW2500_ANY == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    
+    "Death prior to delivery of a fetus at 22 weeks of gestation, n (%)" = paste0(
+      format(sum(STILLBIRTH_22WK == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(STILLBIRTH_22WK == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    
+   "Death of a neonate or an infant up to 1 year of life and has passed the risk period (risk period = >365 days), n #(%)" = paste0(
+     format(sum(INF_DTH == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+     " (",
+     format(round(sum(INF_DTH == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+     ")"),
+   
+    "Fetal loss <20 weeks (miscarriage), n (%) ^c^" = paste0(
+      format(sum(INF_ABOR_SPN == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(INF_ABOR_SPN == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   
+    "SGA<3rd (small for gestational age below 3rd percentile),n (%)" = paste0(
+      format(sum(SGA_CAT == 11 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(SGA_CAT == 11 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   
+     "3rd<SGA<10th (small for gestational age between 3rd and 10th percentile),n (%)" = paste0(
+      format(sum(SGA_CAT == 12 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(SGA_CAT == 12 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   
+    "LGA>=90th (large for gestational age above 90th percentile),n (%)" = paste0(
+      format(sum(SGA_CAT == 14 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(SGA_CAT == 14 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"))  %>%
+  # Can't transpose the table with a row that says NA for IOM Adequacy.
+  filter(!is.na(IOM_ADEQUACY)) %>%
+  
+  t() %>% as.data.frame() %>% 
+  `colnames<-`(c(.[1,])) %>% 
+  slice(-1) %>% 
+        add_column(
+      .before = 1,
+    "Total" = gwg_inf %>%
+        plyr::summarise(
+          
+       "Total number of women with IOM Adequacy data, n (%) " = paste0(
+      format(sum(IOM_ADEQUACY %in% c(0,1,2), na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(IOM_ADEQUACY %in% c(0,1,2), na.rm = TRUE)/total_iom_data*100, 2), nsmall = 0, digits = 2),
+      ")"),
+          
+     "Preterm birth <34 weeks, n (%)" = paste0(
+      format(sum(PRETERMBIRTH_LT34 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(PRETERMBIRTH_LT34 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Preterm birth <37 weeks, n (%)" = paste0(
+      format(sum(PRETERMBIRTH_LT37 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(PRETERMBIRTH_LT37 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Low birthweight <2500g (PRISMA or facility measured), n (%)" = paste0(
+      format(sum(LBW2500_ANY == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(LBW2500_ANY == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   "Death prior to delivery of a fetus at 22 weeks of gestation, n (%)" = paste0(
+      format(sum(STILLBIRTH_22WK == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(STILLBIRTH_22WK == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   "Death of a neonate or an infant up to 1 year of life and has passed the risk period (risk period = >365 days), n (%)" = paste0(
+      format(sum(INF_DTH == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(INF_DTH == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   "Fetal loss <20 weeks (miscarriage), n (%)" = paste0(
+      format(sum(INF_ABOR_SPN == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(INF_ABOR_SPN == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   "SGA<3rd (small for gestational age below 3rd percentile), n (%)" = paste0(
+      format(sum(SGA_CAT == 11 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(SGA_CAT == 11 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   "3rd<SGA<10th (small for gestational age between 3rd and 10th percentile), n (%)" = paste0(
+      format(sum(SGA_CAT == 12 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(SGA_CAT == 12 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   "LGA>=90th (large for gestational age above 90th percentile), n (%)" = paste0(
+      format(sum(SGA_CAT == 14 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(SGA_CAT == 14 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")")
+    
+  ) %>%
+        t() %>%
+        as.data.frame() %>%
+      `colnames<-`(c(.[1,])) %>% unlist()
+)
+
+```
+
+### Table 2. Summary of infant outcomes based on IOM standards.
+
+```{r}
+
+infantoutcomes_combined <- bind_rows(inf_outcomes_table_IOM) %>% select("Total", "0", "1", "2")
+
+infantoutcomes_combined <- infantoutcomes_combined %>%
+  select(Total, `0`, `1`, `2`) %>%
+  rename(
+    "Insufficient GWG"  = `0`,
+    "Adequate GWG" = `1`,
+    "Excessive GWG" = `2`)
+    
+infantoutcomes_output <-  infantoutcomes_combined %>% 
+  select(-Total) 
+
+# replace NA with 0s (this likely means there is not yet data)
+infantoutcomes_combined[is.na(infantoutcomes_combined)] <- paste0("0 (0)")
+
+infantoutcomes_output <- tb_theme1(infantoutcomes_combined) %>% 
+  tab_header(
+    title = md("**Table 2. Summary of infant outcomes based on IOM standards.**")
+  )  %>% 
+  tab_footnote(
+    footnote = html("<span style='font-size: 18px'><sup>a</sup> Total percent is going across. Subsequent rows are a percent of each column.</span>")
+ )  %>%
+tab_footnote(
+    footnote = html("<span style='font-size: 18px'><sup>b</sup> PTB<34 week not expceted because subsetted to women with ANC-36 visit.</span>")
+ )  %>%
+  tab_footnote(
+    footnote = html("<span style='font-size: 18px'><sup>c</sup> Fetal death not expected among this subset.</span>")
+ ) 
+
+infantoutcomes_summary <-infantoutcomes_combined
+# save data set of summary table to add to monitoring report
+save(infantoutcomes_summary, file= paste0("data_out/infant-outcomes-IOM-Standards_uploaded_",UploadDate, ".RData", sep = ""))
+
+```
+
+```{r, out.width = '100%'}
+
+infantoutcomes_output %>% gtsave("infantoutcomes_IOM_output.png", expand = 10)
+knitr::include_graphics("infantoutcomes_IOM_output.png")
+```
+
+
+
+\newpage
+
+```{r}
+temp.df <- gwg_inf %>%
+  select(SITE, MOMID, PREGID, IOM_ADEQUACY, DENOM_VISIT_5, PRETERMBIRTH_LT37)
+
+## Put definitions here:
+inf_outcomes_table_BMI <- gwg_inf %>%
+   rowwise() %>% 
+  group_by(BMI4CAT) %>% 
+  summarise(
+     "Total number of women with ANC-36 (Visit 5) data, n (%) " = paste0(
+      format(sum(DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(DENOM_VISIT_5 == 1, na.rm = TRUE)/n()*100, 2), nsmall = 0, digits = 2),
+      ")"),
+     
+    "Preterm birth <34 weeks, n (%) ^a^" = paste0(
+      format(sum(PRETERMBIRTH_LT34 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(PRETERMBIRTH_LT34 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    
+    "Preterm birth <37 weeks, n (%)" = paste0(
+      format(sum(PRETERMBIRTH_LT37 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(PRETERMBIRTH_LT37 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    
+    "Low birthweight <2500g (PRISMA or facility measured), n (%)" = paste0(
+      format(sum(LBW2500_ANY == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(LBW2500_ANY == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    
+    "Death prior to delivery of a fetus at 22 weeks of gestation, n (%)" = paste0(
+      format(sum(STILLBIRTH_22WK == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(STILLBIRTH_22WK == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    
+   "Death of a neonate or an infant up to 1 year of life and has passed the risk period (risk period = >365 days), n #(%)" = paste0(
+     format(sum(INF_DTH == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+     " (",
+     format(round(sum(INF_DTH == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+     ")"),
+   
+    "Fetal loss <20 weeks (miscarriage), n (%) ^b^" = paste0(
+      format(sum(INF_ABOR_SPN == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(INF_ABOR_SPN == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   
+    "SGA<3rd (small for gestational age below 3rd percentile),n (%)" = paste0(
+      format(sum(SGA_CAT == 11 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(SGA_CAT == 11 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   
+     "3rd<SGA<10th (small for gestational age between 3rd and 10th percentile),n (%)" = paste0(
+      format(sum(SGA_CAT == 12 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(SGA_CAT == 12 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   
+    "LGA>=90th (large for gestational age above 90th percentile),n (%)" = paste0(
+      format(sum(SGA_CAT == 14 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(SGA_CAT == 14 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"))  %>%
+  # Can't transpose the table with a row that says NA for IOM Adequacy.
+ # filter(!is.na(IOM_ADEQUACY)) %>%
+  
+  t() %>% as.data.frame() %>% 
+  `colnames<-`(c(.[1,])) %>% 
+  slice(-1) %>% 
+        add_column(
+      .before = 1,
+    "Total" = gwg_inf %>%
+        plyr::summarise(
+          
+      "Total number of women with ANC-36 (Visit 5) data, n (%)" = paste0(
+      format(sum(DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(!is.na(DENOM_VISIT_5))*100, 2), nsmall = 0, digits = 2),
+      ")"),
+          
+     "Preterm birth <34 weeks, n (%)" = paste0(
+      format(sum(PRETERMBIRTH_LT34 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(PRETERMBIRTH_LT34 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Preterm birth <37 weeks, n (%)" = paste0(
+      format(sum(PRETERMBIRTH_LT37 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(PRETERMBIRTH_LT37 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Low birthweight <2500g (PRISMA or facility measured), n (%)" = paste0(
+      format(sum(LBW2500_ANY == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(LBW2500_ANY == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   "Death prior to delivery of a fetus at 22 weeks of gestation, n (%)" = paste0(
+      format(sum(STILLBIRTH_22WK == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(STILLBIRTH_22WK == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   "Death of a neonate or an infant up to 1 year of life and has passed the risk period (risk period = >365 days), n (%)" = paste0(
+      format(sum(INF_DTH == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(INF_DTH == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   "Fetal loss <20 weeks (miscarriage), n (%)" = paste0(
+      format(sum(INF_ABOR_SPN == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(INF_ABOR_SPN == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   "SGA<3rd (small for gestational age below 3rd percentile), n (%)" = paste0(
+      format(sum(SGA_CAT == 11 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(SGA_CAT == 11 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   "3rd<SGA<10th (small for gestational age between 3rd and 10th percentile), n (%)" = paste0(
+      format(sum(SGA_CAT == 12 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(SGA_CAT == 12 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+   "LGA>=90th (large for gestational age above 90th percentile), n (%)" = paste0(
+      format(sum(SGA_CAT == 14 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(SGA_CAT == 14 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")")
+    
+  ) %>%
+        t() %>%
+        as.data.frame() %>%
+      `colnames<-`(c(.[1,])) %>% unlist()
+)
+
+```
+
+### Table 3. Summary of infant outcomes based on Maternal BMI at enrollment.
+
+```{r}
+
+infantoutcomes_combined <- bind_rows(inf_outcomes_table_BMI) %>% select("Total", "Normal", "Obese", "Overweight", "Underweight")
+
+    
+infantoutcomes_output <-  infantoutcomes_combined %>% 
+  select(-Total) 
+
+# replace NA with 0s (this likely means there is not yet data)
+infantoutcomes_combined[is.na(infantoutcomes_combined)] <- paste0("0 (0)")
+
+infantoutcomes_output <- tb_theme1(infantoutcomes_combined) %>% 
+  tab_header(
+    title = md("**Table 3. Summary of infant outcomes based on Maternal BMI at enrollment.**")
+  )  %>% 
+tab_footnote(
+    footnote = html("<span style='font-size: 18px'><sup>a</sup> PTB<34 week not expceted because subsetted to women with ANC-36 visit.</span>")
+ )  %>%
+  tab_footnote(
+    footnote = html("<span style='font-size: 18px'><sup>b</sup> Fetal death not expected among this subset.</span>")
+ ) 
+
+infantoutcomes_summary <-infantoutcomes_combined
+# save data set of summary table to add to monitoring report
+save(infantoutcomes_summary, file= paste0("data_out/infant-outcomes-BMI_uploaded_",UploadDate, ".RData", sep = ""))
+
+```
+
+
+```{r, out.width = '100%'}
+infantoutcomes_output %>% gtsave("infantoutcomes_BMI_output.png", expand = 10)
+knitr::include_graphics("infantoutcomes_BMI_output.png")
 ```
 
 
 \newpage
 
 
+```{r}
+## Put definitions here:
+inf_outcomes_table <- gwg_inf_iom %>%
+   rowwise() %>%
+  group_by(IOM_ADEQUACY) %>%
+  summarise(
+
+     "Total number of women with IOM Adequacy data, n (%) ^a^ " = paste0(
+      format(sum(IOM_ADEQUACY %in% c(0,1,2), na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(IOM_ADEQUACY %in% c(0,1,2), na.rm = TRUE)/total_iom_data*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    
+    "GDM by any blood-glucose test, n (%)" = paste0(
+      format(sum(DIAB_GEST_ANY == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(DIAB_GEST_ANY == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "DX of gestational diabetes recorded at L&D, n (%)" = paste0(
+      format(sum(DIAB_GEST_DX == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(DIAB_GEST_DX == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    # "Completed ANC28 visit window with continued pregnancy, n (%)" = paste0(
+    #   format(sum(COMPLETE_ANC28 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+    #   " (",
+    #   format(round(sum(COMPLETE_ANC28 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+    #   ")"),
+    "Chronic HTN, n (%)" = paste0(
+      format(sum(HDP_GROUP == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HDP_GROUP == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Gestational HTN, n (%)" = paste0(
+      format(sum(HDP_GROUP == 2 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HDP_GROUP == 2 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Preeclampsia, n (%)" = paste0(
+      format(sum(HDP_GROUP == 3 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HDP_GROUP == 3 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Preeclampsia superimposed on chronic HTN, n (%)" = paste0(
+      format(sum(HDP_GROUP == 4 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HDP_GROUP == 4 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Preeclampsia with severe features, n (%)" = paste0(
+      format(sum(HDP_GROUP == 5 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HDP_GROUP == 5 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "HIV prevalence at enrollment, n (%)" = paste0(
+      format(sum(HIV_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HIV_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "HIV incidence during ANC, n (%)" = paste0(
+      format(sum(HIV_POSITIVE_ANY_VISIT == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HIV_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Malaria prevalence at enrollment, n (%)" = paste0(
+      format(sum(MAL_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(MAL_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Malaria incidence during ANC, n (%)" = paste0(
+      format(sum(MAL_POSITIVE_ANY_VISIT == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(MAL_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Hep B incidence following enrollment, n (%)" = paste0(
+      format(sum(HBV_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HBV_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Hep B incidence during ANC following enrollment, n (%)" = paste0(
+      format(sum(HBV_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HBV_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Hep C incidence following enrollment, n (%)" = paste0(
+      format(sum(HCV_POSITIVE_ENROLL == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HCV_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "HCV incidence during ANC following enrollment, n (%)" = paste0(
+      format(sum(HCV_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HCV_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Severe anemia during pregnnacy, n (%)" = paste0(
+      format(sum(ANEMIA_SEV_ANC == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(ANEMIA_SEV_ANC == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+  )  %>%
+  
+    # Can't transpose the table with a row that says NA for IOM Adequacy.
+  filter(!is.na(IOM_ADEQUACY)) %>%
+  
+  t() %>% as.data.frame() %>%
+  `colnames<-`(c(.[1,])) %>%
+  slice(-1) %>%
+        add_column(
+      .before = 1,
+    "Total" = gwg_inf %>%
+        plyr::summarise(
+
+     "Total number of women with IOM Adequacy data, n (%) ^a^ " = paste0(
+      format(sum(IOM_ADEQUACY %in% c(0,1,2), na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(IOM_ADEQUACY %in% c(0,1,2), na.rm = TRUE)/total_iom_data*100, 2), nsmall = 0, digits = 2),
+      ")"),
+      
+     "GDM by any blood-glucose test, n (%)" = paste0(
+      format(sum(DIAB_GEST_ANY == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(DIAB_GEST_ANY == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "DX of gestational diabetes recorded at L&D, n (%)" = paste0(
+      format(sum(DIAB_GEST_DX == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(DIAB_GEST_DX == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    # "Completed ANC28 visit window with continued pregnancy, n (%)" = paste0(
+    #   format(sum(COMPLETE_ANC28 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+    #   " (",
+    #   format(round(sum(COMPLETE_ANC28 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+    #   ")"),
+    "Chronic HTN, n (%)" = paste0(
+      format(sum(HDP_GROUP == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HDP_GROUP == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Gestational HTN, n (%)" = paste0(
+      format(sum(HDP_GROUP == 2 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HDP_GROUP == 2 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Preeclampsia, n (%)" = paste0(
+      format(sum(HDP_GROUP == 3 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HDP_GROUP == 3 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Preeclampsia superimposed on chronic HTN, n (%)" = paste0(
+      format(sum(HDP_GROUP == 4 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HDP_GROUP == 4 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Preeclampsia with severe features, n (%)" = paste0(
+      format(sum(HDP_GROUP == 5 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HDP_GROUP == 5 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "HIV prevalence at enrollment, n (%)" = paste0(
+      format(sum(HIV_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HIV_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "HIV incidence during ANC, n (%)" = paste0(
+      format(sum(HIV_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HIV_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Malaria prevalence at enrollment, n (%)" = paste0(
+      format(sum(MAL_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(MAL_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Malaria incidence during ANC, n (%)" = paste0(
+      format(sum(MAL_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(MAL_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Hep B incidence following enrollment, n (%)" = paste0(
+      format(sum(HBV_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HBV_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Hep B incidence during ANC following enrollment, n (%)" = paste0(
+      format(sum(HBV_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HBV_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Hep C incidence following enrollment, n (%)" = paste0(
+      format(sum(HCV_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HCV_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "HCV incidence during ANC following enrollment, n (%)" = paste0(
+      format(sum(HCV_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HCV_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Severe anemia during pregnnacy, n (%)" = paste0(
+      format(sum(ANEMIA_SEV_ANC == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(ANEMIA_SEV_ANC == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")")) %>%
+        t() %>%
+        as.data.frame() %>%
+      `colnames<-`(c(.[1,])) %>% unlist()
+)
+    
+```
+
+### Table 4. Summary of maternal outcomes based on IOM standards.
+```{r}
+
+infantoutcomes_combined <- bind_rows(inf_outcomes_table) %>% 
+  select("Total", "0", "1", "2")
+
+
+infantoutcomes_combined <- infantoutcomes_combined %>%
+  select(Total, `0`, `1`, `2`) %>%
+  rename(
+    "Insufficient GWG"  = `0`,
+    "Adequate GWG" = `1`,
+    "Excessive GWG" = `2`)
+
+infantoutcomes_output <-  infantoutcomes_combined %>%
+  select(-Total)
+
+# replace NA with 0s (this likely means there is not yet data)
+infantoutcomes_combined[is.na(infantoutcomes_combined)] <- paste0("0 (0)")
+
+infantoutcomes_output <- tb_theme1(infantoutcomes_combined) %>%
+ tab_header(
+    title = md("**Table 4. Summary of maternal outcomes based on IOM standards.**")
+   )  %>%
+  tab_footnote(
+    footnote = html("<span style='font-size: 18px'><sup>a</sup> Total percent is going across. Subsequent rows are a percent of each column.</span>")
+ )
+
+infantoutcomes_summary <-infantoutcomes_combined
+# save data set of summary table to add to monitoring report
+save(infantoutcomes_summary, file= paste0("data_out/infant-outcomes-table_uploaded_",UploadDate, ".RData", sep = ""))
+
+
+```
+
+```{r, out.width = '100%'}
+infantoutcomes_output %>% gtsave("infantoutcomes_mat_IOM_output.png", expand = 10)
+knitr::include_graphics("infantoutcomes_mat_IOM_output.png")
+```
+\newpage
 
 
 
+```{r}
+## Put definitions here:
+inf_outcomes_table <- gwg_inf %>%
+   rowwise() %>%
+   group_by(BMI4CAT) %>% 
+  summarise(
+     "Total number of women with ANC-36 (Visit 5) data, n (%) " = paste0(
+      format(sum(DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(DENOM_VISIT_5 == 1, na.rm = TRUE)/n()*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    
+    "GDM by any blood-glucose test, n (%)" = paste0(
+      format(sum(DIAB_GEST_ANY == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(DIAB_GEST_ANY == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "DX of gestational diabetes recorded at L&D, n (%)" = paste0(
+      format(sum(DIAB_GEST_DX == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(DIAB_GEST_DX == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    # "Completed ANC28 visit window with continued pregnancy, n (%)" = paste0(
+    #   format(sum(COMPLETE_ANC28 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+    #   " (",
+    #   format(round(sum(COMPLETE_ANC28 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+    #   ")"),
+    "Chronic HTN, n (%)" = paste0(
+      format(sum(HDP_GROUP == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HDP_GROUP == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Gestational HTN, n (%)" = paste0(
+      format(sum(HDP_GROUP == 2 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HDP_GROUP == 2 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Preeclampsia, n (%)" = paste0(
+      format(sum(HDP_GROUP == 3 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HDP_GROUP == 3 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Preeclampsia superimposed on chronic HTN, n (%)" = paste0(
+      format(sum(HDP_GROUP == 4 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HDP_GROUP == 4 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Preeclampsia with severe features, n (%)" = paste0(
+      format(sum(HDP_GROUP == 5 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HDP_GROUP == 5 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "HIV prevalence at enrollment, n (%)" = paste0(
+      format(sum(HIV_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HIV_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "HIV incidence during ANC, n (%)" = paste0(
+      format(sum(HIV_POSITIVE_ANY_VISIT == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HIV_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Malaria prevalence at enrollment, n (%)" = paste0(
+      format(sum(MAL_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(MAL_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Malaria incidence during ANC, n (%)" = paste0(
+      format(sum(MAL_POSITIVE_ANY_VISIT == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(MAL_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Hep B incidence following enrollment, n (%)" = paste0(
+      format(sum(HBV_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HBV_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Hep B incidence during ANC following enrollment, n (%)" = paste0(
+      format(sum(HBV_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HBV_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Hep C incidence following enrollment, n (%)" = paste0(
+      format(sum(HCV_POSITIVE_ENROLL == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HCV_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "HCV incidence during ANC following enrollment, n (%)" = paste0(
+      format(sum(HCV_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HCV_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Severe anemia during pregnnacy, n (%)" = paste0(
+      format(sum(ANEMIA_SEV_ANC == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(ANEMIA_SEV_ANC == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+  )  %>%
+  
+  #   # Can't transpose the table with a row that says NA for IOM Adequacy.
+  # filter(!is.na(IOM_ADEQUACY)) %>%
+  # 
+  t() %>% as.data.frame() %>%
+  `colnames<-`(c(.[1,])) %>%
+  slice(-1) %>%
+        add_column(
+      .before = 1,
+    "Total" = gwg_inf %>%
+        plyr::summarise(
+
+      "Total number of women with ANC-36 (Visit 5) data, n (%)" = paste0(
+      format(sum(DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(!is.na(DENOM_VISIT_5))*100, 2), nsmall = 0, digits = 2),
+      ")"),
+      
+     "GDM by any blood-glucose test, n (%)" = paste0(
+      format(sum(DIAB_GEST_ANY == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(DIAB_GEST_ANY == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "DX of gestational diabetes recorded at L&D, n (%)" = paste0(
+      format(sum(DIAB_GEST_DX == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(DIAB_GEST_DX == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    # "Completed ANC28 visit window with continued pregnancy, n (%)" = paste0(
+    #   format(sum(COMPLETE_ANC28 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+    #   " (",
+    #   format(round(sum(COMPLETE_ANC28 == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+    #   ")"),
+    "Chronic HTN, n (%)" = paste0(
+      format(sum(HDP_GROUP == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HDP_GROUP == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Gestational HTN, n (%)" = paste0(
+      format(sum(HDP_GROUP == 2 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HDP_GROUP == 2 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Preeclampsia, n (%)" = paste0(
+      format(sum(HDP_GROUP == 3 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HDP_GROUP == 3 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Preeclampsia superimposed on chronic HTN, n (%)" = paste0(
+      format(sum(HDP_GROUP == 4 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HDP_GROUP == 4 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Preeclampsia with severe features, n (%)" = paste0(
+      format(sum(HDP_GROUP == 5 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HDP_GROUP == 5 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "HIV prevalence at enrollment, n (%)" = paste0(
+      format(sum(HIV_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HIV_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "HIV incidence during ANC, n (%)" = paste0(
+      format(sum(HIV_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HIV_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Malaria prevalence at enrollment, n (%)" = paste0(
+      format(sum(MAL_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(MAL_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Malaria incidence during ANC, n (%)" = paste0(
+      format(sum(MAL_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(MAL_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Hep B incidence following enrollment, n (%)" = paste0(
+      format(sum(HBV_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HBV_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Hep B incidence during ANC following enrollment, n (%)" = paste0(
+      format(sum(HBV_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HBV_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Hep C incidence following enrollment, n (%)" = paste0(
+      format(sum(HCV_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HCV_POSITIVE_ENROLL == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "HCV incidence during ANC following enrollment, n (%)" = paste0(
+      format(sum(HCV_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(HCV_POSITIVE_ANY_VISIT == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")"),
+    "Severe anemia during pregnnacy, n (%)" = paste0(
+      format(sum(ANEMIA_SEV_ANC == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
+      " (",
+      format(round(sum(ANEMIA_SEV_ANC == 1 & DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(DENOM_VISIT_5 == 1, na.rm = TRUE)*100, 2), nsmall = 0, digits = 2),
+      ")")) %>%
+        t() %>%
+        as.data.frame() %>%
+      `colnames<-`(c(.[1,])) %>% unlist()
+)
+    
+```
+
+### Table 5. Summary of maternal outcomes based on BMI standards.
+
+```{r}
+
+infantoutcomes_combined <- bind_rows(inf_outcomes_table) %>% select("Total", "Normal", "Obese", "Overweight", "Underweight")
+
+    
+infantoutcomes_output <-  infantoutcomes_combined %>% 
+  select(-Total) 
+
+# replace NA with 0s (this likely means there is not yet data)
+infantoutcomes_combined[is.na(infantoutcomes_combined)] <- paste0("0 (0)")
+
+infantoutcomes_output <- tb_theme1(infantoutcomes_combined) %>% 
+  tab_header(
+    title = md("**Table 5. Summary of maternal outcomes based on BMI at enrollment.**")
+  )  %>% 
+tab_footnote(
+    footnote = html("<span style='font-size: 18px'><sup>a</sup> Add footnot.</span>")
+ ) 
+
+infantoutcomes_summary <-infantoutcomes_combined
+# save data set of summary table to add to monitoring report
+save(infantoutcomes_summary, file= paste0("data_out/maternal-outcomes-BMI_uploaded_",UploadDate, ".RData", sep = ""))
+
+```
+
+
+```{r, out.width = '100%'}
+infantoutcomes_output %>% gtsave("infantoutcomes_mat_BMI_output.png", expand = 10)
+knitr::include_graphics("infantoutcomes_mat_BMI_output.png")
+```
+\newpage
+
+
+```{r,include=FALSE}
+gwg_df2 <-gwg_df %>%
+  filter(BMI_FLAG==0 & GWG_TOTAL_FLAG==0 & GA_WKS_FLAG==0 &(TYPE_VISIT_UPDATED>=2 & TYPE_VISIT_UPDATED<=5))%>%
+  mutate(BMI4CAT=recode(BMI4CAT,
+                        '0'="Underweight",
+                        '1'="Normal",
+                        '2'="Overweight",
+                        '3'="Obese"),
+         TYPE_VISIT=recode(TYPE_VISIT_UPDATED,
+                        '2'="20",
+                        '3'="28",
+                        '4'="32",
+                        '5'="36"))
+gwg_df3 <-gwg_df %>%
+  filter(GWG_TOTAL_FLAG==0 &(TYPE_VISIT_UPDATED>=2 & TYPE_VISIT_UPDATED<=5))
+```
+
+### Figure 1a. Gestational weight gain (per GA in weeks) by BMI per site
+```{r warning=FALSE, fig.height = 6}
+## Left plot - by site and BMI
+gwg_top <- ggplot(gwg_df2, aes(GA_WKS, GWG_FROM_ENROLL) ) +
+  geom_point(color = "red3",alpha = 0.25, size = 0.8) +
+  geom_smooth(method = "loess",
+              formula = y ~ x) +
+  ylim(-10, 30) + 
+  facet_grid(SITE ~ BMI4CAT) +
+  labs(x = "Gestational week",
+       y = "Gestational Weight Gain")+
+  theme(strip.background=element_rect(fill="white"),
+      #  strip.text.y = element_blank(), 
+        axis.text.y = element_text(size = 8))
+
+gwg_top
+```
+
+### Figure 1b. Gestational weight gain (per ANC visit) by BMI per site
+```{r, fig.height=6}
+## Right plot - by site and BMI
+gwg_bottom <- ggplot(gwg_df2, aes(x = TYPE_VISIT_UPDATED, y = GWG_FROM_ENROLL)) +
+  geom_point(color = "red3",alpha = 0.25, size = 0.8) +
+  geom_smooth(aes(group = BMI4CAT), method = "lm", se = FALSE) +
+  facet_grid(SITE ~ BMI4CAT) +
+  ylim(-10, 30) + 
+  # theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+  labs(x = "ANC Visit",
+       y = "Gestational Weight Gain") +
+  theme(strip.background=element_rect(fill="white"),
+      #  axis.text.y = element_blank(),   # Removes y-axis text
+      #  axis.ticks.y = element_blank(),  # Removes y-axis ticks
+        axis.title.y = element_blank(),  # Removes y-axis title
+  )
+gwg_bottom
+
+
+# ## Adding the regression line to it - same as the above, no need to add
+# #ggp+geom_smooth(method = "loess",
+# #                formula = y ~ x)
+# 
+# ## Arrange the plots with specified sizes
+# widths <- c(1, 1)  # Adjust as needed
+# 
+# ## Combine plots
+# combined_plot <- grid.arrange(
+#   # textGrob("Gestational weight gain by gestational week and ANC visit", gp = gpar(fontsize = 16)),  # Title
+#   gwg_left, gwg_right, ncol = 1,heights = c(5, 3) 
+# )
+
+```
+
+\newpage
+
+### Figure 2. Distribution of gestational weight gain by site
+```{r,warning=FALSE, fig.height=6}
+gwg_total_plot <-gwg_df3 %>%
+  ggplot(aes(x = GWG_TOTAL)) +
+  geom_histogram(aes(y=..density..),
+                 fill = "white", color = "black",lwd=0.5,
+                 alpha=0.5, position="identity", breaks = seq(-10, 30, by = 1)) +
+  geom_density(lwd=0.6, colour="turquoise3", fill="turquoise1", alpha=0.16) +
+ #  scale_x_continuous(breaks=seq(4,16,1))+
+  xlab("Total gestational weight gain (kg)") +
+  ylab("Density") +
+  xlim(-10, 30) + 
+  facet_grid(rows = vars(SITE), scales="free_y") +
+  theme_bw() +
+  theme(strip.background=element_rect(fill="white"),
+        axis.text.y = element_blank(),   # Removes y-axis text
+        axis.ticks.y = element_blank())  # Removes y-axis ticks)
+gwg_total_plot
+```

@@ -23,6 +23,12 @@ folder_path <- paste0("D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/AN
 
 merged_df <- read.csv(paste0('ANALYSIS/GWG/data_out/cleaned_merged_from_uploaded_', UploadDate, ".csv"))
 
+temp.df <- merged_df %>% 
+  filter(SITE=="Zambia") %>% 
+  filter(TYPE_VISIT==5) %>%
+  select(SITE, MOMID, PREGID, TYPE_VISIT, M05_WEIGHT_PERES) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
+
+
 #****************************************************************************
 # PROCESSING OTHER MNH FILES.
 #****************************************************************************
@@ -57,11 +63,15 @@ merged_df <- merged_df %>%
 merged_df <- merged_df %>%
   mutate(M01_US_OHOSTDAT = ymd(M01_US_OHOSTDAT))
 
+temp.df <- merged_df %>%
+  select(SITE, MOMID, PREGID, TYPE_VISIT, M01_US_OHOSTDAT, M01_US_GA_WKS_AGE_FTS1) %>%
+  filter(SITE == "Zambia") %>% 
+  filter(TYPE_VISIT %in% c(1,2,3,4,5))
+
 merged_df <- merged_df %>%
 mutate(M01_US_OHOSTDAT = ymd(M01_US_OHOSTDAT)) %>%
-  
-  # filter out any ultrasound visit dates that are 07-07-1907
-  filter(M01_US_OHOSTDAT != ymd("1907-07-07")) %>%   
+  # filter out any ultrasound visit dates that are 07-07-1907 - don't need to do this b/c it throws 
+  # filter(M01_US_OHOSTDAT != ymd("1907-07-07")) %>%   
   # calculate us ga in days with reported ga in wks + days. if ga is -7 or -5, replace with NA
   mutate(GA_US_DAYS_FTS1 =  ifelse(M01_US_GA_WKS_AGE_FTS1!= -7 & M01_US_GA_DAYS_AGE_FTS1 != -7 & M01_US_GA_WKS_AGE_FTS1 != -5 & M01_US_GA_DAYS_AGE_FTS1 != -5,  (M01_US_GA_WKS_AGE_FTS1 * 7 + M01_US_GA_DAYS_AGE_FTS1), NA), 
          GA_US_DAYS_FTS2 =  ifelse(M01_US_GA_WKS_AGE_FTS2!= -7 & M01_US_GA_DAYS_AGE_FTS2 != -7 & M01_US_GA_WKS_AGE_FTS2 != -5 & M01_US_GA_WKS_AGE_FTS2 != -5,  (M01_US_GA_WKS_AGE_FTS2 * 7 + M01_US_GA_DAYS_AGE_FTS2), NA),
@@ -107,6 +117,12 @@ mutate(M01_US_OHOSTDAT = ymd(M01_US_OHOSTDAT)) %>%
   # add 280 days to EST_CONCEP_DATE to generate EDD based on BOE 
   mutate(EDD_BOE = EST_CONCEP_DATE + 280)
 
+
+temp.df <- merged_df %>% 
+  filter(SITE=="Zambia") %>% 
+  filter(TYPE_VISIT==5) %>%
+  select(SITE, MOMID, PREGID, TYPE_VISIT, M05_WEIGHT_PERES) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
+
 # RESET ESTIMATED CONCEPTION DATE AND EDD_BOE FOR ALL TYPE_VISITS TO NA EXCEPT VISIT 1.
 merged_df <- merged_df %>%
   mutate(EST_CONCEP_DATE = case_when(
@@ -117,6 +133,12 @@ merged_df <- merged_df %>%
     EDD_BOE = case_when(
       TYPE_VISIT == 1 ~ as.Date(EDD_BOE),
       TRUE ~ as.Date(NA)))
+
+temp.df <- merged_df %>% 
+  filter(SITE=="Zambia") %>% 
+  filter(TYPE_VISIT==5) %>%
+  select(SITE, MOMID, PREGID, TYPE_VISIT, M05_WEIGHT_PERES) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
+
 
 temp.df <- merged_df %>%
   select(MOMID, PREGID, SITE, TYPE_VISIT,
@@ -140,6 +162,12 @@ merged_df <- merged_df %>%
   mutate(GA_ENROLL_WKS = floor(as.numeric((DIFFDAYS + US_GA_DAYS)/7)), #TODO Stacie had this as GA_US_DAYS
          GA_ENROLL_DAYS = floor(as.numeric(DIFFDAYS + US_GA_DAYS))) #TODO Stacie had this as GA_US_DAYS
 
+temp.df <- merged_df %>% 
+  filter(SITE=="Zambia") %>% 
+  filter(TYPE_VISIT==5) %>%
+  select(SITE, MOMID, PREGID, TYPE_VISIT, M05_WEIGHT_PERES) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
+
+
 temp.df <- merged_df %>% select(SITE, MOMID, PREGID, TYPE_VISIT, M01_US_OHOSTDAT, M02_SCRN_OBSSTDAT, DIFFDAYS, US_GA_DAYS, GA_ENROLL_DAYS, GA_ENROLL_WKS)
 #TODO STACIE SAID SHE USED GA_US_DAYS IN THE MONITORING REPORT AND IN MATERNAL_WIDE FILE HAS US_GA_DAYS - SAME THING
 
@@ -154,6 +182,16 @@ merged_df %>% distinct (MOMID, PREGID, SITE, ENROLL, .keep_all = TRUE) %>%
 
 temp.df <- merged_df %>% 
   select(SITE, MOMID, PREGID, TYPE_VISIT, ENROLL)
+
+temp.df <- merged_df %>% 
+  filter(SITE=="Zambia") %>% 
+  filter(TYPE_VISIT==5) %>%
+  select(SITE, MOMID, PREGID, TYPE_VISIT, M05_WEIGHT_PERES) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
+
+temp.df <- merged_df %>% 
+  filter(SITE=="Zambia") %>% 
+  filter(TYPE_VISIT==5) %>%
+  select(SITE, MOMID, PREGID, TYPE_VISIT, M05_WEIGHT_PERES) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
 
 #****************************************************************************
 # WRITE OUT THE FILE

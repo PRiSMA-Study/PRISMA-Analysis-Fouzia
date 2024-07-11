@@ -23,24 +23,34 @@ folder_path <- paste0("D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/AN
 # Get a list of all CSV files in the folder
 csv_files <- list.files(path = folder_path, pattern = "*.csv", full.names = TRUE)
 
-# Loop through each CSV file
-for (file in csv_files) {
-  # Extract the base name of the file (without the path)
-  base_name <- basename(file)
-  
-  # Extract the part of the name before the underscore
-  name_prefix <- str_split(base_name, "_")[[1]][1]
-  
-  # Read the CSV file into a data frame
-  data_frame <- read.csv(file)
-  
-  # Assign the data frame to a variable with the extracted name
-  assign(name_prefix, data_frame)
-}
-
-# Optional: List all variables in the environment to verify
-ls()
-
+# NOTE: Don't need to read the files in over and over again now that I've created an RDA file.
+# # Loop through each CSV file
+# for (file in csv_files) {
+#   # Extract the base name of the file (without the path)
+#   base_name <- basename(file)
+#   
+#   # Extract the part of the name before the underscore
+#   name_prefix <- str_split(base_name, "_")[[1]][1]
+#   
+#   # Read the CSV file into a data frame
+#   data_frame <- read.csv(file)
+#   
+#   # Assign the data frame to a variable with the extracted name
+#   assign(name_prefix, data_frame)
+# }
+# 
+# # Optional: List all variables in the environment to verify
+# ls()
+# 
+# save(mnh00, mnh01, mnh02, mnh03, mnh04, mnh05, mnh06, mnh07, mnh08, mnh09,
+#             file = "ANALYSIS/GWG/data_out/mnh_dataframes_2024-06-28.rda")
+     
+#****************************************************************************
+#*# Load in the Rda file
+#****************************************************************************
+load("ANALYSIS/GWG/data_out/mnh_dataframes_2024-06-28.rda")
+     
+     
 #****************************************************************************
 # CREATE A DATASET OF ENROLLED WOMEN
 #****************************************************************************
@@ -156,10 +166,16 @@ momids_vector <- mnh02_enrolled %>%
   pull(MOMID) %>% 
   unique()
 
+save(momids_vector, file = 'ANALYSIS/GWG/data_out/enrolled_momid_vec.rda')
 # Step 2: Filter mnh05 based on MOMIDs vector
 mnh05_filtered <- mnh05 %>%
   filter(MOMID %in% momids_vector) %>%
   relocate(SITE, MOMID, PREGID, M05_TYPE_VISIT)
+
+temp.df <- mnh05_filtered %>% 
+  filter(SITE=="Zambia") %>% 
+  filter(M05_TYPE_VISIT==5) %>%
+  select(SITE, MOMID, PREGID, M05_TYPE_VISIT, M05_WEIGHT_PERES) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
 
 mnh01_02_05 <- full_join(mnh01_02, mnh05_filtered %>% 
                           select(MOMID, PREGID, SITE, M05_TYPE_VISIT, M05_ANT_PEDAT, M05_WEIGHT_PERES, M05_WEIGHT_PEPERF, M05_HEIGHT_PERES),
@@ -168,14 +184,23 @@ mnh01_02_05 <- full_join(mnh01_02, mnh05_filtered %>%
 # Zambia's data also exists!
 temp.df <- mnh01_02_05 %>%
   select(MOMID, PREGID, SITE, TYPE_VISIT, M05_WEIGHT_PERES, M05_HEIGHT_PERES)
+
+temp.df <- mnh01_02_05 %>% 
+  filter(SITE=="Zambia") %>% 
+  filter(TYPE_VISIT==5) %>%
+  select(SITE, MOMID, PREGID, TYPE_VISIT, M05_WEIGHT_PERES) # Zambia has n=668 obs at visit 5 and n=1228 obs at visit 1.
+
+
 #****************************************************************************
 # CLEAN in MNH06:
 #****************************************************************************
 # CLEAN UP MNH06 FIRST AND SUBSET TO THE RIGHT MOMID BEFORE MERGING ON. 
+# Filter mnh06 based on MOMIDs vector for enrolled women:
 
 mnh06_filtered <- mnh06 %>%
   filter(MOMID %in% momids_vector) %>%
-  relocate(SITE, MOMID, PREGID, M06_TYPE_VISIT, M06_SINGLETON_PERES)
+  relocate(SITE, MOMID, PREGID, M06_TYPE_VISIT)
+
 
 #****************************************************************************
 # create singleton dataframe:
@@ -194,6 +219,12 @@ mnh01_02_05_singleton <- left_join(singleton_momids, mnh01_02_05,
 mnh01_02_05_singleton %>% distinct (MOMID, PREGID, SITE, ENROLL, .keep_all = TRUE) %>%
   count(ENROLL)
 
+temp.df <- mnh01_02_05_singleton %>% 
+  filter(SITE=="Zambia") %>% 
+  filter(TYPE_VISIT==5) %>%
+  select(SITE, MOMID, PREGID, TYPE_VISIT, M05_WEIGHT_PERES) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
+
+
 #*nrow()#****************************************************************************
 # REMOVE NA ROWS ON MISSING MOMID:
 #****************************************************************************
@@ -203,6 +234,12 @@ mnh01_02_05_singleton <- mnh01_02_05_singleton %>%
 
 merged_df <- mnh01_02_05_singleton %>%
   relocate(SITE, MOMID, PREGID, TYPE_VISIT, ENROLL)
+
+temp.df <- merged_df %>% 
+  filter(SITE=="Zambia") %>% 
+  filter(TYPE_VISIT==5) %>%
+  select(SITE, MOMID, PREGID, TYPE_VISIT, M05_WEIGHT_PERES) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
+
 
 table(merged_df$ENROLL) # 2024-06-28 data has n=9105 women enrolled and singleton.
 #****************************************************************************
