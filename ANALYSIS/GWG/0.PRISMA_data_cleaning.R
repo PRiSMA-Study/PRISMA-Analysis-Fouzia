@@ -167,6 +167,7 @@ momids_vector <- mnh02_enrolled %>%
   unique()
 
 save(momids_vector, file = 'ANALYSIS/GWG/data_out/enrolled_momid_vec.rda')
+
 # Step 2: Filter mnh05 based on MOMIDs vector
 mnh05_filtered <- mnh05 %>%
   filter(MOMID %in% momids_vector) %>%
