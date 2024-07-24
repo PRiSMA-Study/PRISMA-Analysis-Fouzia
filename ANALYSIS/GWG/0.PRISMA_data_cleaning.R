@@ -3,6 +3,10 @@
 
 # THIS FILE CREATES BOE VARIABLES THAT I CAN RUN EVERYTIME WITH NEW DATASET: 
 
+#****************************************************************************
+#* NOTES:
+#* SEE IF THE VARIABLE I AM USING FOR SINGLETON PREGNANCIES MATCHES OTHER VARIABLES THAT INDICATE SINGLETON PREGNANCIES.
+#****************************************************************************
 
 library(tidyverse)
 library(lubridate)

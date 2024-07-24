@@ -62,16 +62,16 @@ mnh06 <- read.csv(paste0(folder_path, "/mnh06_merged.csv"))
 ########
 # Read in Imputed Data:
 ########
-imputed_df <- readxl::read_excel(paste0(folder_path, '/impute_gawk9_14.xlsx'))
+imputed_df <- read.csv(paste0(folder_path, '/GWG_ImputeObs_wk9_wk14.csv')) # This has many rows per woman
 
 imputed_df <- imputed_df %>% 
-  rename(PREGID = PREGid,
-         SITE = site,
+  rename(MOMID = momid,
          WEIGHT_IMPUTED_9 = weight_imputed_9,
          WEIGHT_IMPUTED_14 = weight_imputed_14)
 
-imputed_df <- imputed_df %>%
-  mutate(PREGID = substring(PREGID, 3))
+# Trying to remove first 2 characters from the PREGID. 
+# imputed_df <- imputed_df %>%
+#   mutate(PREGID = substring(PREGID, 3))
 
 imputed_pregids <- imputed_df$PREGID
 merged_pregids <- merged_df$PREGID
@@ -124,14 +124,27 @@ temp.df <- merged_df %>%
 # temp.df3 <- full_join(temp.df1, temp.df2, 
 #                         by = c("MOMID", "PREGID", "SITE", "TYPE_VISIT" = "M05_TYPE_VISIT"))
 
-imputed_pregids <- imputed_df$PREGID
+
+imputed_pregids <- imputed_df$MOMID # only n=1227 matching MOMIDs
+merged_pregids <- merged_df$MOMID
+length(intersect(imputed_pregids, merged_pregids))
+
+imputed_pregids <- imputed_df$PREGID # only n=9090 matching PREGIDs
 merged_pregids <- merged_df$PREGID
-intersect(imputed_pregids, merged_pregids)
+length(intersect(imputed_pregids, merged_pregids))
+
 #* ****************************************************************************
 # LEFT_JOIN() IMPUTED DATA FIRST: 
 #* ****************************************************************************
+imputed_df2 <- imputed_df  %>%
+  group_by(SITE, PREGID, MOMID) %>%
+  slice(1) %>%
+  ungroup()
 
-merged_df2 <- left_join(merged_df, imputed_df, by ='PREGID')
+imputed_df2 <- imputed_df2 %>%
+  select(-SITE, -MOMID, -SCRNID)
+
+merged_df2 <- left_join(merged_df, imputed_df2, by ='PREGID')
 
 temp.df <- merged_df2 %>% 
   select( MOMID, PREGID, TYPE_VISIT, M05_WEIGHT_PERES, GA_ENROLL_WKS, WEIGHT_IMPUTED_9, WEIGHT_IMPUTED_14)
@@ -139,63 +152,63 @@ temp.df <- merged_df2 %>%
 #* ****************************************************************************
 # Use dplyr to propagate EST_CONCEP_DATE within the same MOMID
 #* ****************************************************************************
-merged_df2 <- merged_df %>% 
+merged_df3 <- merged_df2 %>% 
   group_by(SITE, MOMID, PREGID) %>%
   mutate(EST_CONCEP_DATE = ifelse(is.na(EST_CONCEP_DATE), 
                                   first(EST_CONCEP_DATE[TYPE_VISIT == 1]), 
                                   EST_CONCEP_DATE))
 
-temp.df <- merged_df2 %>%
-  select(SITE, MOMID, PREGID, TYPE_VISIT, EST_CONCEP_DATE, M05_WEIGHT_PERES)
+temp.df <- merged_df3 %>%
+  select(SITE, MOMID, PREGID, TYPE_VISIT, EST_CONCEP_DATE, M05_WEIGHT_PERES, WEIGHT_IMPUTED_9)
 
 #* ****************************************************************************
 # Use dplyr to propagate GA_ENROLL_WKS within the same MOMID
 #* ****************************************************************************
-merged_df2 <- merged_df2 %>% 
+merged_df3 <- merged_df3 %>% 
   group_by(SITE, MOMID, PREGID) %>%
   mutate(GA_ENROLL_WKS = ifelse(is.na(GA_ENROLL_WKS), 
                                       first(GA_ENROLL_WKS[TYPE_VISIT == 1]), 
                                 GA_ENROLL_WKS))
 
-temp.df <- merged_df2 %>% 
+temp.df <- merged_df3 %>% 
   select(SITE, MOMID, PREGID, TYPE_VISIT, GA_ENROLL_WKS)
 
 #* ****************************************************************************
 #* REPLACE -7 VALUES TO NA:
 #* ****************************************************************************
-merged_df2 <- merged_df2 %>%
+merged_df3<- merged_df3 %>%
   mutate(M05_WEIGHT_PERES = ifelse(M05_WEIGHT_PERES==-7, NA, M05_WEIGHT_PERES),
          M05_HEIGHT_PERES = ifelse(M05_HEIGHT_PERES==-7, NA, M05_HEIGHT_PERES),
+        # M05_WEIGHT_PERES = ifelse(M05_WEIGHT_PERES==-7.00, NA, M05_WEIGHT_PERES),
+         # M05_WEIGHT_PERES = ifelse(M05_HEIGHT_PERES==-7.00, NA, M05_HEIGHT_PERES),
          M05_WEIGHT_PERES = ifelse(M05_WEIGHT_PERES==-5, NA, M05_WEIGHT_PERES),
          M05_HEIGHT_PERES = ifelse(M05_HEIGHT_PERES==-5, NA, M05_HEIGHT_PERES))
+         # M05_WEIGHT_PERES = ifelse(M05_WEIGHT_PERES==-5.00, NA, M05_WEIGHT_PERES),
+         # M05_WEIGHT_PERES = ifelse(M05_HEIGHT_PERES==-5.00, NA, M05_HEIGHT_PERES))
 
-temp.df <- merged_df2 %>% 
-  filter(SITE=="Zambia") %>% 
+temp.df <- merged_df3 %>% 
   select(SITE, MOMID, PREGID, TYPE_VISIT, M05_WEIGHT_PERES) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
 
 
 
-merged_df2 <- merged_df2 %>%
+temp.df <- merged_df3 %>% 
+  filter(SITE=="Zambia") %>% 
+  select(SITE, MOMID, PREGID, TYPE_VISIT, M05_WEIGHT_PERES) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
+
+
+merged_df3 <- merged_df3 %>%
   filter(TYPE_VISIT %in% c(1,2,3,4,5,13))
 
-temp.df <- merged_df2 %>% 
+temp.df <- merged_df3 %>% 
   filter(SITE=="Zambia") %>% 
   select(SITE, MOMID, PREGID, TYPE_VISIT, M05_WEIGHT_PERES) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
 
 
-temp.df <- merged_df2 %>% 
+temp.df <- merged_df3 %>% 
   filter(SITE=="Zambia") %>% 
   filter(TYPE_VISIT==5) %>%
   select(SITE, MOMID, PREGID, TYPE_VISIT, M05_WEIGHT_PERES) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
 
-
-merged_df3 <- merged_df2 # %>% 
-  # select(MOMID, PREGID, SITE, TYPE_VISIT, PREG_END, INFANTID, 
-  #        PRETERMBIRTH_LT34, PRETERMBIRTH_LT37, 
-  #        LBW2500_ANY, SGA_CAT, STILLBIRTH_22WK, 
-  #        INF_DTH, INF_ABOR_SPN,
-  #        GA_ENROLL_WKS, GA_ENROLL_DAYS, BOE_GA_WKS, EST_CONCEP_DATE, EDD_BOE,
-  #         M05_ANT_PEDAT, M05_WEIGHT_PERES, M05_WEIGHT_PEPERF, M05_HEIGHT_PERES)
 
 
 merged_df3 <- merged_df3 %>%
@@ -205,6 +218,10 @@ merged_df3 <- merged_df3 %>%
 merged_df4 <- merged_df3
 # merged_df4 <- merged_df3 %>%
 #   filter(TYPE_VISIT!=14)
+
+#* COUNTING NUMBER OF WOMEN IN THE DATASET:         
+temp.df %>% distinct (MOMID, PREGID, SITE, .keep_all = TRUE) %>%
+  count(MOMID) # n=9042 total women.
 
 #* ****************************************************************************
 # CREATING AN UPDATED TYPE VISIT WHERE TYPE_VISIT ==13 GETS REPLACED WITH NA FIRST.
@@ -228,12 +245,21 @@ weight_df <- merged_df4 %>%
 
 temp.df <- weight_df %>% 
   filter(SITE=="Zambia") %>% 
-  filter(TYPE_VISIT_UPDATED==5) %>%
-  select(SITE, MOMID, PREGID, TYPE_VISIT_UPDATED, M05_WEIGHT_PERES) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
+ # filter(TYPE_VISIT_UPDATED==5) %>%
+  select(SITE, MOMID, PREGID, TYPE_VISIT_UPDATED, M05_WEIGHT_PERES, WEIGHT_IMPUTED_9) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
 
-
+#* ******************************************
+#* COUNTING NUMBER OF WOMEN IN THE DATASET: 
+#* ****************************************** 
+distinct_count <- weight_df %>% # n=9102 women
+  group_by(SITE, MOMID, PREGID) %>%
+  summarise(distinct_pregid = n_distinct(PREGID)) %>%
+  pull(distinct_pregid)
 
 #* ***************************TYPE_VISIT_UPDATED#* *******************************************************
+
+
+#* *******************************************************
 #* CREATE INITIAL WEIGHT, INITIAL HEIGHT VARS
 #* *******************************************************
 # Create INITIAL_WEIGHT variable from TYPE_VISIT 1
@@ -242,6 +268,47 @@ weight_df <- weight_df %>%
   mutate(WEIGHT_ENROLL = M05_WEIGHT_PERES[TYPE_VISIT_UPDATED == 1][1],
          HEIGHT_ENROLL = M05_HEIGHT_PERES[TYPE_VISIT_UPDATED == 1][1]) %>%
   ungroup()
+
+
+#* ******************************************************* 
+#* # CREATE A NEW VARIABLE USING IMPUTED WEIGHT AT WEEK 9 FOR EARLY PREGNANCY 
+#* *******************************************************
+
+# Step 1: Figure out a conditional logic
+weight_df <- weight_df %>%
+  group_by(SITE, MOMID, PREGID) %>%
+  mutate(GA_Enroll_Condition = GA_ENROLL_WKS[TYPE_VISIT_UPDATED == 1][1]) %>%
+  ungroup()
+
+# Step 2: Apply the conditional logic
+# If GA_enroll is >9 weeks, replace weight at enrollment visit with the imputed weight.
+# If GA_enroll is <=9 weeks, keep the weight at enrollment visit (no need to use imputed.)
+weight_df <- weight_df %>%
+  mutate(
+    WEIGHT_ENROLL_IMPUTED = if_else(
+      GA_Enroll_Condition > 9,
+      WEIGHT_IMPUTED_9,
+      WEIGHT_ENROLL
+    )
+  ) %>%
+  select(-GA_Enroll_Condition)  # Remove the temporary column
+
+temp.df <- weight_df %>%
+  select(SITE, MOMID, PREGID, TYPE_VISIT_UPDATED, M05_WEIGHT_PERES, GA_ENROLL_WKS, WEIGHT_ENROLL, WEIGHT_IMPUTED_9, WEIGHT_ENROLL_IMPUTED)
+
+#############################################
+# NOW LET'S JUST REPLACE THE WEIGHT_ENROLL WITH WEIGHT_ENROLL_IMPUTED SO I DON'T HAVE TO UPDATE THE CODE BELOW.
+#############################################
+
+weight_df <- weight_df %>%
+  group_by(SITE, MOMID, PREGID) %>%
+  mutate(WEIGHT_ENROLL_TEMP = WEIGHT_ENROLL,
+    WEIGHT_ENROLL = WEIGHT_ENROLL_IMPUTED) %>%
+  ungroup
+
+temp.df <- weight_df %>%
+  select(SITE, MOMID, TYPE_VISIT_UPDATED,  GA_ENROLL_WKS, WEIGHT_ENROLL,WEIGHT_ENROLL_TEMP, WEIGHT_IMPUTED_9, WEIGHT_ENROLL_IMPUTED)
+
 
 #* *******************************************************
 #* CREATE INITIAL BMI AND BMI CATEGORIES:
@@ -266,6 +333,8 @@ weight_df <- weight_df %>%
                        BMI > 5 & BMI < 50 ~ 0,
                        TRUE ~ NA_real_))
 
+temp.df <- weight_df %>%
+  select(SITE, MOMID, PREGID, TYPE_VISIT_UPDATED, GA_ENROLL_WKS, WEIGHT_ENROLL, WEIGHT_ENROLL_TEMP, HEIGHT_ENROLL, BMI4CAT)
 
 #* *******************************************************
 #* LABELING GA WEEKS - CREATING VARIABLE FOR THIS:
@@ -343,15 +412,18 @@ weight_df <- weight_df %>%
                                 
 temp.df <- weight_df %>% select(SITE, MOMID, PREGID, TYPE_VISIT, WEIGHT_ENROLL, M05_WEIGHT_PERES, GWG_FROM_ENROLL, GWG_BW_ANC, GWG_TOTAL, PREG_END)                               
                                 
-                                
+
 #* *******************************************************
 #* LET'S NOW SUBSET TO WOMEN REMOVING OUTLIERS
 #* *******************************************************
 # From Lili: 
 # filter(GA_WKS_FLAG==0 & GWG_FROM_ENROLL_FLAG != 1)
 
-weight_df <- weight_df %>% filter(GA_WKS_FLAG==0 & GWG_FROM_ENROLL_FLAG != 1)
+temp.df <- weight_df %>% filter(GA_WKS_FLAG==1 | GWG_FROM_ENROLL_FLAG == 1) %>%
+  select(SITE, MOMID, PREGID, GWG_TOTAL, GA_WKS, GA_WKS_FLAG, GWG_FROM_ENROLL_FLAG)
 
+weight_df <- weight_df %>% filter(GA_WKS_FLAG==0 | GWG_FROM_ENROLL_FLAG!=1)
+  
 #* COUNTING NUMBER OF WOMEN IN THE DATASET:         
 temp.df %>% distinct (MOMID, PREGID, SITE, .keep_all = TRUE) %>%
   count(MOMID) # n=9042 total women.
@@ -359,9 +431,18 @@ temp.df %>% distinct (MOMID, PREGID, SITE, .keep_all = TRUE) %>%
 temp.df <- weight_df %>%
   select(SITE, MOMID, PREGID, TYPE_VISIT_UPDATED, M05_WEIGHT_PERES, WEIGHT_ENROLL, GWG_FROM_ENROLL, GWG_FROM_ENROLL_FLAG, GWG_TOTAL, GWG_TOTAL_FLAG)
 
+#* ******************************************
+#* COUNTING NUMBER OF WOMEN IN THE DATASET: 
+#* ****************************************** 
+distinct_count <- weight_df %>% # n=9090 women
+  group_by(SITE, MOMID, PREGID) %>%
+  summarise(distinct_pregid = n_distinct(PREGID)) %>%
+  pull(distinct_pregid)
+
 #* ************************************************************
 #* CREATE A FLAG FOR WOMEN WHO HAVE A GA<=16 WEEKS AT ENROLLMENT
 #* ************************************************************
+# I don't need to subset on this.  This was needed for imputing weight for Qing.
 weight_df <- weight_df %>% 
   mutate(GA_LTE_16_AT_ENROLL = if_else(GA_ENROLL_WKS<=16, 1, 0))
 
@@ -497,47 +578,74 @@ temp.df <- weight_df %>%
   select(SITE, MOMID, PREGID, TYPE_VISIT, M05_WEIGHT_PERES) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
 
 temp.df <- weight_df %>%
-  select(SITE, MOMID, PREGID, TYPE_VISIT, TYPE_VISIT_UPDATED, M05_WEIGHT_PERES, GWG_TOTAL, GWG_BW_ANC, GWG_FROM_ENROLL)
+  select(SITE, MOMID, PREGID, TYPE_VISIT, TYPE_VISIT_UPDATED, M05_WEIGHT_PERES, GWG_TOTAL, GWG_BW_ANC, GWG_FROM_ENROLL, BMI4CAT, IOM_ADEQUACY, PREG_END)
+
+weight_df_single_row <- weight_df  %>% # has n=9097 women
+  group_by(SITE, PREGID, MOMID) %>%
+  slice(1) %>%
+  ungroup()
+
+table(weight_df_single_row$IOM_ADEQUACY, useNA = "always") 
+
 
 #* *******************************************************
-#* MERGE IMPUTED DATA
+#* SAVE FILE - VARIABLES THAT SAVANNAH NEEDS
 #* *******************************************************
-#* After Qing Imputes: 
-# So if first weight we have at enrollment is at <9 weeks, use it for BMI.  Otherwise use the imputed weight at 9 weeks. Qing will impute for everyone so i will have to properly join.
-#SAS code impute both at week 13 and at week 9. Lili mentioned she is using Wk 9 imputed weight to calc. BMI.
+# SCRNID	MOMID	PREGID	SITE	TYPE_VISIT	M05_WEIGHT_PERES	WEIGHT_ENROLL	GWG_FROM_ENROLL	GWG_TOTAL	BMI	BMI4CAT	IOM_ADEQUACY
+savannah_subset <- weight_df %>%
+  select(SITE, SCRNID, MOMID, PREGID, TYPE_VISIT_UPDATED,	M05_WEIGHT_PERES,	WEIGHT_ENROLL,	GWG_FROM_ENROLL,	GWG_TOTAL,	BMI4CAT,	IOM_ADEQUACY, PREG_END)
 
-#TODO:
-# Once imputed gets merged in, i need to replace enrollment weight with imputed weight if her GA at enrollment is <9. If not, keep the weight.
-# Then, i need to create a BMI using the newly created WEIGHT AT ENROLLMENT VARIABLE. AND THEN DO THE REST.
+# write.csv(savannah_subset, paste0("ANALYSIS/GWG/data_out/",'GWG_OUTCOME_LONG_', UploadDate, ".csv"))
 
+#* *******************************************************
+#* NEED TO SUBSET TO WOMEN WHO HAVE HAD A PREGNANCY END.
+#* *******************************************************
+ weight_df2 <- weight_df %>%
+   filter(PREG_END==1)
 
+ weight_df_single_row <- weight_df2  %>% # has n=9097 women
+   group_by(SITE, PREGID, MOMID) %>%
+   slice(1) %>%
+   ungroup()
  
-#* *******************************************************
-#* SUBSET TO WOMEN WHO HAVE A GA<=16 WEEKS AT ENROLLMENT
-#* *******************************************************
-#* 
-#* 
+ table(weight_df_single_row$IOM_ADEQUACY, useNA = "always") 
+ 
+#* ******************************************
+#* COUNTING NUMBER OF WOMEN IN THE DATASET: 
+#* ****************************************** 
+ distinct_count <- weight_df2 %>% # n=9102 women
+   group_by(SITE, MOMID, PREGID) %>%
+   summarise(distinct_pregid = n_distinct(PREGID)) %>%
+   pull(distinct_pregid)
+# Erin: in the 06-268-2024 dataset, n=5402 women have had a PREG_END==1 (including deaths)
+ # I have n= 5294 women with in this dataset with PREG_END==1.  I know that n=74 women are dropped when I do the GWG_TOTAL and GA_WKS filter. 
+ # The rest are n=34 women that I can't account for yet. 
+ # Erin said there are n=104? non-singleton pregnancies.
+ 
+ 
+
+
 #* ***************************************************************************
 #* CREATING VARIABLES SO I CAN COUNT UP NUMBER OF WOMEN FOR DENOMINATOR CALC.
 #* ***************************************************************************
 # Total number of who have visit 5 data and are singleton and are enrolled.
 
-temp.df <- weight_df %>%
+temp.df <- weight_df2 %>%
   select(SITE, MOMID, PREGID, TYPE_VISIT, TYPE_VISIT_UPDATED, M05_WEIGHT_PERES)
 
-weight_df <- weight_df %>%
+weight_df2 <- weight_df2 %>%
   group_by(SITE, MOMID, PREGID) %>% 
   mutate(DENOM_VISIT_5 = if_else(!is.na(M05_WEIGHT_PERES[TYPE_VISIT_UPDATED==5][1]), 1, 0)) %>%
   ungroup()
 
-temp.df <- weight_df %>%
+temp.df <- weight_df2 %>%
   filter(TYPE_VISIT==1) %>%
   select(SITE, MOMID, PREGID, TYPE_VISIT, TYPE_VISIT_UPDATED, M05_WEIGHT_PERES, DENOM_VISIT_5, PRETERMBIRTH_LT34, PRETERMBIRTH_LT37)
 
 #* *******************************************************
 #* WRITE OUT A FILE TO START BUILDING OUT THE REPORT:
 #* *******************************************************
-write.csv(weight_df, paste0("ANALYSIS/GWG/data_out/df_w_GWGvars-n-Outcomes_uploaded_", UploadDate, ".csv"))
+write.csv(weight_df2, paste0("ANALYSIS/GWG/data_out/df_w_GWGvars-n-Outcomes_uploaded_", UploadDate, ".csv"))
 
 
 #****************************************************************************
@@ -547,4 +655,4 @@ UploadDate = "2024-06-28"
 # Define the path to the folder containing the CSV files
 folder_path <- paste0("D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/ANALYSIS/GWG/data/Stacked Data/", UploadDate)
 getwd()
-weight_df <- read.csv(paste0('ANALYSIS/GWG/data_out/df_w_GWGvars-n-Outcomes_uploaded_', UploadDate, '.csv')
+weight_df <- read.csv(paste0('ANALYSIS/GWG/data_out/df_w_GWGvars-n-Outcomes_uploaded_', UploadDate, '.csv'))
