@@ -1,5 +1,5 @@
 ---
-title: "<span style='font-size: 18px'> <span style='text-align: center'> GWG (Issued: 2024 July 10)"
+title: "<span style='font-size: 18px'> <span style='text-align: center'> GWG (Issued: 2024 July 24)"
 output:
   pdf_document:
     toc: no
@@ -18,7 +18,7 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 #*****************************************************************************
 #* PRISMA GWG Aim 1 
 #* Drafted: July 01, 2024
-#* Last updated: July 010, 2024
+#* Last updated: July 24, 2024
 #*****************************************************************************
 library(knitr)
 library(tidyverse)

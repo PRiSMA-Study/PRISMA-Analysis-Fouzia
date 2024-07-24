@@ -593,9 +593,9 @@ table(weight_df_single_row$IOM_ADEQUACY, useNA = "always")
 #* *******************************************************
 # SCRNID	MOMID	PREGID	SITE	TYPE_VISIT	M05_WEIGHT_PERES	WEIGHT_ENROLL	GWG_FROM_ENROLL	GWG_TOTAL	BMI	BMI4CAT	IOM_ADEQUACY
 savannah_subset <- weight_df %>%
-  select(SITE, SCRNID, MOMID, PREGID, TYPE_VISIT_UPDATED,	M05_WEIGHT_PERES,	WEIGHT_ENROLL,	GWG_FROM_ENROLL,	GWG_TOTAL,	BMI4CAT,	IOM_ADEQUACY, PREG_END)
+  select(SITE, SCRNID, MOMID, PREGID, TYPE_VISIT_UPDATED,	M05_WEIGHT_PERES,	WEIGHT_ENROLL,	GWG_FROM_ENROLL,	GWG_TOTAL,	BMI, BMI4CAT,	IOM_ADEQUACY, PREG_END)
 
-# write.csv(savannah_subset, paste0("ANALYSIS/GWG/data_out/",'GWG_OUTCOME_LONG_', UploadDate, ".csv"))
+write.csv(savannah_subset, paste0("ANALYSIS/GWG/data_out/",'GWG_OUTCOME_LONG_', UploadDate, ".csv"))
 
 #* *******************************************************
 #* NEED TO SUBSET TO WOMEN WHO HAVE HAD A PREGNANCY END.
