@@ -167,8 +167,16 @@ gwg_inf_iom <- gwg_inf %>%
 ## 1. Summary
 
 **Denominator:** All enrolled women who have had a pregnancy outcome and had a singleton pregnancy.<br>
-                 Removed women who had a Gestational age outside of 0-42 weeks.<br>
-                 Removed women who had a GWG of >50kg or <-10 kg at their last visit from enrollment.
+
+                 *Removed women who had a Gestational age outside of 0-42 weeks.<br>
+                 
+                 *Removed women who had a GWG of >50kg or <-10 kg at their last visit from enrollment.
+
+**Definition of Gestational weight gain (GWG) based on 2009 IOM Standards**
+```{r, echo=FALSE, out.width='50%'}
+#paste0("D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/ANALYSIS/GWG/", UploadDate)
+knitr::include_graphics('D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/ANALYSIS/GWG/GWG_2009_IOM_standards.PNG')
+```
 
 
 ```{r}
@@ -248,12 +256,6 @@ inf_outcomes_table_sites <- gwg_inf %>%
         dplyr::summarise(
           
            "Total number of women enrolled with a pregnancy outcome" = n(),
-          
-      # "Total number of women with ANC-36 (Visit 5) data, n (%)" = paste0(
-      # format(sum(DENOM_VISIT_5 == 1, na.rm = TRUE), nsmall = 0, digits = 2),
-      # " (",
-      # format(round(sum(DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(!is.na(DENOM_VISIT_5))*100, 2), nsmall = 0, digits = 2),
-      # ")"),
           
      "Preterm birth <34 weeks, n (%)" = paste0(
       format(sum(PRETERMBIRTH_LT34 == 1  , na.rm = TRUE), nsmall = 0, digits = 2),
@@ -1484,7 +1486,7 @@ demo_outcomes_table_sites <- gwg_inf %>%
      #  " (",
      #  format(round(sum(DENOM_VISIT_5 == 1, na.rm = TRUE)/n()*100, 2), nsmall = 0, digits = 2),
      #  ")"),
-    "Age>18, n (%)" = paste0(
+    "Age >18 (years), n (%)" = paste0(
       format(sum(age18 == 0  , na.rm = TRUE), nsmall = 0, digits = 2),
       " (",
       format(round(sum(age18 == 0  , na.rm = TRUE)/ n()*100, 2), nsmall = 0, digits = 2),
@@ -1589,7 +1591,7 @@ demo_outcomes_table_sites <- gwg_inf %>%
     "Num of miscarriage: median (IQR)" =
           paste0(floor(median(num_miscarriage, na.rm = TRUE)),
                  " (", format(IQR(num_miscarriage, na.rm=TRUE), digits=1, nsmall=1),")"),
-    "Primigravida-an individaul pregnant for the first time, n (%)" = paste0(
+    "Primigravida, n (%)" = paste0(
       format(sum(primigravida == 1  , na.rm = TRUE), nsmall = 0, digits = 2),
       " (",
       format(round(sum(primigravida == 1  , na.rm = TRUE)/ n()*100, 2), nsmall = 0, digits = 2),
@@ -1609,7 +1611,7 @@ demo_outcomes_table_sites <- gwg_inf %>%
       # " (",
       # format(round(sum(DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(!is.na(DENOM_VISIT_5))*100, 2), nsmall = 0, digits = 2),
       # ")"),
-     "Age > 18, n (%)" = paste0(
+     "Age > 18 (years), n (%)" = paste0(
       format(sum(age18 == 0  , na.rm = TRUE), nsmall = 0, digits = 2),
       " (",
       format(round(sum(age18 == 0  , na.rm = TRUE)/ dim(gwg_inf)[1]*100, 2), nsmall = 0, digits = 2),
@@ -1776,7 +1778,7 @@ demo_outcomes_table_iom <- gwg_inf_iom %>%
   dplyr::summarise(
     "Total number of women enrolled with a pregnancy outcome" = n(),
   
-    "Age>18, n (%)" = paste0(
+    "Age>18 (years), n (%)" = paste0(
       format(sum(age18 == 0  , na.rm = TRUE), nsmall = 0, digits = 2),
       " (",
       format(round(sum(age18 == 0  , na.rm = TRUE)/ n()*100, 2), nsmall = 0, digits = 2),
@@ -1881,7 +1883,7 @@ demo_outcomes_table_iom <- gwg_inf_iom %>%
     "Num of miscarriage: median (IQR)" =
           paste0(round(median(num_miscarriage, na.rm = TRUE)),
                  " (", format(IQR(num_miscarriage, na.rm=TRUE), digits=1, nsmall=1),")"),
-    "Primigravida-an individaul pregnant for the first time, n (%)" = paste0(
+    "Primigravida, n (%)" = paste0(
       format(sum(primigravida == 1  , na.rm = TRUE), nsmall = 0, digits = 2),
       " (",
       format(round(sum(primigravida == 1  , na.rm = TRUE)/ n()*100, 2), nsmall = 0, digits = 2),
@@ -1896,7 +1898,7 @@ demo_outcomes_table_iom <- gwg_inf_iom %>%
        dplyr::summarise(
         "Total number of women enrolled with a pregnancy outcome" = n(),
         
-     "Age > 18, n (%)" = paste0(
+     "Age >18 (years), n (%)" = paste0(
       format(sum(age18 == 0  , na.rm = TRUE), nsmall = 0, digits = 2),
       " (",
       format(round(sum(age18 == 0  , na.rm = TRUE)/ dim(gwg_inf_iom)[1]*100, 2), nsmall = 0, digits = 2),
@@ -2068,7 +2070,7 @@ demo_outcomes_table_bmi <- gwg_inf %>%
   dplyr::summarise(
       "Total number of women enrolled with a pregnancy outcome" = n(),
       
-    "Age>18, n (%)" = paste0(
+    "Age >18 (years), n (%)" = paste0(
       format(sum(age18 == 0  , na.rm = TRUE), nsmall = 0, digits = 2),
       " (",
       format(round(sum(age18 == 0  , na.rm = TRUE)/ n()*100, 2), nsmall = 0, digits = 2),
@@ -2173,7 +2175,7 @@ demo_outcomes_table_bmi <- gwg_inf %>%
     "Num of miscarriage: median (IQR)" =
           paste0(round(median(num_miscarriage, na.rm = TRUE)),
                  " (", format(IQR(num_miscarriage, na.rm=TRUE), digits=1, nsmall=1),")"),
-    "Primigravida-an individaul pregnant for the first time, n (%)" = paste0(
+    "Primigravida, n (%)" = paste0(
       format(sum(primigravida == 1  , na.rm = TRUE), nsmall = 0, digits = 2),
       " (",
       format(round(sum(primigravida == 1  , na.rm = TRUE)/ n()*100, 2), nsmall = 0, digits = 2),
@@ -2192,7 +2194,7 @@ demo_outcomes_table_bmi <- gwg_inf %>%
       # " (",
       # format(round(sum(DENOM_VISIT_5 == 1, na.rm = TRUE)/sum(!is.na(DENOM_VISIT_5))*100, 2), nsmall = 0, digits = 2),
       # ")"),
-     "Age > 18, n (%)" = paste0(
+     "Age >18 (years), n (%)" = paste0(
       format(sum(age18 == 0  , na.rm = TRUE), nsmall = 0, digits = 2),
       " (",
       format(round(sum(age18 == 0  , na.rm = TRUE)/ dim(gwg_inf)[1]*100, 2), nsmall = 0, digits = 2),

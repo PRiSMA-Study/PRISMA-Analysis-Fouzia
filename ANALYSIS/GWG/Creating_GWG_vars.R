@@ -14,6 +14,7 @@
 #*Didn't arrange when calculating lag: GWG_BW_ANC.
 #****************************************************************************
 
+# n = 5130 singleton (from Lynda's presentation)
 library(lubridate)
 library(gridExtra)
 library(grid)
@@ -503,10 +504,12 @@ weight_df <- weight_df %>%
     # First piece is weight gain in the first trimester.  2nd piece is weight gain in the 2nd and 3rd tri (after wk 13)
     # (((12.5+18)/2)/13.86) = is calc. to average weight gain.
    # The set of four low rate values are 0.44, 0.35, 0.23 and 0.17; the set of four high rate values are 0.58, 0.50, 0.33 and 0.27
-    BMI4CAT == 0 ~ ((((12.5+18)/2)/13.86)*(13.86-GA_ENROLL_WKS) + ((GA_WKS[TYPE_VISIT_UPDATED==max(TYPE_VISIT_UPDATED)] - 13.86)*0.44)),
-    BMI4CAT == 1 ~ ((((11.5+16)/2)/13.86)*(13.86-GA_ENROLL_WKS) + ((GA_WKS[TYPE_VISIT_UPDATED==max(TYPE_VISIT_UPDATED)] - 13.86)*0.35)),
-    BMI4CAT == 2 ~ ((((7+11.5)/2)/13.86)*(13.86-GA_ENROLL_WKS) + ((GA_WKS[TYPE_VISIT_UPDATED==max(TYPE_VISIT_UPDATED)] - 13.86)*0.23)),
-    BMI4CAT == 3 ~ ((((5+9)/2)/13.86)*(13.86-GA_ENROLL_WKS) + ((GA_WKS[TYPE_VISIT_UPDATED==max(TYPE_VISIT_UPDATED)] - 13.86)*0.17)))) %>% 
+   # BMI4CAT == 0 ~ ((((12.5+18)/2)/13.86)*(13.86-GA_ENROLL_WKS) + ((GA_WKS[TYPE_VISIT_UPDATED==max(TYPE_VISIT_UPDATED)] - 13.86)*0.44)), # This
+    # is wrong.  12.5+18/2 is the average total weight gain.  We need to have expected first trimester weight (not weight gain total)
+    BMI4CAT == 0 ~ ((2/13.86)*(13.86-GA_ENROLL_WKS)) + ((GA_WKS[TYPE_VISIT_UPDATED==max(TYPE_VISIT_UPDATED)] - 13.86)*0.44),
+    BMI4CAT == 1 ~ ((2/13.86)*(13.86-GA_ENROLL_WKS)) + ((GA_WKS[TYPE_VISIT_UPDATED==max(TYPE_VISIT_UPDATED)] - 13.86)*0.35),
+    BMI4CAT == 2 ~ ((1/13.86)*(13.86-GA_ENROLL_WKS)) + ((GA_WKS[TYPE_VISIT_UPDATED==max(TYPE_VISIT_UPDATED)] - 13.86)*0.23),
+    BMI4CAT == 3 ~ ((0.5/13.86)*(13.86-GA_ENROLL_WKS)) + ((GA_WKS[TYPE_VISIT_UPDATED==max(TYPE_VISIT_UPDATED)] - 13.86)*0.17))) %>% 
   
   mutate(GWG_REC_LO = if_else(PREG_END==1, GWG_REC_LO, NA)) %>% 
   ungroup() 
@@ -515,10 +518,10 @@ weight_df <- weight_df %>%
   group_by(SITE, MOMID, PREGID) %>% 
   mutate(GWG_REC_HI = case_when(
     # First piece is weight gain in the first trimester.  2nd piece is weight gain in the 2nd and 3rd tri (after wk 13)
-    BMI4CAT == 0 ~ ((((12.5+18)/2)/13.86)*(13.86-GA_ENROLL_WKS) + ((GA_WKS[TYPE_VISIT_UPDATED==max(TYPE_VISIT_UPDATED)] - 13.86)*0.58)),
-    BMI4CAT == 1 ~ ((((11.5+16)/2)/13.86)*(13.86-GA_ENROLL_WKS) + ((GA_WKS[TYPE_VISIT_UPDATED==max(TYPE_VISIT_UPDATED)] - 13.86)*0.50)),
-    BMI4CAT == 2 ~ ((((7+11.5)/2)/13.86)*(13.86-GA_ENROLL_WKS) + ((GA_WKS[TYPE_VISIT_UPDATED==max(TYPE_VISIT_UPDATED)] - 13.86)*0.33)),
-    BMI4CAT == 3 ~ ((9/13.86)*(13.86-GA_ENROLL_WKS) + ((GA_WKS[TYPE_VISIT_UPDATED==max(TYPE_VISIT_UPDATED)] - 13.86)*0.27)))) %>% 
+    BMI4CAT == 0 ~ ((2/13.86)*(13.86-GA_ENROLL_WKS)) + ((GA_WKS[TYPE_VISIT_UPDATED==max(TYPE_VISIT_UPDATED)] - 13.86)*0.58),
+    BMI4CAT == 1 ~ ((2/13.86)*(13.86-GA_ENROLL_WKS)) + ((GA_WKS[TYPE_VISIT_UPDATED==max(TYPE_VISIT_UPDATED)] - 13.86)*0.50),
+    BMI4CAT == 2 ~ ((1/13.86)*(13.86-GA_ENROLL_WKS)) + ((GA_WKS[TYPE_VISIT_UPDATED==max(TYPE_VISIT_UPDATED)] - 13.86)*0.33),
+    BMI4CAT == 3 ~ ((0.5/13.86)*(13.86-GA_ENROLL_WKS)) + ((GA_WKS[TYPE_VISIT_UPDATED==max(TYPE_VISIT_UPDATED)] - 13.86)*0.27))) %>% 
   
   mutate(GWG_REC_HI = if_else(PREG_END==1, GWG_REC_HI, NA)) %>% 
   ungroup()

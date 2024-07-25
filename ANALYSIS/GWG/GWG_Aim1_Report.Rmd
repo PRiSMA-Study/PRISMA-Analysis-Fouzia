@@ -1,5 +1,5 @@
 ---
-title: "<span style='font-size: 18px'> <span style='text-align: center'> GWG (Issued: 2024 July 24)"
+title: "<span style='font-size: 18px'> <span style='text-align: center'> GWG (Issued: 2024 July 10)"
 output:
   pdf_document:
     toc: no
@@ -10,6 +10,12 @@ include-in-header:
 - \usepackage{ booktabs,longtable}
 ---
 
+```{r}
+# NOTES:
+# This file has denominators that were based on visit==5. 
+# There is a _v2 of this file that is looking at all women who have had a pregnancy end at any time point. Outliers are removed. Use that.
+```
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, out.width = "100%") 
 knitr::opts_chunk$set(out.width = "100%", fig.align = "center")
@@ -18,7 +24,7 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 #*****************************************************************************
 #* PRISMA GWG Aim 1 
 #* Drafted: July 01, 2024
-#* Last updated: July 24, 2024
+#* Last updated: July 010, 2024
 #*****************************************************************************
 library(knitr)
 library(tidyverse)
