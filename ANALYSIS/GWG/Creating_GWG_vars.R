@@ -318,8 +318,8 @@ temp.df <- weight_df %>%
 weight_df <- weight_df %>%
   mutate(BMI=(WEIGHT_ENROLL/(HEIGHT_ENROLL^2))*10000,
          
-         BMI4CAT=ifelse(BMI<=18.5,0, #underweight
-                          ifelse(BMI>18.5 & BMI<25,1, # normal weight
+         BMI4CAT=ifelse(BMI<18.5,0, #underweight
+                          ifelse(BMI>=18.5 & BMI<25,1, # normal weight
                                  ifelse(BMI>=25 & BMI<30,2, # overweight
                                         ifelse(BMI >= 30 & BMI < 50, 3, NA)))),# obese
          bmi4cat=factor(BMI4CAT,levels=c(0,1,2,3),
