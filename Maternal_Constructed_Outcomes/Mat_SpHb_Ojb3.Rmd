@@ -63,23 +63,28 @@ library(tableone)
 library(equatiomatic) # for creating equations from models 
 library(irr) # for ICC
 library(sigmoid)
+library(survival)
+library(Hmisc) # Survival - Harrell's C-index
 ```
 
 Import data: 
 ```{r}
-path_to_data <-  'D:/Users/fouziafarooq/Documents/PRISMA_constructed-outcomes/data/2024-01-26/'# - for AWS data
+UploadDate =  "2024-05-31" #  "2024-04-19" 
 
-UploadDate =  "2024-01-26" # "2024-02-02"
+# path_to_data <-  'D:/Users/fouziafarooq/Documents/PRISMA_constructed-outcomes/data/2024-04-19/'# - Stacked data used.
+path_to_data <-  paste0('D:/Users/fouziafarooq/Documents/PRISMA_constructed-outcomes/data/', UploadDate,'/')# - Stacked data used.
+
+
 uploadDate <- as.Date(UploadDate, format = "%Y-%m-%d")
 ```
 
 Pulling CSV files from AWS into a list:
 ```{r}
 ########################################################################################
-recreate_mnh_list <- FALSE #if I want to recreate the big data list then set this to TRUE
+recreate_mnh_list <- TRUE #if I want to recreate the big data list then set this to TRUE
 ########################################################################################
 tic <- Sys.time()
-if(recreate_mnh_list == TRUE){
+if(recreate_mnh_list ==TRUE){
   mnh_names <- c()
   list_mnh <- dir(path = path_to_data, pattern = "*.csv", full.names = TRUE) #creates a list of all the csv files in the directory
   for (data_file in list_mnh[]) { #can test by just bringing in a small number (add 1:2 inside the bracket to do so)
@@ -204,6 +209,26 @@ mnh05 <- mnh05 %>% rename(TYPE_VISIT = M05_TYPE_VISIT)
 mnh06 <- mnh06 %>% rename(TYPE_VISIT = M06_TYPE_VISIT)
 mnh08 <- mnh08 %>% rename(TYPE_VISIT = M08_TYPE_VISIT)
 mnh12 <- mnh12 %>% rename(TYPE_VISIT = M12_TYPE_VISIT)
+```
+
+# FINDING OUT FROM MNH02 WHEN N=900 WOMEN WERE ENROLLED IN KENYA, PAKISTAN, ZAMBIA. 
+```{r}
+colnames(mnh02)
+table(mnh02$M02_FORMCOMPLDAT_MNH02)
+
+# Group the data by enrollment date and count the number of women enrolled on each date
+enrollment_counts <- mnh02 %>% filter(SITE== "Zambia") %>% 
+                      group_by( M02_FORMCOMPLDAT_MNH02) %>% 
+                      summarise(num_enrolled = n()) %>% 
+                      arrange(M02_FORMCOMPLDAT_MNH02)
+
+# Find the date when the cumulative count reaches 900
+date_900th_enrolled <- enrollment_counts %>%
+                        mutate(cumulative_enrolled = cumsum(num_enrolled)) %>%
+                        filter(cumulative_enrolled >= 900) %>%
+                        slice(1)
+# Kenya reached n=900 2023-10-11
+# Zambia reached n=900 2024-01-24
 ```
 
 In MNH01, **Zambia doesn't have MOMID and PREGID** so have to merge with MNH02. 
@@ -457,8 +482,11 @@ mnh02_03 <- left_join(mnh02, mnh03_subset,by = c("SITE", "MOMID", "PREGID"))
 Merge MNH02_03, MNH00, MNH04, MNH05, MNH08, MNH06 together: 
 ***STILL NEED TO MERGE IN MNH12***
 ```{r}
-merged_df <- left_join(mnh02_03, mnh00, 
-                       by = c("SITE", "SCRNID"))
+ # merged_df <- left_join(mnh02_03, mnh00, 
+ #                         by = c("SITE", "MOMID", "PREGID"))
+
+ merged_df <- left_join(mnh02_03, mnh00, 
+                        by = c("SITE", "SCRNID"))
 
 # THIS MNH06 ALSO HAS TO BE A FULL JOIN.
 mnh02_03_06_df <- full_join(merged_df, mnh06, 
@@ -474,41 +502,41 @@ temp.df <- merged_df %>% select(SITE, MOMID, PREGID, M00_TYPE_VISIT)
 mnh02_03_06_08_df <- full_join(mnh02_03_06_df, mnh08, 
                         by = c("SITE", "MOMID", "PREGID", "TYPE_VISIT"))
 
-temp.df_shpb <- mnh06 %>% 
-  filter(TYPE_VISIT==10) %>% 
-  group_by(SITE, MOMID, PREGID) %>% 
-  summarize(num_sphb = sum(M06_SPHB_LBORRES>0, na.rm=TRUE)) %>% 
-  group_by(SITE) %>% 
-  summarize(total_sphb = sum(num_sphb))
+# temp.df_shpb <- mnh06 %>% 
+#   filter(TYPE_VISIT==10) %>% 
+#   group_by(SITE, MOMID, PREGID) %>% 
+#   summarize(num_sphb = sum(M06_SPHB_LBORRES>0, na.rm=TRUE)) %>% 
+#   group_by(SITE) %>% 
+#   summarize(total_sphb = sum(num_sphb))
+# 
+# temp.df_shpb <- mnh02_03_06_df %>% 
+#   filter(TYPE_VISIT==10) %>% 
+#   group_by(SITE, MOMID, PREGID) %>% 
+#   summarize(num_sphb = sum(M06_SPHB_LBORRES>0, na.rm=TRUE)) %>% 
+#   group_by(SITE) %>% 
+#   summarize(total_sphb = sum(num_sphb))
 
-temp.df_shpb <- mnh02_03_06_df %>% 
-  filter(TYPE_VISIT==10) %>% 
-  group_by(SITE, MOMID, PREGID) %>% 
-  summarize(num_sphb = sum(M06_SPHB_LBORRES>0, na.rm=TRUE)) %>% 
-  group_by(SITE) %>% 
-  summarize(total_sphb = sum(num_sphb))
-
-temp.df_cbc <- mnh08 %>% 
-  filter(TYPE_VISIT==10) %>% 
-  group_by(SITE, MOMID, PREGID) %>% 
-  summarize(num_cbc = sum(M08_CBC_HB_LBORRES>0, na.rm=TRUE)) %>% 
-  group_by(SITE) %>% 
-  summarize(total_cbc = sum(num_cbc))
+# temp.df_cbc <- mnh08 %>% 
+#   filter(TYPE_VISIT==10) %>% 
+#   group_by(SITE, MOMID, PREGID) %>% 
+#   summarize(num_cbc = sum(M08_CBC_HB_LBORRES>0, na.rm=TRUE)) %>% 
+#   group_by(SITE) %>% 
+#   summarize(total_cbc = sum(num_cbc))
 
 
-temp.df_cbc <- mnh02_03_06_08_df %>% 
-  filter(TYPE_VISIT==10) %>% 
-  group_by(SITE, MOMID, PREGID) %>% 
-  summarize(num_cbc = sum(M08_CBC_HB_LBORRES>0, na.rm=TRUE)) %>% 
-  group_by(SITE) %>% 
-  summarize(total_cbc = sum(num_cbc))
+# temp.df_cbc <- mnh02_03_06_08_df %>% 
+#   filter(TYPE_VISIT==10) %>% 
+#   group_by(SITE, MOMID, PREGID) %>% 
+#   summarize(num_cbc = sum(M08_CBC_HB_LBORRES>0, na.rm=TRUE)) %>% 
+#   group_by(SITE) %>% 
+#   summarize(total_cbc = sum(num_cbc))
 
-temp.df_shpb <- mnh02_03_06_08_df %>% 
-  filter(TYPE_VISIT==10) %>% 
-  group_by(SITE, MOMID, PREGID) %>% 
-  summarize(num_sphb = sum(M06_SPHB_LBORRES>0, na.rm=TRUE)) %>% 
-  group_by(SITE) %>% 
-  summarize(total_sphb = sum(num_sphb))
+# temp.df_shpb <- mnh02_03_06_08_df %>% 
+#   filter(TYPE_VISIT==10) %>% 
+#   group_by(SITE, MOMID, PREGID) %>% 
+#   summarize(num_sphb = sum(M06_SPHB_LBORRES>0, na.rm=TRUE)) %>% 
+#   group_by(SITE) %>% 
+#   summarize(total_sphb = sum(num_sphb))
 
 
 
@@ -532,8 +560,8 @@ mnh02_03_06_08_01_04_05_df <- left_join(mnh02_03_06_08_01_04_df, mnh05_subset,
   select(SITE, MOMID, M01_US_OHOSTDAT, TYPE_VISIT)
   
 
-mnh12_subset <- mnh12_subset %>% 
-  select(-scheduled, -visit_seq, 
+mnh12_subset <- mnh12_subset %>%
+  select(-scheduled, -visit_seq,
          -prior_scheduled_visit_type, -next_scheduled_visit_type)
 
 
@@ -648,6 +676,7 @@ participant_count <- df %>%
   distinct(MOMID) %>%
   summarise(total_count_6wkPP = n())
  # summarise(count = n_distinct(MOMID))
+participant_count
 
 # COMPLETED ANC-26 (VISIT 5) 
 participant_count <- df %>% 
@@ -657,13 +686,13 @@ participant_count <- df %>%
   summarise(total_count_ANC36 = n())
 
 # ENROLLED:
-
 participant_count <- df %>% 
   filter(TYPE_VISIT==1) %>% 
   group_by(SITE) %>%
   distinct(MOMID) %>%
-  summarise(total_count_ENROLL = n())
-
+  summarise(total_count_ENROLL = n()) 
+participant_count
+# zAMBIA N=961
 ```
 
 ```{r}
@@ -1231,9 +1260,9 @@ summary(df$PV)
  # 991.9  2093.3  2367.4  2424.5  2700.6  4721.7    3844 
 # This is 2425ml mean. 
 
-# I devidied by 1000 b/c it is then 
+# I devided by 1000 b/c it is then in L and the 95%CI are better.
 df <- df %>% 
-  mutate(PV = ((1-(M08_CBC_HCT_LBORRES/100))*(pv_a + (pv_b * M05_WEIGHT_PERES)))/1000) # Hematocrit is a percentage. Weight in KG
+  mutate(PV = ((1-(M08_CBC_HCT_LBORRES/100))*(pv_a + (pv_b * M05_WEIGHT_PERES)))/1000) # Hematocrit is a percentage. Weight in KG.
     
 
 temp.df <- df %>% select(SITE, MOMID, TYPE_VISIT, M08_CBC_HCT_LBORRES, M05_WEIGHT_PERES, PV)
@@ -1533,6 +1562,23 @@ mean_hb <- df %>%
   group_by(TYPE_VISIT, SITE) %>%
   summarise(mean_cbc = mean(M08_CBC_HB_LBORRES, na.rm=TRUE),
             mean_sphb = mean(M06_SPHB_LBORRES, na.rm=TRUE))
+
+mean_hb <- df %>%
+  group_by( SITE) %>%
+  summarise(mean_cbc = mean(M08_CBC_HB_LBORRES, na.rm=TRUE),
+            mean_sphb = mean(M06_SPHB_LBORRES, na.rm=TRUE))
+
+sd_hb <- df %>%
+  group_by( SITE) %>%
+  summarise(sd_cbc = sd(M08_CBC_HB_LBORRES, na.rm=TRUE),
+            sd_sphb = sd(M06_SPHB_LBORRES, na.rm=TRUE))
+
+# Overall
+mean(df$M08_CBC_HB_LBORRES, na.rm=TRUE)
+mean(df$M06_SPHB_LBORRES, na.rm=TRUE)
+sd(df$M08_CBC_HB_LBORRES, na.rm=TRUE)
+sd(df$M06_SPHB_LBORRES, na.rm=TRUE)
+
 ```
 
 CBC ggplot:
@@ -2924,6 +2970,7 @@ round(results_site_full_adj, 2)
 ############## OBJECTIVE 1 ##############
 ##########################################
 
+.0000000000000000
 ICC on Longitudinal data.
 The ICC can be intepretated as the proportion of the total variance that is “explained” by between-subject variability is. 
 It can take any value between 0 and 1.
@@ -2967,16 +3014,39 @@ variance_SITE <- unlist(variance_components["SITE"])
 residual_variance <- attr(VarCorr(obj1_mixed_model_unadj), "sc")^2
 
 # Print variance components
-print(variance_MOMID)
-print(variance_TYPE_VISIT)
-print(variance_SITE)
-print(residual_variance)
+MOMID_var <- print(variance_MOMID)
+TYPE_VISIT_var <- print(variance_TYPE_VISIT)
+TYPE_VISIT_var
+SITE_var <- print(variance_SITE)
+RESID_var <- print(residual_variance)
 
 # ICC:
-ICC_calc <- (variance_MOMID + variance_TYPE_VISIT + variance_SITE)/(variance_MOMID + variance_TYPE_VISIT + variance_SITE+ residual_variance)
+ICC_calc <- (MOMID_var + TYPE_VISIT_var + SITE_var)/(MOMID_var + TYPE_VISIT_var + SITE_var + RESID_var)
 ICC_calc
-# with 01/26/2024 data: ICC = 0.383
+# with 01/26/2024 data: ICC = 0.383 (it's very close to MOMID var but not the same)
 
+```
+
+
+```{r}
+# Calculate the difference between SpHb and CBC for each MOMID and TYPE_VISIT
+# use: diff_hb
+
+#TODO NOTE: The diagonal line is coming from Pakistan at ANC-28 - look at the data more closely.
+
+# Calculate the average of SpHb and CBC for each MOMID and TYPE_VISIT
+df <- df %>%
+  group_by(SITE, MOMID, TYPE_VISIT) %>%
+  mutate(average_hb = (mean(M06_SPHB_LBORRES) + mean(M08_CBC_HB_LBORRES)) / 2)
+
+# Aggregate differences and averages across MOMID and TYPE_VISIT
+agg_df <- df %>%
+  group_by(SITE, MOMID, TYPE_VISIT) %>%
+  summarise(difference = first(diff_hb),
+            average = first(average_hb))
+
+upper.ci <- mean(agg_df$difference, na.rm = TRUE) + 1.96 * sd(agg_df$difference, na.rm = TRUE)
+lower.ci <- mean(agg_df$difference, na.rm = TRUE) - 1.96 * sd(agg_df$difference, na.rm = TRUE)
 ```
 
 BLAND-ALTMAN USING REPEATED MEASURES:
@@ -3001,8 +3071,53 @@ upper.ci <- mean(agg_df$difference, na.rm = TRUE) + 1.96 * sd(agg_df$difference,
 lower.ci <- mean(agg_df$difference, na.rm = TRUE) - 1.96 * sd(agg_df$difference, na.rm = TRUE)
 
 # Create Bland-Altman plot
- ggplot(agg_df) +
+ agg_df  %>%
+   ggplot() +
   geom_point(alpha= 0.2, size = 0.8, aes(x = average, y = difference, color = SITE)) +
+  # scale_color_manual(values = c("red", "blue3")) +
+  geom_hline(yintercept = mean(agg_df$difference, na.rm=TRUE), linetype = "dashed", color = "red") +  # Add mean difference line
+   
+  geom_hline(aes(yintercept = upper.ci), linetype = "dotted", color = "blue") +  # Add upper limit of agreement
+  geom_hline(aes(yintercept = lower.ci), linetype = "dotted", color = "blue") +  # Add lower limit of agreement
+  labs(x = "Average of SpHb and CBC (g/dL)", y = "Difference (SpHb - CBC) (g/dL)") +
+     #  title = "Bland-Altman Plot",
+      # subtitle = "Comparison of SpHb and CBC (Accounting for Repeated Measures and Time)") +
+   theme_bw() +
+   ylim(-13, 13) 
+  # xlim (8, 12)
+
+```
+
+
+
+INVESTIGATION: 
+```{r}
+# Aggregate differences and averages across MOMID and TYPE_VISIT
+# Aggregate differences and averages across MOMID and TYPE_VISIT
+agg_df <- df %>%
+  select(SITE, MOMID, TYPE_VISIT, M06_DIAG_VSDAT, difference = diff_hb, average = average_hb, M06_SPHB_LBORRES, M08_CBC_HB_LBORRES) 
+```
+
+```{r}
+library('openxlsx')
+
+df_9.9 <- 
+ agg_df %>% # filter(SITE == "Pakistan") %>%
+ #   filter(difference == -2*average + 19.8) %>%
+  filter(M06_SPHB_LBORRES==9.9) %>% 
+  filter(SITE=="Pakistan")
+
+write.xlsx(df_9.9, 'Sphb_Pakistan_20240303.xlsx')
+
+table(df_9.9$SITE)
+
+# Create Bland-Altman plot
+ agg_df %>% # filter(SITE == "Pakistan") %>%
+ #   filter(difference == -2*average + 19.8) %>%
+  filter(M06_SPHB_LBORRES==9.9) %>%
+   ggplot() +
+  geom_jitter(alpha= 0.8, size = 0.8, aes(x = average, y = difference, color = SITE),
+              width = 0.05, height = 0.05) +
   # scale_color_manual(values = c("red", "blue3")) +
   geom_hline(yintercept = mean(agg_df$difference, na.rm=TRUE), linetype = "dashed", color = "red") +  # Add mean difference line
    
@@ -3011,10 +3126,42 @@ lower.ci <- mean(agg_df$difference, na.rm = TRUE) - 1.96 * sd(agg_df$difference,
   labs(x = "Average of SpHb and CBC (g/dL)", y = "Difference (SpHb - CBC) (g/dL)",
        title = "Bland-Altman Plot",
        subtitle = "Comparison of SpHb and CBC (Accounting for Repeated Measures and Time)") +
-   theme_bw() +
-   ylim(-13, 13)
+   theme_bw() # +
+  # ylim(-5, 4) + 
+   #xlim (8, 12) +
+   #geom_text(aes(label = MOMID, x = average, y = difference), nudge_y = 0.03, size = 3.5)
 
 ```
+
+```{r}
+agg_df_artifact <- agg_df %>%
+  filter(SITE == "Pakistan") %>%
+  filter(difference == -2*average + 19.8)
+
+artifact_df <- left_join(agg_df_artifact,
+                         df %>% select(SITE, MOMID, TYPE_VISIT, M06_DIAG_VSDAT, M06_SPHB_LBORRES, M08_CBC_HB_LBORRES))
+
+# table(artifact_df$MOMID)
+```
+
+```{r}
+masimo_readings <- round(df$M06_SPHB_LBORRES, digits = 1)
+# masimo_readings
+
+ggplot() +
+  geom_bar(aes(x = masimo_readings, fill = (masimo_readings == 9.9)), color = 'black') +
+  scale_fill_manual(values = c("white", "orange")) +
+  theme(legend.position="none")
+
+
+ggplot() +
+  geom_bar(aes(x = masimo_readings, fill = (masimo_readings == 9.9)), color = 'black') +
+  scale_x_continuous(limits = c(8.95, 11.05), breaks = seq(9, 11, 0.1)) +
+  scale_fill_manual(values = c("white", "orange")) +
+  theme(legend.position="none")
+```
+
+
 
 OBJECTIVE 2: DEGREE OF AGREEMENT OF SPHB AND CBC
 A. PPA/NPA  - BINARY ANEMIA STATUS - DONE
@@ -3042,78 +3189,364 @@ temp.df <- df2 %>%
 # Fit a GLMM with binary outcome
 
 # Define control parameters
-ctrl <- lmerControl(optimizer = "nloptwrap",
-                    optCtrl = list(restart_edge = TRUE))
+# ctrl <- lmerControl(optimizer = "nloptwrap",
+#                     optCtrl = list(restart_edge = TRUE))
 
-#fit glmm says Qing.  Specify a link function. family = binomial. No link. 
-O2_glmm_model_cbc <- lmer(CBC_anemia ~ M08_CBC_HB_LBORRES + (1 | MOMID) + (1 | SITE) + (1 | TYPE_VISIT),
-                    control = ctrl,
-                    
+ 
+glm_model_CBC <- lmer(M08_CBC_HB_LBORRES ~ 1 + (1 | MOMID) + (1 | SITE) + (1 | TYPE_VISIT),
                     data = df2)
 
-O2_glmm_model_sphb <- lmer(SPHB_anemia ~ M06_SPHB_LBORRES + (1 | MOMID) + (1 | SITE) + (1 | TYPE_VISIT),
-                    control = ctrl,
+glm_model_SPHB <- lmer(M06_SPHB_LBORRES ~ 1 + (1 | MOMID) + (1 | SITE) + (1 | TYPE_VISIT),
                     data = df2)
 
-O2_glmm_model_cbc <- lmer(M08_CBC_HB_LBORRES ~  (1 | MOMID) + (1 | SITE) + (1 | TYPE_VISIT),
-                    control = ctrl,
-                    data = df2)
-
-# O2_glmm_model <- glmer(cbind(CBC_anemia, SPHB_anemia) ~ 1 + (1 | MOMID) + (1 | SITE) + (1 | TYPE_VISIT),
-#                     family = binomial(link = "logit"),
-#                     data = df2)
 
 # Predict measurements from both devices# Predict measurements from both devicesTYPE_VISIT
-df2$predicted_CBC_anemia <- predict(O2_glmm_model_cbc, newdata = df2, type = "response")
-df2$predicted_SPHB_anemia <- predict(O2_glmm_model_sphb, newdata = df2, type = "response")
+df2$predicted_CBC<- predict(glm_model_CBC, newdata = df2)
+df2$predicted_SPHB <- predict(glm_model_SPHB, newdata = df2)
 
 # Convert predicted probabilities to binary outcomes (diseased/non-diseased)
-df2$predicted_CBC_anemia_binary <- ifelse(df2$predicted_CBC_anemia >= 0.5, 1, 0)
-df2$predicted_SPHB_anemia_binary <-ifelse(df2$predicted_SPHB_anemia >= 0.5, 1, 0)
-
-
-temp.df <- df2 %>% 
-  select(SITE, MOMID, TYPE_VISIT, predicted_CBC_anemia_binary, predicted_SPHB_anemia_binary )
+# diseased: <11 or >13g/dL
+df2$predicted_CBC_binary <- ifelse(df2$predicted_CBC < 11 | df2$predicted_CBC > 13, 1, 0)
+df2$predicted_SPHB_binary <- ifelse(df2$predicted_SPHB < 11 | df2$predicted_SPHB > 13, 1, 0)
 
 # Check expected structure
-str(df2$predicted_CBC_anemia_binary)
-str(df2$predicted_SPHB_anemia_binary)
+str(df2$predicted_CBC_binary)
+str(df2$predicted_SPHB_binary)
 
 # Check for NA values in the binary outcome 
-if (any(is.na(df2$predicted_CBC_anemia_binary)) || any(is.na(df2$predicted_SPHB_anemia_binary))) {
+if (any(is.na(df2$predicted_CBC_binary)) || any(is.na(df2$predicted_SPHB_binary))) {
   stop("NA values detected in the binary outcome vectors")
 }
 
 # Print lengths of the vectors
-cat("Length of predicted_CBC_anemia_binary:", length(df2$predicted_CBC_anemia_binary), "\n")
-cat("Length of predicted_SPHB_anemia_binary:", length(df2$predicted_SPHB_anemia_binary), "\n")
+cat("Length of predicted_CBC_binary:", length(df2$predicted_CBC_binary), "\n")
+cat("Length of predicted_SPHB_binary:", length(df2$predicted_SPHB_binary), "\n")
 
 # Print unique values in each vector
-cat("Unique values in predicted_CBC_anemia_binary:", unique(df2$predicted_CBC_anemia_binary), "\n")
-cat("Unique values in predicted_SPHB_anemia_binary:", unique(df2$predicted_SPHB_anemia_binary), "\n")
-
-# Create  a contingency table.
-# table_result <- table(df2$predicted_CBC_anemia_binary, df2$predicted_SPHB_anemia_binary)
+cat("Unique values in predicted_CBC_binary:", unique(df2$predicted_CBC_binary), "\n")
+cat("Unique values in predicted_SPHB_binary:", unique(df2$predicted_SPHB_binary), "\n")
 
 # Compute Cohen's kappa
-kappa_result <- kappa2(df2[, c( "predicted_SPHB_anemia_binary", "predicted_CBC_anemia_binary")]) # I have to use this structure of [], otherwise it doesn't work. Otherwise, I have to have a single matrix or dataframe.  
+kappa_result <- kappa2(df2[, c( "predicted_SPHB_binary", "predicted_CBC_binary")])
 
 # Print the result
-print(kappa_result) # OK to have negative kappa. 
-```
+print(kappa_result)
 
-MCNEMAR'S TEST: 
-```{r}
+#### MCNEMAR'S TEST ####
 # Create  a contingency table.
-table_result <- table(df2$predicted_CBC_anemia_binary, df2$predicted_SPHB_anemia_binary)
+table_result <- table(df2$predicted_CBC_binary, df2$predicted_SPHB_binary)
 
- # Perform McNemar's test
-  mcnemar_result <- mcnemar.test(table_result) # p-value is very small indicating these two are very different. 
-  mcnemar_result
+# Perform McNemar's test
+mcnemar_result <- mcnemar.test(table_result) # p-value is very small indicating these two are very different. 
+mcnemar_result
+
+###****************************************
+# diseased: <11 or >15g/dL
+df2$predicted_CBC_binary <- ifelse(df2$predicted_CBC < 11 | df2$predicted_CBC > 15, 1, 0)
+df2$predicted_SPHB_binary <- ifelse(df2$predicted_SPHB < 11 | df2$predicted_SPHB > 15, 1, 0)
+
+# Compute Cohen's kappa
+kappa_result <- kappa2(df2[, c( "predicted_SPHB_binary", "predicted_CBC_binary")])
+
+# Print the result
+print(kappa_result)
+
+#### MCNEMAR'S TEST ####
+# Create  a contingency table.
+table_result <- table(df2$predicted_CBC_binary, df2$predicted_SPHB_binary)
+
+# Perform McNemar's test
+mcnemar_result <- mcnemar.test(table_result) # p-value is very small indicating these two are very different. 
+mcnemar_result
+
+###****************************************
+# diseased: <10 or >13g/dL
+df2$predicted_CBC_binary <- ifelse(df2$predicted_CBC < 10 | df2$predicted_CBC > 13, 1, 0)
+df2$predicted_SPHB_binary <- ifelse(df2$predicted_SPHB < 10 | df2$predicted_SPHB > 13, 1, 0)
+
+# Compute Cohen's kappa
+kappa_result <- kappa2(df2[, c( "predicted_SPHB_binary", "predicted_CBC_binary")])
+
+# Print the result
+print(kappa_result)
+
+#### MCNEMAR'S TEST ####
+# Create  a contingency table.
+table_result <- table(df2$predicted_CBC_binary, df2$predicted_SPHB_binary)
+
+# Perform McNemar's test
+mcnemar_result <- mcnemar.test(table_result) # p-value is very small indicating these two are very different. 
+mcnemar_result
+
+###****************************************
+
+# diseased: <10 or >15g/dL
+df2$predicted_CBC_binary <- ifelse(df2$predicted_CBC < 10 | df2$predicted_CBC > 15, 1, 0)
+df2$predicted_SPHB_binary <- ifelse(df2$predicted_SPHB < 10 | df2$predicted_SPHB > 15, 1, 0)
+
+# Compute Cohen's kappa
+kappa_result <- kappa2(df2[, c( "predicted_SPHB_binary", "predicted_CBC_binary")])
+
+# Print the result
+print(kappa_result)
+
+#### MCNEMAR'S TEST ####
+# Create  a contingency table.
+table_result <- table(df2$predicted_CBC_binary, df2$predicted_SPHB_binary)
+
+# Perform McNemar's test
+mcnemar_result <- mcnemar.test(table_result) # p-value is very small indicating these two are very different. 
+mcnemar_result
+
+###*****************************************
+
+# diseased: <10 vs. normal (11-13)
+
+df2 <- df2 %>% mutate(predicted_CBC_binary = case_when(predicted_CBC <10 ~ 1,
+                                                       predicted_CBC >=11 & predicted_CBC<=13 ~ 0,
+                                                       TRUE ~ as.numeric(NA)))
+
+df2 <- df2 %>% mutate(predicted_SPHB_binary = case_when(predicted_SPHB <10 ~ 1,
+                                                       predicted_SPHB >=11 & predicted_SPHB<=13 ~ 0,
+                                                       TRUE ~ as.numeric(NA)))
+
+
+temp.df <- df2 %>% select(SITE, MOMID, M08_CBC_HB_LBORRES, predicted_CBC,  predicted_CBC_binary, 
+                          M06_SPHB_LBORRES, predicted_SPHB, predicted_SPHB_binary)
+
+
+# Compute Cohen's kappa
+kappa_result <- kappa2(df2[, c( "predicted_SPHB_binary", "predicted_CBC_binary")])
+
+# Print the result
+print(kappa_result)
+
+#### MCNEMAR'S TEST ####
+# Create  a contingency table.
+table_result <- table(df2$predicted_CBC_binary, df2$predicted_SPHB_binary)
+
+# Perform McNemar's test
+mcnemar_result <- mcnemar.test(table_result) # p-value is very small indicating these two are very different. 
+mcnemar_result
+###*****************************************
+# diseased: <11 vs. normal (11-13)
+
+df2 <- df2 %>% mutate(predicted_CBC_binary = case_when(predicted_CBC <11 ~ 1,
+                                                       predicted_CBC >=11 & predicted_CBC<=13 ~ 0,
+                                                       TRUE ~ as.numeric(NA)))
+
+df2 <- df2 %>% mutate(predicted_SPHB_binary = case_when(predicted_SPHB <11 ~ 1,
+                                                       predicted_SPHB >=11 & predicted_SPHB<=13 ~ 0,
+                                                       TRUE ~ as.numeric(NA)))
+
+
+temp.df <- df2 %>% select(SITE, MOMID, M08_CBC_HB_LBORRES, predicted_CBC,  predicted_CBC_binary, 
+                          M06_SPHB_LBORRES, predicted_SPHB, predicted_SPHB_binary)
+
+
+# Compute Cohen's kappa
+kappa_result <- kappa2(df2[, c( "predicted_SPHB_binary", "predicted_CBC_binary")])
+
+# Print the result
+print(kappa_result)
+
+#### MCNEMAR'S TEST ####
+# Create  a contingency table.
+table_result <- table(df2$predicted_CBC_binary, df2$predicted_SPHB_binary)
+
+# Perform McNemar's test
+mcnemar_result <- mcnemar.test(table_result) # p-value is very small indicating these two are very different. 
+mcnemar_result
+###*****************************************
+
+# diseased: >13 vs. normal (11-13)
+
+df2 <- df2 %>% mutate(predicted_CBC_binary = case_when(predicted_CBC >13 ~ 1,
+                                                       predicted_CBC >=11 & predicted_CBC<=13 ~ 0,
+                                                       TRUE ~ as.numeric(NA)))
+
+df2 <- df2 %>% mutate(predicted_SPHB_binary = case_when(predicted_SPHB >13 ~ 1,
+                                                       predicted_SPHB >=11 & predicted_SPHB<=13 ~ 0,
+                                                       TRUE ~ as.numeric(NA)))
+
+
+temp.df <- df2 %>% select(SITE, MOMID, M08_CBC_HB_LBORRES, predicted_CBC,  predicted_CBC_binary, 
+                          M06_SPHB_LBORRES, predicted_SPHB, predicted_SPHB_binary)
+
+
+# Compute Cohen's kappa
+kappa_result <- kappa2(df2[, c( "predicted_SPHB_binary", "predicted_CBC_binary")])
+
+# Print the result
+print(kappa_result)
+
+#### MCNEMAR'S TEST ####
+# Create  a contingency table.
+table_result <- table(df2$predicted_CBC_binary, df2$predicted_SPHB_binary)
+
+# Perform McNemar's test
+mcnemar_result <- mcnemar.test(table_result) # p-value is very small indicating these two are very different. 
+mcnemar_result
+###*****************************************
+
+# diseased: >=15 vs. normal (11-13)
+
+df2 <- df2 %>% mutate(predicted_CBC_binary = case_when(predicted_CBC >=15 ~ 1,
+                                                       predicted_CBC >=11 & predicted_CBC<=13 ~ 0,
+                                                       TRUE ~ as.numeric(NA)))
+
+df2 <- df2 %>% mutate(predicted_SPHB_binary = case_when(predicted_SPHB >=15 ~ 1,
+                                                       predicted_SPHB >=11 & predicted_SPHB<=13 ~ 0,
+                                                       TRUE ~ as.numeric(NA)))
+
+
+temp.df <- df2 %>% select(SITE, MOMID, M08_CBC_HB_LBORRES, predicted_CBC,  predicted_CBC_binary, 
+                          M06_SPHB_LBORRES, predicted_SPHB, predicted_SPHB_binary)
+
+
+# Compute Cohen's kappa
+kappa_result <- kappa2(df2[, c( "predicted_SPHB_binary", "predicted_CBC_binary")])
+
+# Print the result
+print(kappa_result)
+
+#### MCNEMAR'S TEST ####
+# Create  a contingency table.
+table_result <- table(df2$predicted_CBC_binary, df2$predicted_SPHB_binary)
+table_result
+# Perform McNemar's test
+mcnemar_result <- mcnemar.test(table_result) # p-value is very small indicating these two are very different. 
+mcnemar_result
 ```
+
+
 
 WEIGHTED COHEN'S KAPPA (ORDINAL SCALE)
 ```{r}
+glm_model_CBC <- lmer(M08_CBC_HB_LBORRES ~ 1 + (1 | MOMID) + (1 | SITE) + (1 | TYPE_VISIT),
+                    data = df2)
 
+glm_model_SPHB <- lmer(M06_SPHB_LBORRES ~ 1 + (1 | MOMID) + (1 | SITE) + (1 | TYPE_VISIT),
+                    data = df2)
+
+
+# Predict measurements from both devices# Predict measurements from both devicesTYPE_VISIT
+df2$predicted_CBC<- predict(glm_model_CBC, newdata = df2)
+df2$predicted_SPHB <- predict(glm_model_SPHB, newdata = df2)
+
+
+# Convert predicted probabilities to ordinal outcomes
+df2 <- df2 %>% 
+  mutate(predicted_CBC_ordinal = case_when((!is.na(predicted_CBC) & 
+                                        predicted_CBC>=10 & predicted_CBC<11) ~ "mild",
+                                      
+                                      (!is.na(predicted_CBC) & 
+                                        predicted_CBC>=7 & predicted_CBC<10) ~ "moderate",
+                                      
+                                      (!is.na(predicted_CBC) & 
+                                        predicted_CBC>=0 & predicted_CBC<7) ~ "severe",
+                                      
+                                      (!is.na(predicted_CBC) & 
+                                        predicted_CBC>=11 & predicted_CBC<=13) ~ "normal",
+                                      
+                                      (!is.na(predicted_CBC) & 
+                                        predicted_CBC>13 & predicted_CBC<15) ~ "high hb 13-<15g/dl",
+                                      
+                                      (!is.na(predicted_CBC) & predicted_CBC>=15)  ~ "high hb >=15g/dl",
+                                      
+                                      TRUE ~ as.character(NA)))
+
+df2$predicted_CBC_ordinal <- factor(df2$predicted_CBC_ordinal, 
+                                     ordered = TRUE, 
+                                     levels = c("high hb >=15g/dl", "high hb 13-<15g/dl", 
+                                                "normal", "mild", "moderate", "severe"))
+
+# Convert predicted probabilities to ordinal outcomes
+df2 <- df2 %>% 
+  mutate(predicted_SPHB_ordinal = case_when((!is.na(predicted_SPHB) & 
+                                        predicted_SPHB>=10 & predicted_SPHB<11) ~ "mild",
+                                      
+                                      (!is.na(predicted_SPHB) & 
+                                        predicted_SPHB>=7 & predicted_SPHB<10) ~ "moderate",
+                                      
+                                      (!is.na(predicted_SPHB) & 
+                                        predicted_SPHB>=0 & predicted_SPHB<7) ~ "severe",
+                                      
+                                      (!is.na(predicted_SPHB) & 
+                                        predicted_SPHB>=11 & predicted_SPHB<=13) ~ "normal",
+                                      
+                                      (!is.na(predicted_SPHB) & 
+                                        predicted_SPHB>13 & predicted_SPHB<15) ~ "high hb 13-<15g/dl",
+                                      
+                                      (!is.na(predicted_SPHB) & predicted_SPHB>=15)  ~ "high hb >=15g/dl",
+                                      
+                                      TRUE ~ as.character(NA)))
+
+df2$predicted_SPHB_ordinal <- factor(df2$predicted_SPHB_ordinal, 
+                                     ordered = TRUE, 
+                                     levels = c("high hb >=15g/dl", "high hb 13-<15g/dl", 
+                                                "normal", "mild", "moderate", "severe"))
+
+temp.df <- df2 %>%
+  select(SITE, MOMID, TYPE_VISIT, M08_CBC_HB_LBORRES, predicted_CBC, predicted_CBC_ordinal,
+         M06_SPHB_LBORRES, predicted_SPHB, predicted_SPHB_ordinal)
+
+# Check expected structure
+str(df2$predicted_CBC_ordinal)
+str(df2$predicted_SPHB_ordinal)
+
+# Check for NA values in the ordinal outcome 
+if (any(is.na(df2$predicted_CBC_ordinal)) || any(is.na(df2$predicted_SPHB_ordinal))) {
+  stop("NA values detected in the ordinal outcome vectors")
+}
+
+# Print lengths of the vectors
+cat("Length of predicted_CBC_ordinal:", length(df2$predicted_CBC_ordinal), "\n")
+cat("Length of predicted_SPHB_ordinal:", length(df2$predicted_SPHB_ordinal), "\n")
+
+# Print unique values in each vector
+cat("Unique values in predicted_CBC_ordinal:", unique(df2$predicted_CBC_ordinal), "\n")
+cat("Unique values in predicted_SPHB_ordinal:", unique(df2$predicted_SPHB_ordinal), "\n")
+
+# Compute Cohen's kappa
+kappa_result <- kappa2(df2[, c( "predicted_SPHB_ordinal", "predicted_CBC_ordinal")], c(0,1,2,3,4,5)) # Linear
+
+# penalty for one device measuring say High HB>15 vs. second devicee measureing High HB13-15 is one, But if this is two away, so say the second device is measruing normal, the penalty is 2. 
+# Print the result
+print(kappa_result)
+
+# Compute Cohen's kappa
+kappa_result <- kappa2(df2[, c( "predicted_SPHB_ordinal", "predicted_CBC_ordinal")], c(0,2,3,4,5,7)) # Bigger change 
+# ends are pushed out on the ends units. 7-3 penalty if CBC = Normal (category of 3) vs. SPHB = severe (category 7) so penalty is 7-3= 4
+# Print the result
+print(kappa_result)
+
+# Compute Cohen's kappa
+kappa_result <- kappa2(df2[, c( "predicted_SPHB_ordinal", "predicted_CBC_ordinal")], "squared") # -0.124
+
+# Print the result
+print(kappa_result)
+
+
+```
+
+
+```{r}
+
+#fit a cox model and consider CBC measurements as the event time, SpHb measurements as the covariates and a cluster structure based on MOMID.
+model1<-coxph(Surv(M08_CBC_HB_LBORRES,rep(1,nrow(df2))) ~ M06_SPHB_LBORRES + cluster(MOMID),data = df2)
+#the estimated parameter of SpHb is expected to be negative, since large SpHb measurements expect large CBC measurements, hence less hazard.
+summary(model1)
+#predict the risk for each observation and calculate the Harrel's C accordingly.
+#rep(1, nrow(df2)) is used for censored status since there is no censored observation, all of the event time(CBC measurement) is observed.
+risk_scores <- predict(model1, newdata = df2, type = "risk")
+c_index_value <- rcorr.cens(x = risk_scores, S = Surv(df2$M08_CBC_HB_LBORRES, rep(1, nrow(df2))))
+print(c_index_value)
+
+#Same idea here but assume a gamma frailty for MOMID
+model2<-coxph(Surv(M08_CBC_HB_LBORRES,rep(1,nrow(df2))) ~ M06_SPHB_LBORRES + frailty(MOMID,dist="gamma"),data = df2)
+risk_scores <- predict(model2, newdata = df2, type = "risk")
+c_index_value <- rcorr.cens(x = risk_scores, S = Surv(df2$M08_CBC_HB_LBORRES, rep(1, nrow(df2))))
+print(c_index_value)
 ```
 
