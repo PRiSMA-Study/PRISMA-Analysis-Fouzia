@@ -8,6 +8,8 @@ output:
 ---
 
 README: 
+As of 04/01/2024 This is the first file that needs to be run before doing constructed outcomes!
+
 File: Test-data-PRISMA_Constructed-Outcomes_IndivForms.Rmd (not Test2-data...Rmd) has NAs, in this file, I have converted all NAs to 0s like Emily requested. 
 
 This file is created from PRISMA_Constructed-Outcomes_IndivForms(v1) and (v2).Rmd.  This is the active file as of 10/04/2023 
@@ -28,7 +30,7 @@ Monitoring Report: https://github.com/PRiSMA-Study/Monitoring-Report-ACTIVE/tree
 
 ReMAPP Protocol: https://www.dropbox.com/scl/fi/9rimh5a8rpkxe6a4qfdku/ReMAPP-Protocol-v1.8-JUN292023.docx.docx?dl=0&rlkey=uprxvk03drnpckcctbjct2j2r
 
-
+CMD+SHIFT+P: Pipe (%>%)
 #TODO: 
 # - Need to look at Visit=13s and 14s (unscheduled ANC=13 and PNC=14) - this is not working currently in AWS dataset.
 # - Include all the unscheduled visits and account by date. 
@@ -71,12 +73,12 @@ The varname structure for the newly integrated forms (hospitalizations, adverse 
 # path_to_data <- 'Z:/SynapseCSVs/Kenya/2023-07-28/' # If MNH*.xlsx files are located elsewhere, set this to, for example, 'data/' or '//TNT/...'
 # path_to_data <- 'Z:/Processed Data/2023-07-28/'
 
-# path_to_data <- 'Z:/Stacked Data/2023-09-15/' # - for AWS data
+# path_to_data <- 'Z:/Stacked Data/2023-10-13/' # - for AWS data
 
-path_to_data <-  'D:/Users/fouziafarooq/Documents/PRISMA_constructed-outcomes/data/2023-10-06/'# - for AWS data that
+path_to_data <-  'D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/data/2024-06-28/'# - for AWS data - stacked. 
 
 # path_to_data <- 'data' # for Mac R.
-UploadDate = "2023-10-06"
+UploadDate = "2024-06-28"
 
 uploadDate <- as.Date(UploadDate, format = "%Y-%m-%d")
 ```
@@ -103,8 +105,8 @@ print(toc - tic)
 
 # mnh_list <- readRDS(paste0("MNH_list_", basename(path_to_data), ".RDS"))  #read in the RDS objects with all the MNH files as a massive list.
 
-mnh_list <- readRDS(file = 'MNH_list_2023-10-06.RDS')
-```
+mnh_list <- readRDS(file = 'MNH_list_2024-06-28.RDS')
+```   
 
 ```{r}
 # mnh01_df <- mnh_list[["mnh01"]]
@@ -229,7 +231,10 @@ if("mnh19" %in% names(mnh_list)){
 # THERE ARE NA'S AND THEN THERE ARE "" IN ZAMBIA MOMID AND PREGID
 Keep an eye on SITE variable. 
 ```{r echo=FALSE}
-mnh_list[["mnh00"]] <- mnh_list[["mnh00"]] %>% select(-PREGID, -MOMID) # Only need to run this line outside of AWS when I need to add Mxx prefix.
+###############################
+ # Only need to run this line outside of AWS when I need to add Mxx prefix.
+################################
+# mnh_list[["mnh00"]] <- mnh_list[["mnh00"]] %>% select(-PREGID, -MOMID)
 
 # mnh_list[["mnh00"]] <- mnh_list[["mnh00"]] %>% filter(!is.na(SCRN_OBSSTDAT)) # had to remove 2 rows of garbage.
 # mnh_list[["mnh00"]]$SCRNID <- as.double(mnh_list[["mnh00"]]$SCRNID) # Just for Test Kenya data on Mac
@@ -408,11 +413,24 @@ assign(paste0(form_name, "_df"), mnh_list_wide[[form_name]]) # assign is the opp
 # MERGE together all the forms. - ENROLLED 
 ```{r echo=FALSE}
 merged_df <- mnh02_df 
-merged_df <- merged_df %>% 
-  mutate(ENROLLED_FF = ifelse(M02_AGE_IEORRES_1 ==1 & M02_PC_IEORRES_1==1 & 
-                                M02_CATCHMENT_IEORRES_1==1 & M02_CATCH_REMAIN_IEORRES_1==1 & 
-                                M02_CONSENT_IEORRES_1==1, 1,0)) %>% filter(ENROLLED_FF ==1) # THIS DOES DROP SOME WOMEN!
 
+merged_df <- merged_df %>% 
+  mutate(ENROLLED_FF = case_when(M02_AGE_IEORRES_1 == 1 & M02_PC_IEORRES_1 == 1 & M02_CATCHMENT_IEORRES_1 == 1 &
+                       M02_CATCH_REMAIN_IEORRES_1 == 1  & (M02_SCRN_RETURN_1 != 0 | is.na(M02_SCRN_RETURN_1)) ~ 1,
+                     M02_AGE_IEORRES_1 == 0 | M02_PC_IEORRES_1 == 0 | M02_CATCHMENT_IEORRES_1 == 0 |
+                       M02_CATCH_REMAIN_IEORRES_1 == 0  ~ 0,
+                     TRUE ~ 99),
+CONSENT = case_when(!is.na(M02_CONSENT_IEORRES_1) ~ M02_CONSENT_IEORRES_1,
+                    TRUE ~ 99),
+ENROLL = case_when(M02_CONSENT_IEORRES_1 == 1 & !is.na(M02_FORMCOMPLDAT_MNH02_1) & ENROLLED_FF == 1 ~ 1,## MAY7 UPDATES: (M02_SCRN_RETURN == 1 | is.na(M02_SCRN_RETURN) to account for particpants who returned for screening and/or sites not using the variable
+                   ENROLLED_FF == 0 | M02_CONSENT_IEORRES_1 == 0 | M02_CONSENT_IEORRES_1 == 77 ~ 0,
+                   TRUE ~ 77))
+  
+table(merged_df$ENROLLED_FF, useNA = "always")
+
+merged_df <- merged_df %>%
+  filter(ENROLLED_FF==1)
+  
 # merged_df <- left_join(merged_df, mnh00_df, by = c("MOMID", "PREGID", "SITE"))
 # merged_df <- left_join(merged_df, mnh01_df, by = c("MOMID", "PREGID", "SITE"))
 
@@ -472,6 +490,7 @@ for(i in 0:26) {
 # ---- 55:55, Missing 
 # ---- 66:66, Refused to answer
 # ---- 99:99, Don't know
+
 ```{r echo=FALSE}
 CONVERT_NA <- FALSE
 if(CONVERT_NA ==TRUE){
@@ -958,12 +977,12 @@ mnh01_constructed_df <- mnh01_df %>%
   # filter(M01_TYPE_VISIT == 1) %>% 
   # select a subset of variables
   
-  select(SITE, MOMID,PREGID, M01_US_OHOSTDAT_1,
-         M01_US_GA_WKS_AGE_FTS1_1, M01_US_GA_WKS_AGE_FTS2_1,
-         M01_US_GA_WKS_AGE_FTS3_1, M01_US_GA_WKS_AGE_FTS4_1,
-         M01_US_GA_DAYS_AGE_FTS1_1, M01_US_GA_DAYS_AGE_FTS2_1,
-         M01_US_GA_DAYS_AGE_FTS3_1, M01_US_GA_DAYS_AGE_FTS4_1,
-         M01_GA_LMP_WEEKS_SCORRES_1, M01_GA_LMP_DAYS_SCORRES_1) %>%
+  # select(SITE, MOMID,PREGID, M01_US_OHOSTDAT_1,
+  #        M01_US_GA_WKS_AGE_FTS1_1, M01_US_GA_WKS_AGE_FTS2_1,
+  #        M01_US_GA_WKS_AGE_FTS3_1, M01_US_GA_WKS_AGE_FTS4_1,
+  #        M01_US_GA_DAYS_AGE_FTS1_1, M01_US_GA_DAYS_AGE_FTS2_1,
+  #        M01_US_GA_DAYS_AGE_FTS3_1, M01_US_GA_DAYS_AGE_FTS4_1,
+  #        M01_GA_LMP_WEEKS_SCORRES_1, M01_GA_LMP_DAYS_SCORRES_1) 
   
   mutate(M01_US_OHOSTDAT_1 = ymd(M01_US_OHOSTDAT_1)) %>%
   
@@ -1097,7 +1116,7 @@ If its NA, nothing was reported - no form there.
 Wass the visit actually completed? AT_VISIT_MNH08 - when it's 1 or 2, if she missed the visit the HCW still has to fill out the form and the response options are 3-88. 
 
 # VISIT COMPLETE OR NOT LOOKING AT THE DATE: MAT_VISIT_MNHxx
-# ANC 4 NOT FILLED OUT AT BIRTH (VISIT 6)
+# ANC 4 NOT FILLED OUT AT DELIVERY (VISIT 6)
 ```{r}
 # From M04_MAT_VISIT_MNH04_1 create: M04_MAT_VISIT_FORM_COMPLETED_= Was the visit completed.  If it was filled out by staff, then yes. otherwise no. 
 # From M04_MAT_VISIT_MNH04_1 create: M04_MAT_VISIT_wPERSON_COMPLETED_1 = if the form is filled out by staff, was the visit in person or by phone, if yes, then 1, otherwise woman didn't show or died etc. 
@@ -1138,7 +1157,7 @@ mnh04_constructed_df <- mnh04_df %>%
 ```
 
 # SETTING UP: IS MNH08 VISIT COMPLETE? 
-# MNH08 IS OPTIONAL AT VISIT 8 (SO SOME PLACES WILL HAVE, SOME WONT.) - NOT INCLUDING HERE ATM.
+# MNH08 IS OPTIONAL AT DELIVERY - VISIT 6(SO SOME PLACES WILL HAVE, SOME WONT.) - NOT INCLUDING HERE ATM.
 ```{r}
 mnh08_constructed_df <- mnh08_df %>% 
   # VISIT 1
@@ -1180,6 +1199,51 @@ mnh08_constructed_df <- mnh08_df %>%
     select(MOMID, PREGID, SITE, starts_with(c( "M08_MAT_VISIT_FORM_COMPLETED_", "M08_MAT_VISIT_wPERSON_COMPLETED_")))
 ```
 
+# SETTING UP: IS MNH06 VISIT COMPLETE? 
+# MNH06 is optional at delivery
+```{r}
+mnh06_constructed_df <- mnh06_df %>% 
+  rowwise() %>%
+  # VISIT 1
+  mutate(M06_MAT_VISIT_FORM_COMPLETED_1 = case_when(!is.na(M06_MAT_VISIT_MNH06_1) ~ 1, # M06_MAT_VISIT_MNH06_1 is always 1,2, 3 etc number or NA
+                                                    TRUE ~ as.numeric(0)),
+         M06_MAT_VISIT_wPERSON_COMPLETED_1 = case_when(M06_MAT_VISIT_MNH06_1 %in% c(1,2) ~ 1, 
+                                                       TRUE ~ 0),
+         # VISIT 2
+         M06_MAT_VISIT_FORM_COMPLETED_2 = case_when(!is.na(M06_MAT_VISIT_MNH06_2) ~ 1, 
+                                                    TRUE ~ 0),
+         M06_MAT_VISIT_wPERSON_COMPLETED_2 = case_when(M06_MAT_VISIT_MNH06_2 %in% c(1,2) ~ 1, 
+                                                       TRUE ~ 0),
+         # VISIT 3
+         M06_MAT_VISIT_FORM_COMPLETED_3 = case_when(!is.na(M06_MAT_VISIT_MNH06_3) ~ 1, 
+                                                    TRUE ~ 0),
+         M06_MAT_VISIT_wPERSON_COMPLETED_3 = case_when(M06_MAT_VISIT_MNH06_3 %in% c(1,2) ~ 1, 
+                                                       TRUE ~ 0),
+         # VISIT 4
+         M06_MAT_VISIT_FORM_COMPLETED_4 = case_when(!is.na(M06_MAT_VISIT_MNH06_4) ~ 1, 
+                                                    TRUE ~ 0),
+         M06_MAT_VISIT_wPERSON_COMPLETED_4 = case_when(M06_MAT_VISIT_MNH06_4 %in% c(1,2) ~ 1, 
+                                                       TRUE ~ 0),
+         # VISIT 5
+         M06_MAT_VISIT_FORM_COMPLETED_5 = case_when(!is.na(M06_MAT_VISIT_MNH06_5) ~ 1, 
+                                                    TRUE ~ 0),
+         M06_MAT_VISIT_wPERSON_COMPLETED_5 = case_when(M06_MAT_VISIT_MNH06_5 %in% c(1,2) ~ 1, 
+                                                       TRUE ~ 0))
+          # VISIT 13 Hosp
+        # M06_MAT_VISIT_FORM_COMPLETED_13 = case_when(!is.na(M06_MAT_VISIT_MNH06_13) ~ 1, 
+         #                                           TRUE ~ 0),
+        # M06_MAT_VISIT_wPERSON_COMPLETED_13 = case_when(M06_MAT_VISIT_MNH06_13 %in% c(1,2) ~ 1, 
+         #                                              TRUE ~ 0))
+
+# EVERYONE AT VISIT 1 HAS MNH06 IN PAKISTAN:
+  test.df <- mnh06_constructed_df %>%
+    select(MOMID, PREGID, SITE, M06_DIAG_VSDAT_1, M06_MAT_VISIT_MNH06_1, M06_MAT_VISIT_FORM_COMPLETED_1) # %>% filter(SITE=="Kenya")
+  
+  # NEED THIS CONSTRUCTED_DF2 TO BE MERGED NEXT:
+  mnh06_constructed_df2 <- mnh06_constructed_df %>%
+    select(MOMID, PREGID, SITE, starts_with(c( "M06_MAT_VISIT_FORM_COMPLETED_", "M06_MAT_VISIT_wPERSON_COMPLETED_")))
+```
+
 # COMBINE MNH04_CONSTRUCTED AND MNH08_CONSTRUCTED WITH MNH01_CONSTRUCTED
 ```{r}
 merged_df <- left_join(merged_df, mnh04_constructed_df2,
@@ -1187,36 +1251,66 @@ merged_df <- left_join(merged_df, mnh04_constructed_df2,
 
 merged_df <- left_join(merged_df, mnh08_constructed_df2,
                                         by = c("MOMID", "PREGID", "SITE"))
+
+merged_df <- left_join(merged_df, mnh06_constructed_df2,
+                                        by = c("MOMID", "PREGID", "SITE"))
+
+# THIS WILL HAVE NA'S FOR COMPLETED FORM IF A SITE DOESN'T HAVE ANY MNH06 SO WHEN IT MERGED BACK INTO MY MERGED_DF, IT GET'S MERGED AS NA.
+test.df <- merged_df %>% 
+  select(MOMID, PREGID, SITE, M06_DIAG_VSDAT_1, M06_MAT_VISIT_MNH06_2, M06_MAT_VISIT_FORM_COMPLETED_2) # %>% filter(SITE=="Kenya")
+
+  test.df <- merged_df %>%
+    select(MOMID, PREGID, SITE, M08_MAT_VISIT_MNH08_1, M08_MAT_VISIT_FORM_COMPLETED_1)
+  
 ```
 
 ```{r}
-# USE UPLOAD DATE
+temp.df <- merged_df %>% 
+  filter(SITE=="Pakistan") %>%
+  select(SITE, MOMID, PREGID, M09_HDP_HTN_MHOCCUR_1_6, M09_HDP_HTN_MHOCCUR_77_6, M09_HDP_HTN_MHOCCUR_99_6, M09_PREECLAMPSIA_CEOCCUR_1_6, M09_PREECLAMPSIA_CEOCCUR_77_6, M09_PREECLAMPSIA_CEOCCUR_99_6)
+```
 
-merged_df <- merged_df %>%
-  # EDD BY BOE
-  ## CALCULATE ON TIME AND LATE ANC WINDOWS 
+```{r}
+## visit windows for ANC
+merged_df <- merged_df %>% 
+  # filter(M01_US_OHOSTDAT_1 != ymd("1907-07-07")) %>%   
+  ## CALCULATE ON TIME AND LATE ANC WINDOWS
   mutate(ENROLL_ONTIME = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(139, unit="days"), #EDD-280 = conception date + and then estimate the right hand of the window. Gives a date
-         ENROLL_LATE = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(139, unit="days"), # doesn't have a late window.
-         ANC20_ONTIME = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(160, unit="days"), 
-         ANC20_LATE = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(181, unit="days"),
-         ANC28_ONTIME = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(216, unit="days"), # if miss this ANC 28 on time window, you miss the visit, there is no late window
-         ANC28_LATE = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(216, unit="days"), 
-         ANC32_ONTIME = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(237, unit="days"), 
-         ANC32_LATE = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(244, unit="days"), ## will need to ask about this
-         ANC36_ONTIME = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(272, unit="days"), 
-         ANC36_LATE = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(300, unit="days")) %>% 
-  
-  #####################
-#TODO FIX NEEDS TO FIXED. 
-# QUESTION FOR STACIE: WHY DID SHE USE ONTIME WINDOWS TO CALC OVERDUE AND NOT LATE WINDOWS. 
+         ENROLL_LATE = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(139, unit="days"), # doesn't have a late window
+         ANC20_ONTIME = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(160, unit="days"), # computing date for 20 weeks
+         ANC20_LATE = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(181, unit="days"), # she has 21 days for ANC20 and then she's late for that visit. 
+         ANC28_ONTIME = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(216, unit="days"),
+         ANC28_LATE = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(216, unit="days"),
+         ANC32_ONTIME = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(237, unit="days"),
+         ANC32_LATE = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(237, unit="days"), 
+         ANC36_ONTIME = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(272, unit="days"),
+         ANC36_LATE = (EDD_BOE - as.difftime(280, unit="days")) + as.difftime(272, unit="days")) %>%
+  ## CALCULATE INDICATOR VARIABLES for passed ON-TIME ANC WINDOWS - same as overdue code, but exclude the visit completion piece
+  mutate(ENROLL_PASS = ifelse(ENROLL_ONTIME<UploadDate, 1, 0),  # WINDOW HAS PASSED. IF YOUR ENROLL WINDOW END IS JAN 1ST, BUT UPLOAD JAN 5TH. THEN YOU'RE LATE MEANING ON TIME WINDOW IS PASSED. 
+         ANC20_PASS = ifelse(ANC20_ONTIME<UploadDate, 1, 0), #IF A WINDOW IS PASSED AND HER GA AT ENROLLEMENT WAS <17 WEEKS, SHE DOES GET AN ANC 20. IF SHE'S >18 THEN HER ANC20 FORMS WILL BE NA B/C SHE'S NOT SUPPOSED TO HAVE IT.
+          ANC20_PASS = ifelse(ANC20_ONTIME<UploadDate & GA_ENROLL_WKS <= 17, 1, 0), # NEED TO ASK STACY WHY SHE DOESN'T HAVE THIS LINE INSTEAD. (01/31/2024)
+         ANC28_PASS = ifelse(ANC28_ONTIME<UploadDate, 1, 0),
+         ANC32_PASS = ifelse(ANC32_ONTIME<UploadDate, 1, 0),
+         ANC36_PASS = ifelse(ANC36_ONTIME<UploadDate, 1, 0)) %>% 
+  ## CALCULATE INDICATOR VARIABLES for passed LATE ANC WINDOWS
+  mutate(ENROLL_PASS_LATE = ifelse(ENROLL_LATE<UploadDate, 1, 0),
+         ANC20_PASS_LATE = ifelse(ANC20_LATE<UploadDate & GA_ENROLL_WKS <= 17, 1, 0), # It said BOE_GA_WKS_ENROLL when i ran this on 04/01/2024 (why?)
+         ANC28_PASS_LATE = ifelse(ANC28_LATE<UploadDate, 1, 0),
+         ANC32_PASS_LATE = ifelse(ANC32_LATE<UploadDate, 1, 0),
+         ANC36_PASS_LATE = ifelse(ANC36_LATE<UploadDate, 1, 0))  
+```
 
+```{r}
+#####################
+# QUESTION FOR STACIE: WHY DID SHE USE ONTIME WINDOWS TO CALC OVERDUE AND NOT LATE WINDOWS. 
+merged_df <- merged_df %>%
 
   ## CALCULATE INDICATOR VARIABLES for missed ANC visits ON-TIME WINDOWS
   ## max date has to be less than the upload date
   mutate(M04_ENROLL_OVERDUE = ifelse(UploadDate>ENROLL_ONTIME & (M04_MAT_VISIT_FORM_COMPLETED_1==0), 1, 0),
          M08_ENROLL_OVERDUE = ifelse(UploadDate>ENROLL_ONTIME & (M08_MAT_VISIT_FORM_COMPLETED_1==0), 1, 0),#TODO DO THIS FOR MNH08
          
-          # if this window ANC20 is passed, then this var would be NA b/c they don't have to have ANC20 visit. 
+          # if this window ANC20 is passed, then this var would be NA b/c they don't have to have ANC20 visit form. 
          M04_ANC20_OVERDUE = ifelse(UploadDate>ANC20_ONTIME & (M04_MAT_VISIT_FORM_COMPLETED_2==0) & GA_ENROLL_WKS <= 17, 1, 0), # GA_ENROLL_WKS is in weeks. 
          M08_ANC20_OVERDUE = ifelse(UploadDate>ANC20_ONTIME & (M08_MAT_VISIT_FORM_COMPLETED_2==0) & GA_ENROLL_WKS <= 17, 1, 0),
          
@@ -1227,26 +1321,13 @@ merged_df <- merged_df %>%
          M08_ANC32_OVERDUE = ifelse(UploadDate>ANC32_ONTIME & (M08_MAT_VISIT_FORM_COMPLETED_4==0), 1, 0),
          
          M04_ANC36_OVERDUE = ifelse(UploadDate>ANC36_ONTIME & (M04_MAT_VISIT_FORM_COMPLETED_5==0), 1, 0),
-         M08_ANC36_OVERDUE = ifelse(UploadDate>ANC36_ONTIME & (M08_MAT_VISIT_FORM_COMPLETED_5==0), 1, 0)) %>% 
-  
-  ## CALCULATE INDICATOR VARIABLES for passed ON-TIME ANC WINDOWS - same as overdue code, but exclude the visit completion piece
-  ## using upload date
-  mutate(ENROLL_PASS = ifelse(ENROLL_ONTIME<UploadDate, 1, 0), # WINDOW HAS PASSED. IF YOUR ENROLL WINDOW END IS JAN 1ST, BUT UPLOAD JAN 5TH. THEN YOU'RE LATE MEANING ON TIME WINDOW IS PASSED. 
-         ANC20_PASS = ifelse(ANC20_ONTIME<UploadDate & GA_ENROLL_WKS <= 17, 1, 0), #IF A WINDOW IS PASSED AND HER GA AT ENROLLEMENT WAS <17 WEEKS, SHE DOES GET AN ANC 20. IF SHE'S >18 THEN HER ANC20 FORMS WILL BE NA B/C SHE'S NOT SUPPOSED TO HAVE IT.
-         ANC28_PASS = ifelse(ANC28_ONTIME<UploadDate, 1, 0),
-         ANC32_PASS = ifelse(ANC32_ONTIME<UploadDate, 1, 0),
-         ANC36_PASS = ifelse(ANC36_ONTIME<UploadDate, 1, 0)) %>% 
-  ## CALCULATE INDICATOR VARIABLES for missed PASSED LATE WINDOWS
-  mutate(ENROLL_PASS_LATE = ifelse(ENROLL_LATE<UploadDate, 1, 0),
-         ANC20_PASS_LATE = ifelse(ANC20_LATE<UploadDate & GA_ENROLL_WKS <= 17, 1, 0),
-         ANC28_PASS_LATE = ifelse(ANC28_LATE<UploadDate, 1, 0),
-         ANC32_PASS_LATE = ifelse(ANC32_LATE<UploadDate, 1, 0),
-         ANC36_PASS_LATE = ifelse(ANC36_LATE<UploadDate, 1, 0)) 
+         M08_ANC36_OVERDUE = ifelse(UploadDate>ANC36_ONTIME & (M08_MAT_VISIT_FORM_COMPLETED_5==0), 1, 0))
 ```
 
 # VISIT date from the form, estimated conception date (visit date - estimated conception date = this is estimated GA at that visit in days or weeks)
 # CALC. GA AT VISIT.
 ```{r}
+# XX_GA_AT_VISIT_X can have NAs
 merged_df <- merged_df %>%
   mutate(M04_GA_AT_VISIT_1 = as.Date(M04_ANC_OBSSTDAT_1) - EST_CONCEP_DATE, #DATE OF VISIT - CONCEPTION DATE = GA AT VISIT. 
          M04_GA_AT_VISIT_2 = as.Date(M04_ANC_OBSSTDAT_2) - EST_CONCEP_DATE,
@@ -1255,11 +1336,23 @@ merged_df <- merged_df %>%
          M04_GA_AT_VISIT_5 = as.Date(M04_ANC_OBSSTDAT_5) - EST_CONCEP_DATE) 
 
 merged_df <- merged_df %>%
+  mutate(M06_GA_AT_VISIT_1 = as.Date(M06_DIAG_VSDAT_1) - EST_CONCEP_DATE, #DATE OF VISIT - CONCEPTION DATE = GA AT VISIT. 
+         M06_GA_AT_VISIT_2 = as.Date(M06_DIAG_VSDAT_2) - EST_CONCEP_DATE,
+         M06_GA_AT_VISIT_3 = as.Date(M06_DIAG_VSDAT_3) - EST_CONCEP_DATE,
+         M06_GA_AT_VISIT_4 = as.Date(M06_DIAG_VSDAT_4) - EST_CONCEP_DATE,
+         M06_GA_AT_VISIT_5 = as.Date(M06_DIAG_VSDAT_5) - EST_CONCEP_DATE)
+
+
+merged_df <- merged_df %>%
   mutate(M08_GA_AT_VISIT_1 = as.Date(M08_LBSTDAT_1) - EST_CONCEP_DATE,
          M08_GA_AT_VISIT_2 = as.Date(M08_LBSTDAT_2) - EST_CONCEP_DATE,
          M08_GA_AT_VISIT_3 = as.Date(M08_LBSTDAT_3) - EST_CONCEP_DATE,
          M08_GA_AT_VISIT_4 = as.Date(M08_LBSTDAT_4) - EST_CONCEP_DATE,
          M08_GA_AT_VISIT_5 = as.Date(M08_LBSTDAT_5) - EST_CONCEP_DATE)
+
+temp.df <- merged_df %>%
+  select(MOMID, SITE, M04_GA_AT_VISIT_1, M04_ANC_OBSSTDAT_1, 
+         EST_CONCEP_DATE, M01_US_OHOSTDAT_1, BOE_GA_DAYS)  %>% filter(SITE=="Pakistan")
 # VISIT 6 CALCULATION IS DONE BELOW (GA AT DELIVERY VISIT)
 ```
 
@@ -1272,13 +1365,50 @@ merged_df <- merged_df %>%
 # GA AT DELIVERY: DOB - CONCEPTION DATE. SEP THE DOB FIRST. TIME BECOMES IMPORTANT FOR PNC VISITS LATER.
 merged_df <- merged_df %>%
   mutate(GA_AT_DELIV_6 = DOB_DATEONLY - EST_CONCEP_DATE)
+```
 
+
+```{r}
+# ANC36_PASS = ifelse(ANC36_ONTIME<UploadDate, 1, 0))
+
+temp.df <- merged_df %>% select(MOMID, SITE, GA_AT_DELIV_6, DOB_DATEONLY, ANC36_ONTIME, ANC36_PASS, 
+                                ANC36_PASS_LATE, M04_MAT_VISIT_FORM_COMPLETED_5, M04_ANC_OBSSTDAT_5) %>% 
+  
+  mutate(ANC36_PASS_FF = case_when(is.na(DOB_DATEONLY) & (ANC36_ONTIME<UploadDate) ~ 1,
+                                   !is.na(DOB_DATEONLY) & (DOB_DATEONLY>=ANC36_ONTIME) ~ 1,
+                                   TRUE ~ 0))
+```
+
+
+
+# GA INDICATOR VARIABLES
+# When her GA at enrollment is <=17, then M04_GA_ENROLL_LT18==1 and she should have an ANC20 (VISIT 2) form then.
+# INVESTIGATING GA AT VISIT AND DELIVERY GA
+```{r}
+merged_df <- merged_df %>%
+  mutate(M04_GA_ENROLL_LT18 = case_when((M04_GA_AT_VISIT_1/7) <=17 ~ 1,
+                                        TRUE ~ as.numeric(0)))
+
+
+temp.df <- merged_df %>%
+  select(MOMID, SITE, M04_GA_AT_VISIT_1, M04_GA_AT_VISIT_2, M04_GA_AT_VISIT_3, 
+         M04_GA_AT_VISIT_4, M04_GA_AT_VISIT_5, ANC28_PASS, ANC32_PASS,ANC32_PASS_LATE, ANC36_PASS, ANC36_PASS_LATE,
+         M04_MAT_VISIT_FORM_COMPLETED_4, M04_MAT_VISIT_FORM_COMPLETED_5, GA_AT_DELIV_6) %>%
+  mutate(GA_VISIT1 = as.double(M04_GA_AT_VISIT_1)/7,
+         GA_VISIT2 = as.double(M04_GA_AT_VISIT_2)/7,
+         GA_VISIT3 = as.double(M04_GA_AT_VISIT_3)/7,
+         GA_VISIT4 = as.double(M04_GA_AT_VISIT_4)/7, 
+         GA_VISIT5 = as.double(M04_GA_AT_VISIT_5)/7,
+         GA_DELIV = as.double(GA_AT_DELIV_6)/7) %>% 
+  select(-M04_GA_AT_VISIT_1, -M04_GA_AT_VISIT_2, -M04_GA_AT_VISIT_3,-M04_GA_AT_VISIT_4, -M04_GA_AT_VISIT_5, -GA_AT_DELIV_6)
 ```
 
 # WRITE OUT A MERGED FILE RDS
 ```{r}
-write_rds(merged_df, '../data_out/merged_df.RDS')
+write_rds(merged_df, '../data_out/merged_df_20240628.RDS')
 ```
+
+
 
 # WINDOW SUBSET
 ```{r}
@@ -1287,7 +1417,8 @@ window_subset_df <- merged_df %>%
          EDD_BOE, GA_ENROLL_WKS, GA_ENROLL_DAYS, DOB, DOB_DATEONLY, 
          
          starts_with(c("M04_MAT_VISIT_FORM_", "M04_MAT_VISIT_wPERSON_",
-                     "M08_MAT_VISIT_FORM_", "M08_MAT_VISIT_wPERSON_")),
+                       "M06_MAT_VISIT_FORM_", "M06_MAT_VISIT_wPERSON_",
+                       "M08_MAT_VISIT_FORM_", "M08_MAT_VISIT_wPERSON_")),
          
          ENROLL_ONTIME, ENROLL_LATE, 
          ANC20_ONTIME, ANC20_LATE,
@@ -1301,16 +1432,21 @@ window_subset_df <- merged_df %>%
          M08_ENROLL_OVERDUE, M08_ANC20_OVERDUE, M08_ANC28_OVERDUE,
          M08_ANC32_OVERDUE, M08_ANC36_OVERDUE,
          
+         M08_MAT_VISIT_MNH08_1, M08_MAT_VISIT_MNH08_2, M08_MAT_VISIT_MNH08_3,
+         
          ENROLL_PASS, ANC20_PASS, ANC28_PASS, ANC32_PASS, ANC36_PASS,
          
          ENROLL_PASS_LATE, ANC20_PASS_LATE, ANC28_PASS_LATE, ANC32_PASS_LATE, ANC36_PASS_LATE,
          
+          
+         
          # GA AT VISIT:
          M04_GA_AT_VISIT_1, M04_GA_AT_VISIT_2, M04_GA_AT_VISIT_3, M04_GA_AT_VISIT_4, M04_GA_AT_VISIT_5,
          M08_GA_AT_VISIT_1,  M08_GA_AT_VISIT_2,  M08_GA_AT_VISIT_3,  M08_GA_AT_VISIT_4,  M08_GA_AT_VISIT_5,
-         GA_AT_DELIV_6)# JUST NEED ONE B/C M08 IS OPTIONAL AT DELIVERY)
+         GA_AT_DELIV_6,# JUST NEED ONE B/C M08 IS OPTIONAL AT DELIVERY
+         M04_GA_ENROLL_LT18) # This is an indicator for when GA at enroll is <=17 or not.
 
-write.csv(window_subset_df, '../data_out/window_subset_df.csv')
+write.csv(window_subset_df, '../data_out/window_subset_df_20240628.csv')
 ```
 
 #################################################
@@ -1323,11 +1459,54 @@ diabetes_df <- merged_df %>%
         M09_GEST_DIAB_MHOCCUR_6, M09_INDUCED_PROCCUR_6, M09_INDUCED_PRINDC_6,
         M19_PRIMARY_MHTERM_13, M19_LD_COMPL_MHTERM_3_13,
         #MEASURED VARS:
-        M08_HBA1C_PRCNT_1,
+        M08_HBA1C_LBORRES_1, # for ghana only (hba1c)
+        M08_HBA1C_PRCNT_1, # for all other sites (hba1c)
         M08_BGLUC_PRETEST_MMOLL_LBORRES_3, 
-        M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3, M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3 )
+        M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3, M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_3,
+        
+        # Visit 4
+        M08_BGLUC_PRETEST_MMOLL_LBORRES_4, M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_4, M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_4,
+        
+        # visit 5: 
+        M08_BGLUC_PRETEST_MMOLL_LBORRES_5, M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_5, M08_BGLUC_ORAL_2HR_MMOLL_LBORRES_5)
 
-write.csv(diabetes_df, '../data_out/mat_diabetes_vars.csv')
+write.csv(diabetes_df, '../data_out/mat_diabetes_vars_20240315.csv')
+```
+
+# WRITE OUT A FILE FOR SPHB ANALYSIS
+```{r}
+sphb_df <- merged_df %>% select(MOMID, PREGID, SITE, 
+                                M06_SPHB_VSSTAT_1, M06_SPHB_LBORRES_1,
+                                M06_SPHB_VSSTAT_2, M06_SPHB_LBORRES_2,
+                                M06_SPHB_VSSTAT_3, M06_SPHB_LBORRES_3,
+                                M06_SPHB_VSSTAT_4, M06_SPHB_LBORRES_4, # NOTE that Sphb is not done at week32 except Pakistan 
+                                M06_SPHB_VSSTAT_5, M06_SPHB_LBORRES_5,
+                                M06_SPHB_VSSTAT_10, M06_SPHB_LBORRES_10, # Week 6 PNC (Visit 10)
+                                
+                                M08_CBC_LBTSTDAT_1, M08_CBC_HB_LBORRES_1,
+                                M08_CBC_LBTSTDAT_2, M08_CBC_HB_LBORRES_2,
+                                M08_CBC_LBTSTDAT_3, M08_CBC_HB_LBORRES_3,
+                                M08_CBC_LBTSTDAT_4, M08_CBC_HB_LBORRES_4,
+                                M08_CBC_LBTSTDAT_5, M08_CBC_HB_LBORRES_5,
+                                M08_CBC_LBTSTDAT_10, M08_CBC_HB_LBORRES_10, # Week 6 PNC (Visit 10)
+                                
+                                M06_HB_POC_LBPERF_1, M06_HB_POC_LBORRES_1, 
+                                M06_HB_POC_LBPERF_2, M06_HB_POC_LBORRES_2,
+                                M06_HB_POC_LBPERF_3, M06_HB_POC_LBORRES_3,
+                                M06_HB_POC_LBPERF_4, M06_HB_POC_LBORRES_4,
+                                M06_HB_POC_LBPERF_5, M06_HB_POC_LBORRES_5,
+                                M06_HB_POC_LBPERF_6, M06_HB_POC_LBORRES_10)
+
+
+write.csv(sphb_df, '../data_out/mat_Sphb_20240628.csv')
+```
+
+```{r}
+temp.df <- merged_df %>% select(MOMID, SITE, M08_HBA1C_PRCNT_1, M08_GA_AT_VISIT_3, M08_LBSTDAT_3) %>%
+                                  filter(SITE=="Pakistan") %>% filter(M08_HBA1C_PRCNT_1>=6.5) %>% 
+  mutate(GA_at_visit3_wks = as.double(M08_GA_AT_VISIT_3/7))
+#%>% filter(floor(M08_GA_AT_VISIT_3/7) >=20)
+
 ```
 
 
@@ -1336,28 +1515,51 @@ write.csv(diabetes_df, '../data_out/mat_diabetes_vars.csv')
 ####################################
 ```{r}
 htn_df <- merged_df %>% 
-  select(MOMID, PREGID, SITE, DELIVERED_FF, M06_HB_POC_LBORRES_4, M08_CBC_HB_LBORRES_4,
+  select(MOMID, PREGID, SITE, DELIVERED_FF, 
          M04_ANC_OBSSTDAT_1, # Date ANC1 from MNH04
-         M04_HPD_MHTERM_2, # Chronic hypertension or gHTN or PE or Don't know.  
-         M19_BP_SYS_VSORRES_13, M19_BP_DIA_VSORRES_13, M19_BP_SYS_VSORRES_14, M19_BP_DIA_VSORRES_14,
          M04_HTN_EVER_MHOCCUR_1, M04_HTN_MHSTDAT_1, # CHRONIC HYPERTENSION
-         M08_CBC_HB_LBORRES_4, M06_HB_POC_LBORRES_4, 
-         M08_IBILIRUBIN_LBORRES_4, M08_AST_UL_LBORRES_4, M08_ALT_UL_LBORRES_4,
-         M08_CBC_PLATE_LBORRES_4, M08_CREAT_UMOLL_LBORRES_4,
+         M04_HPD_MHTERM_1, M04_HPD_MHTERM_2, M04_HPD_MHTERM_3,# Chronic hypertension or gHTN or PE or Don't know. 
+         M04_HPD_MHTERM_4, M04_HPD_MHTERM_5, M04_HPD_MHTERM_13,
+         starts_with(c("M04_HPD_OECTRT_")),
+         starts_with(c("M04_HPD_MHTERM_")),
+         #Delivery form has _1-3, _77, _99 that I need to keep b/c it is a "No HDP diagnosis" and "No treatment received"
+         M09_HDP_HTN_MHOCCUR_1_6, M09_HDP_HTN_MHOCCUR_2_6, 
+         M09_HDP_HTN_MHOCCUR_3_6, M09_HDP_HTN_MHOCCUR_77_6, M09_HDP_HTN_MHOCCUR_99_6,
+        
+          # variables for HDP medication during Delivery:
+         starts_with(c("M04_HPD_MHOCCUR_", "M09_HDP_HTN_PROCCUR_", "M09_PREECLAMPSIA_CEOCCUR_")), 
+         M09_HEADACHE_CEOCCUR_6, M09_HEADACHE_CEONGO_6,
+         M09_CONFUSION_CEOCCUR_6, M09_CONFUSION_CEONGO_6,
+         starts_with(c("M09_OTHR_CEOCCUR_")),
+         # BP:
+         M19_BP_SYS_VSORRES_13, M19_BP_DIA_VSORRES_13, M19_BP_SYS_VSORRES_14, M19_BP_DIA_VSORRES_14,
+         # Other labs
+         M06_HB_POC_LBORRES_4, M06_HB_POC_LBORRES_5,
+         M08_IBILIRUBIN_LBORRES_4, M08_IBILIRUBIN_LBORRES_5, 
+         M08_CBC_HB_LBORRES_4, M08_CBC_HB_LBORRES_5,
+         M08_AST_UL_LBORRES_4, M08_AST_UL_LBORRES_5,
+         M08_ALT_UL_LBORRES_4, M08_ALT_UL_LBORRES_5,
+         M08_CBC_PLATE_LBORRES_4, M08_CBC_PLATE_LBORRES_5,
+         M08_CREAT_UMOLL_LBORRES_4, M08_CREAT_UMOLL_LBORRES_5,
          # Hospitalization HELLP:
+         M19_OBSSTDAT_13, # DATE OF HOSP.
          M19_CBC_HB_LBORRES_13, M19_CBC_PLATELET_LBORRES_13,
-         M19_AST_LBPERF_13, M19_ALT_LBPERF_13, M19_CREAT_LBORRESU_13,
+         M19_AST_UL_LBORRES_13, 
+         M19_ALT_UL_LBORRES_13,M19_ALT_UKATL_LBORRESU_13, 
+         M19_CREAT_LBORRESU_13,
+         M19_UA_PROT_LBORRES_13,
          # OTHER VARS
          starts_with(c("M06_BP_SYS_VSORRES_", "M06_BP_DIA_VSORRES_", "M04_HTN_CMTRT_", 
                        "M04_HPD_OECTRT_", 
-                       "M09_HDP_HTN_PROCCUR_", # L&D Medication
                        # ANC HOSP _13
-                       "M19_HDP_HTN_MHOCCUR_",
+                       "M19_HDP_HTN_MHOCCUR_", # was mother diagnosed
+                       "M19_HPD_HTN_CMOCCUR_", # did mother receive medication
                        # PROTEINURIA
                        "M08_UA_PROT_LBORRES",
                        "M08_LBSTDAT_")))  # M08_LBSTDAT_ GIVES DATE OF THE VISIT
 
-write.csv(htn_df, '../data_out/mat_htn.csv')
+write.csv(htn_df, '../data_out/mat_HDP.csv')
+
 ```
 #TODO STOPPED HERE
 
@@ -1634,9 +1836,7 @@ temp.df<- merged_df %>% #[1:200, ] %>%
                        "M19_TIMING_OHOCAT_VISIT", "M19_CBC_LBDAT_VISIT", "M19_CBC_HB_LBORRES_VISIT",
                        "M19_HB_POC_LBTSTDAT_VISIT", "M19_HB_POC_LBORRES_VISIT")))
 
-#temp.df <- merged_df %>%
-  # select(MOMID, SITE, DELIVERED_FF, M08_CBC_HB_LBORRES_1, M06_HB_POC_LBORRES_1) %>% filter(SITE=='Ghana') %>% filter(DELIVERED_FF==1)
-  
+
 merged_df <- merged_df %>%
   #SETTING UP VISIT 1 - enrollment.
   # 1st trimester
@@ -1658,6 +1858,10 @@ sum(merged_df$M08_CBC_HB_LBORRES_1 %in% c(-5, -7))
 
 table(MAT_ANEMIA_MEAS1 = merged_df$MAT_ANEMIA_MEAS1, useNA = "always", SITE = merged_df$SITE)
 round(prop.table(table(merged_df$MAT_ANEMIA_MEAS1, useNA = "always", merged_df$SITE), margin=2)*100,2) 
+
+temp.df <- merged_df %>%
+   select(MOMID, SITE, DELIVERED_FF, MAT_ANEMIA_MEAS1, M08_CBC_HB_LBORRES_1, M06_HB_POC_LBORRES_1) %>% filter(SITE=="Kenya")
+  
 
 ########################
 # INVESTIGATING MISSING 
@@ -2036,16 +2240,15 @@ round(prop.table(table(merged_df$MAT_ANEMIA_MEAS_ANY, merged_df$SITE, useNA = "a
 ```{r}
 
 anemia_df <- merged_df %>% 
-  select(MOMID, PREGID, SITE, M09_DELIV_DSSTDAT_INF1_6, DELIVERED_FF, starts_with(c("M08_CBC_HB_LBORRES_", "M06_HB_POC_LBORRES_", "MAT_ANEMIA_MEAS")))
+  select(MOMID, PREGID, SITE, M09_DELIV_DSSTDAT_INF1_6, DELIVERED_FF, starts_with(c("M08_CBC_HB_LBORRES_", "M06_HB_POC_LBORRES_")))
 
+write.csv(anemia_df, paste0('../data_out/', "mat_anemia_foranalysis" ,".csv"), row.names=FALSE)
 
 
 table(anemia_df$DELIVERED_FF, SITE = anemia_df$SITE, useNA = "always")
 
 anemia_df2 <- anemia_df %>% filter(DELIVERED_FF==1) # FILTER TO THOSE WITH A DELIVERY DATE 
 
-#table(anemia_df2$MAT_ANEMIA_MEAS_ANY, SITE = anemia_df2$SITE, useNA = "always")
-# round(prop.table(table(anemia_df2$MAT_ANEMIA_MEAS_ANY, SITE = anemia_df2$SITE, useNA = "always"), margin=2)*100, 2)
 ```
 
 # INVESTIGATING MISSING
@@ -2418,6 +2621,62 @@ table(LATE_MAT_DEATH = merged_df$LATE_MAT_DEATH, SITE = merged_df$SITE, useNA = 
 #TODO Convert M23 info for closeout response and date into an OR not AND.
 ```
 
+# TEST for proteinuria 
+```{r}
+merged_df %>% group_by(SITE) %>% summarize(n=n(), Protein_0 = sum(M08_UA_PROT_LBORRES_1==0, M08_UA_PROT_LBORRES_2==0,
+                                                           M08_UA_PROT_LBORRES_3==0, M08_UA_PROT_LBORRES_4==0,
+                                                           M08_UA_PROT_LBORRES_5==0, M08_UA_PROT_LBORRES_6==0,
+                                                           na.rm = TRUE),
+                                           
+                                           Protein_1 = sum(M08_UA_PROT_LBORRES_1==1, M08_UA_PROT_LBORRES_2==1,
+                                                           M08_UA_PROT_LBORRES_3==1, M08_UA_PROT_LBORRES_4==1,
+                                                           M08_UA_PROT_LBORRES_5==1, M08_UA_PROT_LBORRES_6==1,
+                                                           na.rm = TRUE),
+                                           
+                                           Protein_2 = sum(M08_UA_PROT_LBORRES_1==2, M08_UA_PROT_LBORRES_2==2,
+                                                           M08_UA_PROT_LBORRES_3==2, M08_UA_PROT_LBORRES_4==2,
+                                                           M08_UA_PROT_LBORRES_5==2, M08_UA_PROT_LBORRES_6==2,
+                                                           na.rm = TRUE),
+                                           
+                                           Protein_3 = sum(M08_UA_PROT_LBORRES_1==3, M08_UA_PROT_LBORRES_2==3,
+                                                           M08_UA_PROT_LBORRES_3==3, M08_UA_PROT_LBORRES_4==3,
+                                                           M08_UA_PROT_LBORRES_5==3, M08_UA_PROT_LBORRES_6==3,
+                                                           na.rm = TRUE),
+                                           
+                                           Protein_4 = sum(M08_UA_PROT_LBORRES_1==4, M08_UA_PROT_LBORRES_2==4,
+                                                           M08_UA_PROT_LBORRES_3==4, M08_UA_PROT_LBORRES_4==4,
+                                                           M08_UA_PROT_LBORRES_5==4, M08_UA_PROT_LBORRES_6==4,
+                                                           na.rm = TRUE),
+                                           
+                                           Protein_77 = sum(M08_UA_PROT_LBORRES_1==77, M08_UA_PROT_LBORRES_2==77,
+                                                           M08_UA_PROT_LBORRES_3==77, M08_UA_PROT_LBORRES_4==77,
+                                                           M08_UA_PROT_LBORRES_5==77, M08_UA_PROT_LBORRES_6==77,
+                                                           na.rm = TRUE),
+                                           
+                                           Protein_NA = sum(is.na(M08_UA_PROT_LBORRES_1), is.na(M08_UA_PROT_LBORRES_2),
+                                                           is.na(M08_UA_PROT_LBORRES_3), is.na(M08_UA_PROT_LBORRES_4),
+                                                           is.na(M08_UA_PROT_LBORRES_5), is.na(M08_UA_PROT_LBORRES_6)))
+                                           
+
+df_long_1 <- merged_df %>% select(SITE, x = M08_UA_PROT_LBORRES_1)
+df_long_2 <- merged_df %>% select(SITE, x = M08_UA_PROT_LBORRES_2)
+df_long_3 <- merged_df %>% select(SITE, x = M08_UA_PROT_LBORRES_3)
+df_long_4 <- merged_df %>% select(SITE, x = M08_UA_PROT_LBORRES_4)
+df_long_5 <- merged_df %>% select(SITE, x = M08_UA_PROT_LBORRES_5)
+df_long_6 <- merged_df %>% select(SITE, x = M08_UA_PROT_LBORRES_6)
+df_long_7 <- merged_df %>% select(SITE, x = M08_UA_PROT_LBORRES_7)
+df_long_8 <- merged_df %>% select(SITE, x = M08_UA_PROT_LBORRES_8)
+df_long_9 <- merged_df %>% select(SITE, x = M08_UA_PROT_LBORRES_9)
+df_long_10 <- merged_df %>% select(SITE, x = M08_UA_PROT_LBORRES_10)
+df_long_11 <- merged_df %>% select(SITE, x = M08_UA_PROT_LBORRES_11)
+
+df_long <- rbind(df_long_1, df_long_2, df_long_3, df_long_4, 
+                 df_long_5, df_long_6, df_long_7, df_long_8,
+                 df_long_9, df_long_10, df_long_11)
+
+table(df_long$x, df_long$SITE, useNA = "always")
+
+```
 
 
 # GESTATIONAL PROTEINURIA - PROTEINURIA***
@@ -2466,7 +2725,7 @@ merged_df <- merged_df %>%
                                            (M08_UA_PROT_LBORRES_8 == 2 | M08_UA_PROT_LBORRES_8==3)) |
                                         (!is.na(M08_UA_PROT_LBORRES_9) & 
                                            (M08_UA_PROT_LBORRES_9 == 2 | M08_UA_PROT_LBORRES_9==3)) |
-                                        (!is.na(M08_UA_PROT_LBORRES_10) & 
+                                        (!is.na(M08_UA_PROT_LBORRES_7) & 
                                            (M08_UA_PROT_LBORRES_10 == 2 | M08_UA_PROT_LBORRES_10==3)) |
                                         (!is.na(M08_UA_PROT_LBORRES_14) & 
                                            (M08_UA_PROT_LBORRES_14 == 2 | M08_UA_PROT_LBORRES_14==3)), # HOSP.
