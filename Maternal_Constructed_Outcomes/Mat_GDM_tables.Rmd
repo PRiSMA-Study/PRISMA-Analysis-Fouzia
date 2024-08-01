@@ -17,7 +17,7 @@ output:
 
 
 ##### **Includes data from synapse last updated:** {.unlisted .unnumbered}
-#####  2023-10-13 {.unlisted .unnumbered}
+#####  2024-03-15 {.unlisted .unnumbered}
 
 
 
@@ -27,6 +27,8 @@ output:
   font-weight: bold;
 }
 ```
+
+
 ```{r, data setup, include = FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 ```
@@ -45,10 +47,10 @@ library(kableExtra)
 
 ```{r}
 # AMONG WOMEN WHO HAVE A VISIT 3 (ANC28)
-diabetes_df <- read.csv('../data_out/mat_diabetes_fortables_20231017.csv', header = TRUE)
+diabetes_df <- read.csv('../data_out/mat_diabetes_fortables_20240315_data.csv', header = TRUE)
 df <- diabetes_df # the file that is generated in 'Mat_GDM_analysis.Rmd' -- run that first but make sure to subset on VISIT 3.
 
-missing_mnh08_diab_df <- read.csv( '../data_out/missing_mnh08_df_diab_20231017.csv')
+missing_mnh08_diab_df <- read.csv( '../data_out/missing_mnh08_df_diab_20240315_data.csv')
 ```
 \newpage
 
@@ -184,7 +186,7 @@ missing_vars <- df %>%
 ```
 
 ```{r}
-missing_mnh08 <- missing_mnh08 %>% select(-`India-CMC`)
+missing_mnh08 <- missing_mnh08 %>% select(-`India-SAS`)
 diabetes_table <- rbind(missing_mnh08, missing_vars)
 ```
 
