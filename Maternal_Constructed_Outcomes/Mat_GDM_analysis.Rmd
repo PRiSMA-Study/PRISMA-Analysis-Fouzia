@@ -37,7 +37,7 @@ library(wesanderson)
 
 ```{r}
 # merged_df <- readRDS('../data_out/merged_df.RDS')
-diabetes_df <- read.csv('../data_out/mat_diabetes_vars.csv', header = TRUE)
+diabetes_df <- read.csv('../data_out/mat_diabetes_vars_20240315.csv', header = TRUE)
 window_subset_df <- read.csv('../data_out/window_subset_df.csv', header = TRUE)
 ```
 
@@ -120,7 +120,7 @@ missing_mnh08_diab_df <- diabetes_df2 %>%
          M08_MAT_VISIT_MNH08_3, M08_MAT_VISIT_FORM_COMPLETED_3, ANC28_PASS)
 
 temp.df %>% summarize(n())
-write.csv(missing_mnh08_diab_df, '../data_out/missing_mnh08_df_diab_20231017.csv')
+write.csv(missing_mnh08_diab_df, '../data_out/missing_mnh08_df_diab_20240315_data.csv')
 ```
 
 # WOMEN WHO HAVE A GA >=20 WEEKS
@@ -185,7 +185,7 @@ temp.df <- diabetes_df3 %>%
 
 diabetes_df3 <- diabetes_df3 %>% 
   #dplyr::filter(SITE=="Pakistan") %>%
-  mutate(GEST_DIAB_MEAS = case_when((((is.na(M08_HBA1C_PRCNT_1) | M08_HBA1C_PRCNT_1<6.5) & 
+  mutate(GEST_DIAB_MEAS = case_when((((is.na(M08_HBA1C_PRCNT_1) | M08_HBA1C_PRCNT_1<6.5) & # If HbA1C is not done, that's ok, we still want to keep that info. 
                                         ((M08_BGLUC_PRETEST_MMOLL_LBORRES_3>=5.1 | # confirm pre test (fasting) OGTT is high at ANC28
                                            # when fasting OGTT is high, then 1-hr or 2-hr should be also high at ANC28
                                            M08_BGLUC_ORAL_1HR_MMOLL_LBORRES_3>=10.0) |  # 1-hr at ANC28
@@ -286,7 +286,7 @@ table(diabetes_df$GEST_DIAB_MEAS_TEST, diabetes_df$SITE)
 round(prop.table(table(diabetes_df$GEST_DIAB_MEAS_TEST, diabetes_df$SITE, useNA = "always"), margin=2)*100,2)
 
 # RUN THIS WRITE.CSV CODE SO THAT 'MAT_GDM_TABLES.RMD' RUNS
-write.csv(diabetes_df, '../data_out/mat_diabetes_fortables_20231017.csv') # restricted to women who have a visit 3. 
+write.csv(diabetes_df, '../data_out/mat_diabetes_fortables_20240315_data.csv') # restricted to women who have a visit 3. 
 ```
 
 # VennDiagram - All site
