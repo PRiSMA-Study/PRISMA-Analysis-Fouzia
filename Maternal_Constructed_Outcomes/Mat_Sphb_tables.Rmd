@@ -1,0 +1,310 @@
+---
+title: "<span style='font-size: 18px'> <span style='text-align: center'> PRISMA Sphb and CBC Hb Intraclass correlation analysis (Issued: `r Sys.Date()`)"
+author: 'Author: Fouzia Farooq'
+output:
+  html_document:
+    toc: yes
+    toc_depth: '4'
+    df_print: paged
+---
+
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+
+\newpage
+
+<br>
+**Intraclass correlation:**
+<ul>
+<li>Reliability index for interrater reliability analysis. It reflects both degree of correlation and agreement between measurements.<li>
+<li>Appropriate ICC form must be used since each form involves distinct assumptions and will lead to different interpretations.<li>
+<li>These are the assumptions used for form here:<li>
+<li>**Model:** Two-way (Mixed-Effects Model) - used when the selected raters (instruments) are the only raters of interest. Results only represent the reliability of the specific instruments involved in the experiment and can't be generalized. 
+<li>**Type:** Agreement (agreement: if different instruments assign the same score to the same subject; consistency: instruments' socres to the same group of subjects are correlated in an additive manner.)
+<li>**Definition:** Single unit (single rater vs. 'means of k raters').  Single rater type is selected because reliablity experiment involves 2 raters whose average is not as an assessment basis. 
+
+Reliability is defined as the extent to which measurements can be replicated.
+In other words, it reflects not only degree of correlation but also agreement between measurements.
+Mathematically, reliability represents a ratio of true variance over true variance plus error variance
+
+paper from Masimo: https://www.tandfonline.com/doi/full/10.1080/11101849.2022.2153976
+
+
+```{css, echo=FALSE}
+.table caption {
+  color: black;
+  font-weight: bold;
+}
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+library(tidyverse)
+library(lubridate)
+#library(emo)
+# library(naniar)
+library(dplyr)
+library(knitr)
+library(kableExtra)
+library(irr)
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+sphb_df <- read.csv('../data_out/Mat_sphb_20231027.csv')
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+# INTRACLASS CORRELATION - ENROLLMENT
+
+icc_df <- sphb_df %>% select(SITE, M06_SPHB_LBORRES_1, M08_CBC_HB_LBORRES_1) 
+icc_df %>% group_by(SITE) %>% summarize(N = sum(!is.na(M06_SPHB_LBORRES_1) & !is.na(M08_CBC_HB_LBORRES_1)))
+
+unique_sites <- unique(icc_df$SITE)
+icc_results <- data.frame()
+
+# Loop through each SITE and compute ICC
+for (site in unique_sites) {
+  site_data <- icc_df %>% filter(SITE == site) %>% select(-SITE)
+  
+  # Compute the ICC
+  icc_value <- icc(site_data, model = "twoway", type = "agreement", unit = "single", conf.level = 0.95)
+  
+  # Compute the count of non-missing observations for this site
+  icc_n <- site_data %>% summarize(N = sum(!is.na(M06_SPHB_LBORRES_1) & !is.na(M08_CBC_HB_LBORRES_1)))
+  
+  # Create a data frame with ICC and N
+  icc_results_site <- data.frame(SITE = site, N = icc_n$N, ICC = icc_value$value, Lower = icc_value$lbound, Upper = icc_value$ubound)
+  
+    # Combine the results
+  icc_results <- rbind(icc_results, icc_results_site)
+}
+
+icc_results <- icc_results %>% mutate('95%CI' = paste0("(", format(round(Lower,3),nsmall=2, digits=3), ", ", format(round(Upper,3),nsmall=2, digits=3), ")"))
+icc_results <- icc_results %>% rename(Site = SITE) %>% select(-Upper, -Lower)
+icc_results$ICC <- format(round(icc_results$ICC, 3), nsmall=2, digits=3)
+```
+
+
+#### Table 1. Intraclass correlation between SpHb and CBC Hb measurements at Enrollment  
+```{r echo=FALSE, warning=FALSE}
+icc_results  %>% 
+   # `rownames<-` (c( 
+   #  "Kenya",
+   #  "Pakistan",
+   #  "Zambia")) %>%
+    
+     mutate_all(funs(str_replace(., "NaN", "0"))) %>% 
+  kbl(caption = "", booktabs = TRUE) %>%
+  kable_paper(bootstrap_options = "striped", 
+              full_width = T, html_font = "Cambria", position = "left",
+              latex_options = c("repeat_header", "HOLD_position")) %>% 
+  kable_styling(font_size = 14) %>%
+  row_spec(0, extra_css = "border-bottom: 0px white;")
+  
+  # pack_rows("Sphb", 1, 3, label_row_css = "color: steelblue;")
+```
+<br>
+<br>
+
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+icc_df <- sphb_df %>% select( SITE, M06_SPHB_LBORRES_2, M08_CBC_HB_LBORRES_2) 
+
+unique_sites <- unique(icc_df$SITE)
+icc_results <- data.frame()
+
+# Loop through each SITE and compute ICC
+for (site in unique_sites) {
+  site_data <- icc_df %>% filter(SITE == site) %>% select(-SITE)
+  
+  # Compute the ICC
+  icc_value <- icc(site_data, model = "twoway", type = "agreement", unit = "single", conf.level = 0.95)
+  
+  # Compute the count of non-missing observations for this site
+  icc_n <- site_data %>% summarize(N = sum(!is.na(M06_SPHB_LBORRES_2) & !is.na(M08_CBC_HB_LBORRES_2)))
+  
+  # Create a data frame with ICC and N
+  icc_results_site <- data.frame(SITE = site, N = icc_n$N, ICC = icc_value$value, Lower = icc_value$lbound, Upper = icc_value$ubound)
+  
+    # Combine the results
+  icc_results <- rbind(icc_results, icc_results_site)
+}
+
+icc_results <- icc_results %>% mutate('95%CI' = paste0("(", format(round(Lower,3),nsmall=2, digits=3), ", ", format(round(Upper,3),nsmall=2, digits=3), ")"))
+icc_results <- icc_results %>% rename(Site = SITE) %>% select(-Upper, -Lower)
+icc_results$ICC <- format(round(icc_results$ICC, 3), nsmall=2, digits=3)
+```
+
+#### Table 2. Intraclass correlation between SpHb and CBC Hb measurements at ANC-20  
+```{r echo=FALSE, warning=FALSE}
+icc_results  %>% 
+   # `rownames<-` (c( 
+   #  "Kenya",
+   #  "Pakistan",
+   #  "Zambia")) %>%
+    
+     mutate_all(funs(str_replace(., "NaN", "0"))) %>% 
+  kbl(caption = "", booktabs = TRUE) %>%
+  kable_paper(bootstrap_options = "striped", 
+              full_width = T, html_font = "Cambria", position = "left",
+              latex_options = c("repeat_header", "HOLD_position")) %>% 
+  kable_styling(font_size = 14) %>%
+  row_spec(0, extra_css = "border-bottom: 0px white;")
+  
+  # pack_rows("Sphb", 1, 3, label_row_css = "color: steelblue;")
+```
+<br>
+<br>
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+icc_df <- sphb_df %>% select( SITE, M06_SPHB_LBORRES_3, M08_CBC_HB_LBORRES_3) 
+
+unique_sites <- unique(icc_df$SITE)
+icc_results <- data.frame()
+
+# Loop through each SITE and compute ICC
+for (site in unique_sites) {
+  site_data <- icc_df %>% filter(SITE == site) %>% select(-SITE)
+  
+  # Compute the ICC
+  icc_value <- icc(site_data, model = "twoway", type = "agreement", unit = "single", conf.level = 0.95)
+  
+  # Compute the count of non-missing observations for this site
+  icc_n <- site_data %>% summarize(N = sum(!is.na(M06_SPHB_LBORRES_3) & !is.na(M08_CBC_HB_LBORRES_3)))
+  
+  # Create a data frame with ICC and N
+  icc_results_site <- data.frame(SITE = site, N = icc_n$N, ICC = icc_value$value, Lower = icc_value$lbound, Upper = icc_value$ubound)
+  
+    # Combine the results
+  icc_results <- rbind(icc_results, icc_results_site)
+}
+
+icc_results <- icc_results %>% mutate('95%CI' = paste0("(", format(round(Lower,3),nsmall=2, digits=3), ", ", format(round(Upper,3),nsmall=2, digits=3), ")"))
+icc_results <- icc_results %>% rename(Site = SITE) %>% select(-Upper, -Lower)
+icc_results$ICC <- format(round(icc_results$ICC, 3), nsmall=2, digits=3)
+```
+
+#### Table 3. Intraclass correlation between SpHb and CBC Hb measurements at ANC-28  
+```{r echo=FALSE, warning=FALSE}
+icc_results  %>% 
+   # `rownames<-` (c( 
+   #  "Kenya",
+   #  "Pakistan",
+   #  "Zambia")) %>%
+    
+     mutate_all(funs(str_replace(., "NaN", "0"))) %>% 
+  kbl(caption = "", booktabs = TRUE) %>%
+  kable_paper(bootstrap_options = "striped", 
+              full_width = T, html_font = "Cambria", position = "left",
+              latex_options = c("repeat_header", "HOLD_position")) %>% 
+  kable_styling(font_size = 14) %>%
+  row_spec(0, extra_css = "border-bottom: 0px white;")
+  
+  # pack_rows("Sphb", 1, 3, label_row_css = "color: steelblue;")
+```
+
+\newpage
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+icc_df <- sphb_df %>% select( SITE, M06_SPHB_LBORRES_4, M08_CBC_HB_LBORRES_4)
+
+unique_sites <- unique(icc_df$SITE)
+icc_results <- data.frame()
+
+# Loop through each SITE and compute ICC
+for (site in unique_sites) {
+  site_data <- icc_df %>% filter(SITE == site) %>% select(-SITE)
+  
+  # Compute the ICC
+  icc_value <- icc(site_data, model = "twoway", type = "agreement", unit = "single", conf.level = 0.95)
+  
+  # Compute the count of non-missing observations for this site
+  icc_n <- site_data %>% summarize(N = sum(!is.na(M06_SPHB_LBORRES_4) & !is.na(M08_CBC_HB_LBORRES_4)))
+  
+  # Create a data frame with ICC and N
+  icc_results_site <- data.frame(SITE = site, N = icc_n$N, ICC = icc_value$value, Lower = icc_value$lbound, Upper = icc_value$ubound)
+  
+    # Combine the results
+  icc_results <- rbind(icc_results, icc_results_site)
+}
+
+icc_results <- icc_results %>% mutate('95%CI' = paste0("(", format(round(Lower,3),nsmall=2, digits=3), ", ", format(round(Upper,3),nsmall=2, digits=3), ")"))
+icc_results <- icc_results %>% rename(Site = SITE) %>% select(-Upper, -Lower)
+icc_results$ICC <- format(round(icc_results$ICC, 3), nsmall=2, digits=3)
+```
+
+<br>
+<br>
+
+#### Table 4. Intraclass correlation between SpHb and CBC Hb measurements at ANC-32, Pakistan site only  
+```{r echo=FALSE, warning=FALSE}
+icc_results  %>% 
+   # `rownames<-` (c( 
+   #  "Kenya",
+   #  "Pakistan",
+   #  "Zambia")) %>%
+    
+     mutate_all(funs(str_replace(., "NaN", "0"))) %>% 
+  kbl(caption = "", booktabs = TRUE) %>%
+  kable_paper(bootstrap_options = "striped", 
+              full_width = T, html_font = "Cambria", position = "left",
+              latex_options = c("repeat_header", "HOLD_position")) %>% 
+  kable_styling(font_size = 14) %>%
+  row_spec(0, extra_css = "border-bottom: 0px white;")
+  
+  # pack_rows("Sphb", 1, 3, label_row_css = "color: steelblue;")
+```
+<br>
+<br>
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+icc_df <- sphb_df %>% select( SITE, M06_SPHB_LBORRES_5, M08_CBC_HB_LBORRES_5) 
+
+unique_sites <- unique(icc_df$SITE)
+icc_results <- data.frame()
+
+# Loop through each SITE and compute ICC
+for (site in unique_sites) {
+  site_data <- icc_df %>% filter(SITE == site) %>% select(-SITE)
+  
+  # Compute the ICC
+  icc_value <- icc(site_data, model = "twoway", type = "agreement", unit = "single", conf.level = 0.95)
+  
+  # Compute the count of non-missing observations for this site
+  icc_n <- site_data %>% summarize(N = sum(!is.na(M06_SPHB_LBORRES_5) & !is.na(M08_CBC_HB_LBORRES_5)))
+  
+  # Create a data frame with ICC and N
+  icc_results_site <- data.frame(SITE = site, N = icc_n$N, ICC = icc_value$value, Lower = icc_value$lbound, Upper = icc_value$ubound)
+  
+    # Combine the results
+  icc_results <- rbind(icc_results, icc_results_site)
+}
+
+icc_results <- icc_results %>% mutate('95%CI' = paste0("(", format(round(Lower,3),nsmall=2, digits=3), ", ", format(round(Upper,3),nsmall=2, digits=3), ")"))
+icc_results <- icc_results %>% rename(Site = SITE) %>% select(-Upper, -Lower)
+icc_results$ICC <- format(round(icc_results$ICC, 3), nsmall=2, digits=3)
+```
+
+#### Table 5. Intraclass correlation between SpHb and CBC Hb measurements at ANC-36  
+```{r echo=FALSE, warning=FALSE}
+icc_results  %>% 
+   # `rownames<-` (c( 
+   #  "Kenya",
+   #  "Pakistan",
+   #  "Zambia")) %>%
+    
+     mutate_all(funs(str_replace(., "NaN", "0"))) %>% 
+  kbl(caption = "", booktabs = TRUE) %>%
+  kable_paper(bootstrap_options = "striped", 
+              full_width = T, html_font = "Cambria", position = "left",
+              latex_options = c("repeat_header", "HOLD_position")) %>% 
+  kable_styling(font_size = 14) %>%
+  row_spec(0, extra_css = "border-bottom: 0px white;")
+  
+  # pack_rows("Sphb", 1, 3, label_row_css = "color: steelblue;")
+```

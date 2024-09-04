@@ -4,15 +4,15 @@
 # THIS FILE CREATES BOE VARIABLES THAT I CAN RUN EVERYTIME WITH NEW DATASET: 
 
 #****************************************************************************
-#* NOTES:
-#* SEE IF THE VARIABLE I AM USING FOR SINGLETON PREGNANCIES MATCHES OTHER VARIABLES THAT INDICATE SINGLETON PREGNANCIES.
+#* NOTES/UPDATES:
+#* Updated Singleton fetus variables 09/03/2024
 #****************************************************************************
 
 library(tidyverse)
 library(lubridate)
 library(naniar)
 library(writexl) # only for writing excel files
-
+library(haven)
 rm(list = ls())
 dir.create("data_out")
 
@@ -52,8 +52,8 @@ csv_files <- list.files(path = folder_path, pattern = "*.csv", full.names = TRUE
 #****************************************************************************
 #*# Load in the Rda file
 #****************************************************************************
-load("ANALYSIS/GWG/data_out/mnh_dataframes_2024-06-28.rda")
-     
+# load("ANALYSIS/GWG/data_out/mnh_dataframes_2024-06-28.rda")
+load("D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/ANALYSIS/GWG/data_out/mnh_dataframes_2024-06-28.rda")
      
 #****************************************************************************
 # CREATE A DATASET OF ENROLLED WOMEN
@@ -170,7 +170,8 @@ momids_vector <- mnh02_enrolled %>%
   pull(MOMID) %>% 
   unique()
 
-save(momids_vector, file = 'ANALYSIS/GWG/data_out/enrolled_momid_vec.rda')
+save(momids_vector, file = 'D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/ANALYSIS/GWG/data_out/enrolled_momid_vec.rda')
+# save(momids_vector, file = 'ANALYSIS/GWG/data_out/enrolled_momid_vec.rda')
 
 # Step 2: Filter mnh05 based on MOMIDs vector
 mnh05_filtered <- mnh05 %>%
@@ -210,10 +211,25 @@ mnh06_filtered <- mnh06 %>%
 #****************************************************************************
 # create singleton dataframe:
 #****************************************************************************
-singleton_momids <- mnh06_filtered %>%
-  filter(M06_TYPE_VISIT==1) %>%
-  filter(M06_SINGLETON_PERES==1) %>%
+## READ IN MAT_PLACENTA_PREVIA FOR SINGLETON
+singleton <- read_dta('Z:/Outcome Data/2024-06-28/MAT_PLACENTA_PREVIA.dta') %>%
+  select("SITE","MOMID", "PREGID","FETUS_CT_PERES_US")
+
+singleton_filtered <- singleton %>%
+  filter(MOMID %in% momids_vector) %>%
+  relocate(SITE,MOMID, PREGID, FETUS_CT_PERES_US)
+#****************************************************************************
+# create singleton dataframe:
+#****************************************************************************
+singleton_momids <- singleton_filtered %>%
+  filter(FETUS_CT_PERES_US==1) %>%
   select(SITE, MOMID, PREGID)
+
+# This was old code before I started using FETUS_CT_PERES_US
+# singleton_momids <- mnh06_filtered %>%
+#   filter(M06_TYPE_VISIT==1) %>%
+#   filter(M06_SINGLETON_PERES==1) %>%
+#   select(SITE, MOMID, PREGID)
 
 #****************************************************************************
 # MERGE the MNH01_02_05 dataset onto this singleton dataset.
@@ -250,7 +266,7 @@ table(merged_df$ENROLL) # 2024-06-28 data has n=9105 women enrolled and singleto
 #****************************************************************************
 # WRITE OUT THE FILE
 #****************************************************************************
-write.csv(merged_df, paste0("ANALYSIS/GWG/data_out/cleaned_merged_from_uploaded_", UploadDate, ".csv"))
+write.csv(merged_df, paste0("D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/ANALYSIS/GWG/data_out/cleaned_merged_from_uploaded_", UploadDate, ".csv"))
 
 
 

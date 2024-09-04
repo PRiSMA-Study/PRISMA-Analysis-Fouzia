@@ -25,7 +25,7 @@ UploadDate = "2024-06-28"
 # Define the path to the folder containing the CSV files
 folder_path <- paste0("D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/ANALYSIS/GWG/data/Stacked Data/", UploadDate)
 
-merged_df <- read.csv('ANALYSIS/GWG/data_out/merged_df_BOE-calc_uploaded_2024-06-28.csv')
+merged_df <- read.csv('D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/ANALYSIS/GWG/data_out/merged_df_BOE-calc_uploaded_2024-06-28.csv')
 
 temp.df <- merged_df %>% 
   filter(SITE=="Zambia") %>% 
@@ -64,8 +64,18 @@ temp.df <- merged_df %>%
 #****************************************************************************
 # Load in the Rda file:
 #****************************************************************************
-load("ANALYSIS/GWG/data_out/mat_inf_demogph_dataframes_2024-06-28.rda")
+load("D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/ANALYSIS/GWG/data_out/mat_inf_demogph_dataframes_2024-06-28.rda")
 
+#****************************************************************************
+# Bring in MNH04:
+#****************************************************************************
+# MNH04: 
+mnh04 <- read.csv('D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/ANALYSIS/GWG/data/Stacked Data/2024-06-28/mnh04_merged.csv')
+
+# mnh04 <- mnh04 %>%
+#   distinct (MOMID, PREGID, SITE, .keep_all = TRUE)
+
+table(mnh04$M04_TYPE_VISIT, useNA = "always") # MNH04 at multipe visits.
 
 # READ IN ADDITIONAL FILES: 
 # mnh06 <- read.csv('data/Stacked Data/2024-06-14/mnh06_merged.csv')
@@ -107,6 +117,24 @@ mat_infect_subset <- mat_infection %>%
 mat_nearmiss_subset <- mat_nearmiss_interim %>%
   select(SITE, MOMID, PREGID,
          ANEMIA_SEV_ANC)
+
+# Micronutrient supplementation:
+nutrition_subset <-mnh04 %>% select("MOMID", "PREGID", "SITE", "M04_TYPE_VISIT",
+                                      #Iron supplement
+                                      M04_IRON_CMOCCUR,
+                                      M04_IRON_ORAL_CMOCCUR,
+                                      M04_IRON_IV_CMOCCUR,
+                                      #Folic acid supplement
+                                      M04_IFA_CMOCCUR,
+                                      #Calcium supplement
+                                      M04_CALCIUM_CMOCCUR,
+                                      #Vitamin A supplement
+                                      M04_VITAMIN_A_CMOCCUR,
+                                      #Multiple micronutrient supplement
+                                      M04_MICRONUTRIENT_CMOCCUR,
+                                      #Anthelmintic treatment
+                                      M04_ANTHELMINTHIC_CMOCCUR
+)  %>% filter(M04_TYPE_VISIT==1) # only need this info at visit 1
 
 #****************************************************************************
 #. Singleton pregnancy - i already have these from the BOE_calc.R file
@@ -165,16 +193,72 @@ merged_df4 <- merged_df3 %>%
   left_join(mat_gdm_subset, by = c("SITE", "MOMID", "PREGID")) %>%
   left_join(mat_hdp_subset,  by = c("SITE", "MOMID", "PREGID")) %>%
   left_join(mat_infect_subset,  by = c("SITE", "MOMID", "PREGID")) %>%
-  left_join(mat_nearmiss_subset,  by = c("SITE", "MOMID", "PREGID"))
+  left_join(mat_nearmiss_subset,  by = c("SITE", "MOMID", "PREGID")) %>%
+  left_join(nutrition_subset, by = c("SITE", "MOMID", "PREGID"))
 
+table(merged_df4$M04_IRON_CMOCCUR, useNA = "always")
+table(merged_df4$M04_IRON_ORAL_CMOCCUR, useNA = "always")
+table(merged_df4$M04_IRON_IV_CMOCCUR, useNA = "always")
+table(merged_df4$M04_IFA_CMOCCUR, useNA = "always")
+table(merged_df4$M04_CALCIUM_CMOCCUR, useNA = "always")
+table(merged_df4$M04_VITAMIN_A_CMOCCUR, useNA = "always")
+table(merged_df4$M04_MICRONUTRIENT_CMOCCUR, useNA = "always")
+table(merged_df4$M04_ANTHELMINTHIC_CMOCCUR, useNA = "always")
+
+#TODO Review these if else statements before moving on.  
 merged_df4 <- merged_df4 %>%
-  mutate(DIAB_GEST_ANY = if_else((DIAB_GEST_ANY==55 | DIAB_GEST_ANY==77), NA, DIAB_GEST_ANY),
-         DIAB_GEST_DX = if_else((DIAB_GEST_DX==55 | DIAB_GEST_DX==77), NA, DIAB_GEST_DX),
-         COMPLETE_ANC28 = if_else((COMPLETE_ANC28==55 | COMPLETE_ANC28==77), NA, COMPLETE_ANC28))
+  # IRON
+  mutate(M04_IRON_CMOCCUR = if_else((M04_IRON_CMOCCUR==55 |
+                                       M04_IRON_CMOCCUR==77 |
+                                       M04_IRON_CMOCCUR==99), 
+                                    NA, M04_IRON_CMOCCUR),
+         
+         M04_IRON_ORAL_CMOCCUR = if_else((M04_IRON_ORAL_CMOCCUR==55 |
+                                            M04_IRON_ORAL_CMOCCUR==77 |
+                                            M04_IRON_ORAL_CMOCCUR==99), 
+                                    NA, M04_IRON_ORAL_CMOCCUR),
+         
+         M04_IRON_IV_CMOCCUR = if_else((M04_IRON_IV_CMOCCUR==55 |
+                                          M04_IRON_IV_CMOCCUR==77 |
+                                          M04_IRON_IV_CMOCCUR==99), 
+                                    NA, M04_IRON_IV_CMOCCUR),
+         # IFA
+         M04_IFA_CMOCCUR = if_else((M04_IFA_CMOCCUR==55 |
+                                       M04_IFA_CMOCCUR==77 |
+                                       M04_IFA_CMOCCUR==99), 
+                                    NA, M04_IFA_CMOCCUR),
+         
+         M04_CALCIUM_CMOCCUR = if_else((M04_CALCIUM_CMOCCUR==55 |
+                                       M04_CALCIUM_CMOCCUR==77 |
+                                       M04_CALCIUM_CMOCCUR==99), 
+                                    NA, M04_CALCIUM_CMOCCUR),
+         
+         M04_VITAMIN_A_CMOCCUR = if_else((M04_VITAMIN_A_CMOCCUR==55 |
+                                       M04_VITAMIN_A_CMOCCUR==77 |
+                                       M04_VITAMIN_A_CMOCCUR==99), 
+                                    NA, M04_VITAMIN_A_CMOCCUR),
+         
+         M04_MICRONUTRIENT_CMOCCUR = if_else((M04_MICRONUTRIENT_CMOCCUR==55 |
+                                       M04_MICRONUTRIENT_CMOCCUR==77 |
+                                       M04_MICRONUTRIENT_CMOCCUR==99), 
+                                    NA, M04_MICRONUTRIENT_CMOCCUR),
+         
+         M04_ANTHELMINTHIC_CMOCCUR = if_else((M04_ANTHELMINTHIC_CMOCCUR==55 |
+                                                M04_ANTHELMINTHIC_CMOCCUR==77 |
+                                                M04_ANTHELMINTHIC_CMOCCUR==99), 
+                                             NA, M04_ANTHELMINTHIC_CMOCCUR))
+         
+merged_df4 <- merged_df4 %>%
+           mutate(DIAB_GEST_ANY = if_else((DIAB_GEST_ANY==55 | DIAB_GEST_ANY==77), NA, DIAB_GEST_ANY),
+                  DIAB_GEST_DX = if_else((DIAB_GEST_DX==55 | DIAB_GEST_DX==77), NA, DIAB_GEST_DX),
+                  COMPLETE_ANC28 = if_else((COMPLETE_ANC28==55 | COMPLETE_ANC28==77), NA, COMPLETE_ANC28))
 
 merged_df4 <- merged_df4 %>%
   mutate(HDP_GROUP = if_else((HDP_GROUP==55 | HDP_GROUP==77), NA, HDP_GROUP))
 
+merged_df4 <- merged_df4 %>%
+  mutate(DIAB_GEST_ANY = if_else((DIAB_GEST_ANY==55 | DIAB_GEST_ANY==77), NA, DIAB_GEST_ANY),
+         
 temp.df <- merged_df4 %>%
   select(SITE, MOMID, PREGID, TYPE_VISIT, DIAB_GEST_ANY, DIAB_GEST_DX, COMPLETE_ANC28)
 

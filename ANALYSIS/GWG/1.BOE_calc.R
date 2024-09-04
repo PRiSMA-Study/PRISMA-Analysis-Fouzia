@@ -21,7 +21,7 @@ UploadDate = "2024-06-28"
 folder_path <- paste0("D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/ANALYSIS/GWG/data/Stacked Data/", UploadDate)
 
 
-merged_df <- read.csv(paste0('ANALYSIS/GWG/data_out/cleaned_merged_from_uploaded_', UploadDate, ".csv"))
+merged_df <- read.csv(paste0('D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/ANALYSIS/GWG/data_out/cleaned_merged_from_uploaded_', UploadDate, ".csv"))
 
 temp.df <- merged_df %>% 
   filter(SITE=="Zambia") %>% 
@@ -32,7 +32,8 @@ temp.df <- merged_df %>%
 #****************************************************************************
 # PROCESSING OTHER MNH FILES.
 #****************************************************************************
-mnh09 <- read.csv('ANALYSIS/GWG/data/Stacked Data/2024-06-28/mnh09_merged.csv')
+# MNH09:
+mnh09 <- read.csv('D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/ANALYSIS/GWG/data/Stacked Data/2024-06-28/mnh09_merged.csv')
 # First deduplicate MNH09
 mnh09 <- mnh09 %>%
   distinct (MOMID, PREGID, SITE, .keep_all = TRUE)
@@ -196,7 +197,7 @@ temp.df <- merged_df %>%
 #****************************************************************************
 # WRITE OUT THE FILE
 #****************************************************************************
-write.csv(merged_df, paste0("ANALYSIS/GWG/data_out/merged_df_BOE-calc_uploaded_", UploadDate, ".csv"))
+write.csv(merged_df, paste0("D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/ANALYSIS/GWG/data_out/merged_df_BOE-calc_uploaded_", UploadDate, ".csv"))
 
 ################################## END! ######################################
 
