@@ -127,9 +127,13 @@ mat_infect_subset <- mat_infection %>%
          TB_SYMP_POSITIVE_ENROLL, TB_SYMP_POSITIVE_ANY_VISIT
          )
 
-mat_nearmiss_subset <- mat_nearmiss_interim %>%
+# mat_nearmiss_subset <- mat_nearmiss_interim %>%
+#   select(SITE, MOMID, PREGID,
+#          ANEMIA_SEV_ANC) # Don't use this anemia b/c the denominator here is for near_miss women.
+
+mat_anemia_subset <- mat_anemia %>%
   select(SITE, MOMID, PREGID,
-         ANEMIA_SEV_ANC)
+                ANEMIA_T1, ANEMIA_T2, ANEMIA_T3)
 
 mat_ga_subset <-mat_preg_endpoints %>%
   select(SITE,MOMID,PREGID,PREG_END_GA)
@@ -149,6 +153,13 @@ mat_nutr_subset <- mat_nutr %>%
          FOL_RBC_ANC20, FOL_RBC_ANC32,
          FOL_SERUM_ANC20, FOL_SERUM_ANC32)
 
+# MAT_DEMO_SUBSET:
+mat_demo_subset <- mat_demo %>%
+  select(SITE, MOMID, PREGID, age, age18, married, marry_age, marry_status, educated, school_yrs,
+         chew_tobacco, chew_betelnut, smoke, drink, 
+         height_index,  bmi_enroll, bmi_index, muac, 
+         ga_wks_enroll, folic, nulliparous, num_fetus, num_miscarriage, primigravida)
+
 # # Micronutrient supplementation:
 # nutrition_subset <-mnh04 %>% select("MOMID", "PREGID", "SITE", "M04_TYPE_VISIT",
 #                                       #Iron supplement
@@ -167,25 +178,31 @@ mat_nutr_subset <- mat_nutr %>%
 #                                       M04_ANTHELMINTHIC_CMOCCUR
 # )  %>% filter(M04_TYPE_VISIT==1) # only need this info at visit 1
 
-mat_demo_subset <- mat_demo %>%
-  select(SITE, MOMID, PREGID, age18, married, marry_age, educated, marry_status, chew_tobacco, chew_betelnut, smoke, drink, 
-         height_index, educated, school_yrs, bmi_enroll, bmi_index, muac,
-         ga_wks_enroll, folic, nulliparous, num_fetus, num_miscarriage, primigravida)
-
 #****************************************************************************
 #. OUTCOMES FROM MNH FORMS
 #****************************************************************************
 mnh03_subset <- mnh03 %>%
-  select(SITE, MOMID, PREGID,M03_JOB_SCORRES)
+  select(SITE, MOMID, PREGID, M03_JOB_SCORRES) %>%
+  mutate(TYPE_VISIT = 1)
 
 mnh04_subset <-mnh04 %>%
-  select(SITE, MOMID, PREGID,M04_MICRONUTRIENT_CMOCCUR)
+  select(SITE, MOMID, PREGID, M04_TYPE_VISIT, M04_FORMCOMPLDAT_MNH04, M04_MICRONUTRIENT_CMOCCUR, 
+         M04_PH_PREVN_RPORRES, M04_PH_PREV_RPORRES) %>%
+  rename(TYPE_VISIT = M04_TYPE_VISIT)
+
+# M04_PH_PREV_RPORRES and M04_PH_PREVN_RPORRES make the gravidity variable
+# M04_PH_PREVN_RPORRES: Specify total no. of previous pregnancies.
+# M04_PH_PREV_RPORRES: Have you ever been pregnant? Include all live births, stillbirths, 
+#### miscarriages, or abortions. Do not include the current pregnancy.
 
 mnh05_subset <- mnh05 %>%
-  select(SITE, MOMID, PREGID,M05_MUAC_PERES)
+  select(SITE, MOMID, PREGID, M05_TYPE_VISIT, M05_FORMCOMPLDAT_MNH05, M05_MUAC_PERES) %>%
+  rename(TYPE_VISIT = M05_TYPE_VISIT)
+  
 
+#TODO Ask Lili: Why are we looking at infection at visit 6? This would be at birth.
 mnh19_subset <- mnh19 %>%
-  select(SITE, MOMID, PREGID,M19_INFECTION_MHTERM_6)
+  select(SITE, MOMID, PREGID, M19_INFECTION_MHTERM_6)
 
 #****************************************************************************
 #. Singleton pregnancy - i already have these from the BOE_calc.R file
@@ -193,14 +210,36 @@ mnh19_subset <- mnh19 %>%
 # NA here.
 
 #****************************************************************************
+#. MERGE IN MNH03, MNH04, AND MNH05 VARS FIRST
+#****************************************************************************
+# NOTE: I dont need to first filter to the momid_vector first b/c left_join does that automatically.
+merged_df2 <- left_join(merged_df, mnh03_subset,
+                        by = c("SITE", "MOMID", "PREGID", "TYPE_VISIT"))
+
+temp.df <- mnh04 %>% select(SITE, MOMID, PREGID, M04_TYPE_VISIT, M04_FORMCOMPLDAT_MNH04)
+
+merged_df2 <- left_join(merged_df2, mnh04_subset,
+                        by = c("SITE", "MOMID", "PREGID", "TYPE_VISIT"))
+
+merged_df2 <- left_join(merged_df2, mnh05_subset,
+                        by = c("SITE", "MOMID", "PREGID", "TYPE_VISIT"))
+
+# Count unique MOMIDs for each ENROLL group
+unique_counts <- merged_df2 %>%
+  distinct(MOMID, PREGID, SITE, ENROLL, .keep_all = TRUE) %>%
+  group_by(ENROLL) %>%
+  summarize(unique_MOMIDs = n_distinct(MOMID))
+# 9037 unique counts - FF
+
+#****************************************************************************
 #. Subset Infant outcome and pregnancy outcome file to women who only had a singleton pregnancy
 #****************************************************************************
-# Step 1: Extract MOMIDs from MERGED_DF
+# Step 1: Extract MOMIDs from merged_df
 momids_vector <- merged_df %>% 
   pull(MOMID) %>% 
   unique()
 
-# Step 2: Filter mnh05 based on MOMIDs vector
+# Step 2: Filter the dataset based on MOMIDs vector
 infant_outcomes_subset2 <- infant_outcomes_subset %>%
   filter(MOMID %in% momids_vector) %>%
   relocate(SITE, MOMID, PREGID)
@@ -212,17 +251,17 @@ mat_preg_endpoints2 <- mat_preg_endpoints %>%
 #****************************************************************************
 #. Merge on the infant outcomes.
 #****************************************************************************
-merged_df2 <- left_join(merged_df, infant_outcomes_subset2,
+merged_df3 <- left_join(merged_df2, infant_outcomes_subset2,
                         by = c("SITE", "MOMID", "PREGID"))
 
 # Count unique MOMIDs for each ENROLL group
-unique_counts <- merged_df2 %>%
+unique_counts <- merged_df3 %>%
   distinct(MOMID, PREGID, SITE, ENROLL, .keep_all = TRUE) %>%
   group_by(ENROLL) %>%
   summarize(unique_MOMIDs = n_distinct(MOMID))
 # 9037 unique counts - FF
 
-temp.df <- merged_df2 %>%
+temp.df <- merged_df3 %>%
   select(SITE, MOMID, PREGID, TYPE_VISIT, ENROLL, PRETERMBIRTH_LT37, LBW2500_ANY)
 
 #****************************************************************************
@@ -232,9 +271,11 @@ temp.df <- merged_df2 %>%
 mat_preg_endpoints2_subset <- mat_preg_endpoints2 %>%
   select(SITE, MOMID, PREGID, PREG_END)
 
-merged_df3 <- left_join(merged_df2, mat_preg_endpoints2_subset,
+merged_df3 <- left_join(merged_df3, mat_preg_endpoints2_subset,
                         by = c("SITE", "MOMID", "PREGID"))
 
+temp.df <- merged_df3 %>%
+  select(SITE, MOMID, PREGID, TYPE_VISIT,ENROLL, PRETERMBIRTH_LT37, PREG_END)
 
 #****************************************************************************
 #. Merge on the maternal outcomes.
@@ -243,12 +284,15 @@ merged_df4 <- merged_df3 %>%
   left_join(mat_gdm_subset, by = c("SITE", "MOMID", "PREGID")) %>%
   left_join(mat_hdp_subset,  by = c("SITE", "MOMID", "PREGID")) %>%
   left_join(mat_infect_subset,  by = c("SITE", "MOMID", "PREGID")) %>%
-  left_join(mat_nearmiss_subset,  by = c("SITE", "MOMID", "PREGID")) %>%
+ # left_join(mat_nearmiss_subset,  by = c("SITE", "MOMID", "PREGID")) %>%
   left_join(mat_ga_subset,  by = c("SITE", "MOMID", "PREGID"))%>%
   left_join(mat_risks_subset,  by = c("SITE", "MOMID", "PREGID"))%>%
   left_join(mat_depr_subset,  by = c("SITE", "MOMID", "PREGID"))%>%
-  left_join(mat_nutr_subset, by = c("SITE", "MOMID", "PREGID"))
+  left_join(mat_nutr_subset, by = c("SITE", "MOMID", "PREGID")) %>%
+  left_join(mat_demo_subset, by = c("SITE", "MOMID", "PREGID"))
 
+temp.df <- merged_df4 %>%
+  select(SITE, MOMID, PREGID, TYPE_VISIT, M04_PH_PREVN_RPORRES, muac)
 #*********************************************************
 #TODO Review these if else statements before moving on. 
 #*********************************************************
@@ -493,20 +537,41 @@ table(merged_df4$FOL_SERUM_ANY_POINT, useNA = "always")
 
 
 #****************************************************************************
-#. Merge on demographics
+#. MERGE ON DEMOGRAPHICS:
 #****************************************************************************
-#TODO STOPPED HERE - FF 
-
-mat_demo_subset <- mat_demographics %>%
-  select(SITE, MOMID, PREGID, age18, married, marry_age, marry_status, chew_tobacco, chew_betelnut, smoke, drink, 
-         height_index, educated, school_yrs, bmi_enroll, bmi_index, muac,
-         ga_wks_enroll, folic, nulliparous, num_fetus, num_miscarriage, primigravida)
-
 
 merged_df5 <- merged_df4 %>% 
   left_join(mat_demo_subset, by = c("SITE", "MOMID", "PREGID"))
 
-temp.df <- merged_df4 %>% 
+#GRAVIDITY: number of times a woman has been pregnant (including current pregnancy), 
+# regardless of the outcome or duration of the pregnancy
+
+# M04_PH_PREVN_RPORRES: Specify total no. of previous pregnancies.
+# M04_PH_PREV_RPORRES: Have you ever been pregnant? Include all live births, stillbirths, 
+#### miscarriages, or abortions. Do not include the current pregnancy.
+
+merged_df5 <- merged_df5 %>%
+  mutate(M04_PH_PREVN_RPORRES = if_else(M04_PH_PREVN_RPORRES==-7, NA, M04_PH_PREVN_RPORRES),
+         M04_PH_PREV_RPORRES = if_else(M04_PH_PREV_RPORRES==77, NA, M04_PH_PREV_RPORRES),
+         
+         GRAVIDITY = case_when(M04_PH_PREVN_RPORRES > 0 ~ M04_PH_PREVN_RPORRES,
+                   (M04_PH_PREV_RPORRES == 0 | M04_PH_PREVN_RPORRES == 0 |
+                     is.na(M04_PH_PREV_RPORRES) | is.na(M04_PH_PREVN_RPORRES)) ~ 0,
+                   TRUE ~ NA_real_))
+
+merged_df5 <- merged_df5 %>%
+  mutate(GRAVIDITY  = GRAVIDITY+1) %>%
+  mutate(GRAVIDITY_CAT = case_when(GRAVIDITY==1 ~ '1',
+                                   GRAVIDITY==2 ~ '2',
+                                   GRAVIDITY==3 ~ '3',
+                                   GRAVIDITY>=4 ~ '4+',
+                                   TRUE ~ as.character(NA)))
+
+temp.df <- merged_df5 %>%
+  select(SITE, MOMID, PREGID, TYPE_VISIT, M04_PH_PREVN_RPORRES, M04_PH_PREV_RPORRES, GRAVIDITY, GRAVIDITY_CAT)
+
+
+temp.df <- merged_df5 %>% 
   filter(SITE=="Zambia") %>% 
   filter(TYPE_VISIT==5) %>%
   select(SITE, MOMID, PREGID, TYPE_VISIT, M05_WEIGHT_PERES) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
@@ -519,43 +584,43 @@ temp.df <- merged_df4 %>%
 #######
 # PTB # 
 #######
-merged_df3 %>% distinct (MOMID, PREGID, SITE, PRETERMBIRTH_LT34, .keep_all = TRUE) %>%
+merged_df5 %>% distinct (MOMID, PREGID, SITE, PRETERMBIRTH_LT34, .keep_all = TRUE) %>%
   count(PRETERMBIRTH_LT34)
 
-merged_df3 %>% distinct (MOMID, PREGID, SITE, PRETERMBIRTH_LT37, .keep_all = TRUE) %>%
+merged_df5 %>% distinct (MOMID, PREGID, SITE, PRETERMBIRTH_LT37, .keep_all = TRUE) %>%
   count(PRETERMBIRTH_LT37)
 
-temp.df <- merged_df3 %>% 
+temp.df <- merged_df5 %>% 
   select(SITE, MOMID, PREGID, INFANTID, TYPE_VISIT, PRETERMBIRTH_LT34, PRETERMBIRTH_LT37)
 
 #######
 # LBW # 
 #######
-merged_df3 %>% distinct (MOMID, PREGID, SITE, LBW2500_ANY, .keep_all = TRUE) %>%
+merged_df5 %>% distinct (MOMID, PREGID, SITE, LBW2500_ANY, .keep_all = TRUE) %>%
   count(LBW2500_ANY)
 
 #######
 # SGA # 
 #######
-merged_df3 %>% distinct (MOMID, PREGID, SITE, SGA_CAT, .keep_all = TRUE) %>%
+merged_df5 %>% distinct (MOMID, PREGID, SITE, SGA_CAT, .keep_all = TRUE) %>%
   count(SGA_CAT)
 
 ##########################
 # Stillbirth >=22 weeks # 
 #########################
-merged_df3 %>% distinct (MOMID, PREGID, SITE, STILLBIRTH_22WK, .keep_all = TRUE) %>%
+merged_df5 %>% distinct (MOMID, PREGID, SITE, STILLBIRTH_22WK, .keep_all = TRUE) %>%
   count(STILLBIRTH_22WK)
 
 #################
 # Infant Death # 
 ################
-merged_df3 %>% distinct (MOMID, PREGID, SITE, INF_DTH, .keep_all = TRUE) %>%
+merged_df5 %>% distinct (MOMID, PREGID, SITE, INF_DTH, .keep_all = TRUE) %>%
   count(INF_DTH)
 
 #######################
 # Abortion <20 weeks # 
 ######################
-merged_df3 %>% distinct (MOMID, PREGID, SITE, INF_ABOR_SPN, .keep_all = TRUE) %>%
+merged_df5 %>% distinct (MOMID, PREGID, SITE, INF_ABOR_SPN, .keep_all = TRUE) %>%
   count(INF_ABOR_SPN)
 
 
@@ -563,7 +628,7 @@ merged_df3 %>% distinct (MOMID, PREGID, SITE, INF_ABOR_SPN, .keep_all = TRUE) %>
 #****************************************************************************
 # WRITE OUT THE FILE
 #****************************************************************************
-write.csv(merged_df5, paste0("ANALYSIS/GWG/data_out/merged_df_w_Outcomes_uploaded_", UploadDate, ".csv"))
+write.csv(merged_df5, paste0("data_out/merged_df_w_Outcomes_uploaded_", UploadDate, ".csv"))
 
 
 #****************************************************************************
