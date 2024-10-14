@@ -6,8 +6,6 @@
 #****************************************************************************
 #TODO: THINGS TO DO AS OF 07/01/2024
 #* Need to change all 55, 77 etc to NA before giving dataset to Lili.
-#* #FF: Subset to enrolled women who have visit 1 and visit 5 weight data.
-#*     So those who have total weight gain and have singleton preg.
 
 #*Ask Lili: 
 #*How is she accounting for the updated Type Visit? 
@@ -37,7 +35,7 @@ library(readxl)
 #*****  TYPE_VISIT==5 weight
 #*****  Its a calculation for delivery at any GA, even those that are PTB etc.
 
-#*3. Remove outliers: Lii said:  removed GA outside of range 0-42 (GA_WKS_FLAG==0) and 
+#*3. Remove outliers: Lili said:  removed GA outside of range 0-42 (GA_WKS_FLAG==0) and 
 #*****  GWG from enrollment outside -10~50kg (GWG_FROM_ENROLL_FLAG!=1).
 
 #*4. Fix anemia variable 
@@ -54,7 +52,7 @@ UploadDate = "2024-06-28"
 # Define the path to the folder containing the CSV files
 folder_path <- paste0("D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/ANALYSIS/GWG/data/Stacked Data/", UploadDate)
 
-merged_df <- read.csv(paste0("ANALYSIS/GWG/data_out/merged_df_w_Outcomes_uploaded_", UploadDate, ".csv"))
+merged_df <- read.csv(paste0("data_out/merged_df_w_Outcomes_uploaded_", UploadDate, ".csv"))
 
 mnh01 <- read.csv(paste0(folder_path, "/mnh01_merged.csv"))
 mnh05 <- read.csv(paste0(folder_path, "/mnh05_merged.csv"))
@@ -177,7 +175,7 @@ temp.df <- merged_df3 %>%
 #* ****************************************************************************
 #* REPLACE -7 VALUES TO NA:
 #* ****************************************************************************
-merged_df3<- merged_df3 %>%
+merged_df3 <- merged_df3 %>%
   mutate(M05_WEIGHT_PERES = ifelse(M05_WEIGHT_PERES==-7, NA, M05_WEIGHT_PERES),
          M05_HEIGHT_PERES = ifelse(M05_HEIGHT_PERES==-7, NA, M05_HEIGHT_PERES),
         # M05_WEIGHT_PERES = ifelse(M05_WEIGHT_PERES==-7.00, NA, M05_WEIGHT_PERES),
@@ -189,8 +187,6 @@ merged_df3<- merged_df3 %>%
 
 temp.df <- merged_df3 %>% 
   select(SITE, MOMID, PREGID, TYPE_VISIT, M05_WEIGHT_PERES) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
-
-
 
 temp.df <- merged_df3 %>% 
   filter(SITE=="Zambia") %>% 
@@ -209,7 +205,6 @@ temp.df <- merged_df3 %>%
   filter(SITE=="Zambia") %>% 
   filter(TYPE_VISIT==5) %>%
   select(SITE, MOMID, PREGID, TYPE_VISIT, M05_WEIGHT_PERES) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
-
 
 
 merged_df3 <- merged_df3 %>%
@@ -314,7 +309,7 @@ temp.df <- weight_df %>%
 #* *******************************************************
 #* CREATE INITIAL BMI AND BMI CATEGORIES:
 #* *******************************************************
-#TODO Stopped here.  Next, need to calc. last visit total_gwg (BASED ON VISIT=5)
+# Next, need to calc. last visit total_gwg (BASED ON VISIT=5)
 weight_df <- weight_df %>%
   mutate(BMI=(WEIGHT_ENROLL/(HEIGHT_ENROLL^2))*10000,
          
@@ -415,7 +410,7 @@ temp.df <- weight_df %>% select(SITE, MOMID, PREGID, TYPE_VISIT, WEIGHT_ENROLL, 
                                 
 
 #* *******************************************************
-#* LET'S NOW SUBSET TO WOMEN REMOVING OUTLIERS
+#* LET'S NOW REMOVE OUTLIERS
 #* *******************************************************
 # From Lili: 
 # filter(GA_WKS_FLAG==0 & GWG_FROM_ENROLL_FLAG != 1)
@@ -595,10 +590,10 @@ table(weight_df_single_row$IOM_ADEQUACY, useNA = "always")
 #* SAVE FILE - VARIABLES THAT SAVANNAH NEEDS
 #* *******************************************************
 # SCRNID	MOMID	PREGID	SITE	TYPE_VISIT	M05_WEIGHT_PERES	WEIGHT_ENROLL	GWG_FROM_ENROLL	GWG_TOTAL	BMI	BMI4CAT	IOM_ADEQUACY
-savannah_subset <- weight_df %>%
-  select(SITE, SCRNID, MOMID, PREGID, TYPE_VISIT_UPDATED,	M05_WEIGHT_PERES,	WEIGHT_ENROLL,	GWG_FROM_ENROLL,	GWG_TOTAL,	BMI, BMI4CAT,	IOM_ADEQUACY, PREG_END)
-
-write.csv(savannah_subset, paste0("ANALYSIS/GWG/data_out/",'GWG_OUTCOME_LONG_', UploadDate, ".csv"))
+# savannah_subset <- weight_df %>%
+#   select(SITE, SCRNID, MOMID, PREGID, TYPE_VISIT_UPDATED,	M05_WEIGHT_PERES,	WEIGHT_ENROLL,	GWG_FROM_ENROLL,	GWG_TOTAL,	BMI, BMI4CAT,	IOM_ADEQUACY, PREG_END)
+# 
+# write.csv(savannah_subset, paste0("data_out/",'GWG_OUTCOME_LONG_', UploadDate, ".csv"))
 
 #* *******************************************************
 #* NEED TO SUBSET TO WOMEN WHO HAVE HAD A PREGNANCY END.
@@ -621,12 +616,9 @@ write.csv(savannah_subset, paste0("ANALYSIS/GWG/data_out/",'GWG_OUTCOME_LONG_', 
    summarise(distinct_pregid = n_distinct(PREGID)) %>%
    pull(distinct_pregid)
 # Erin: in the 06-268-2024 dataset, n=5402 women have had a PREG_END==1 (including deaths)
- # I have n= 5294 women with in this dataset with PREG_END==1.  I know that n=74 women are dropped when I do the GWG_TOTAL and GA_WKS filter. 
- # The rest are n=34 women that I can't account for yet. 
+ # I have n= 5264 women with in this dataset with PREG_END==1.  I know that n=74 women are dropped when I do the GWG_TOTAL and GA_WKS filter. 
  # Erin said there are n=104? non-singleton pregnancies.
  
- 
-
 
 #* ***************************************************************************
 #* CREATING VARIABLES SO I CAN COUNT UP NUMBER OF WOMEN FOR DENOMINATOR CALC.
@@ -648,7 +640,7 @@ temp.df <- weight_df2 %>%
 #* *******************************************************
 #* WRITE OUT A FILE TO START BUILDING OUT THE REPORT:
 #* *******************************************************
-write.csv(weight_df2, paste0("ANALYSIS/GWG/data_out/df_w_GWGvars-n-Outcomes_uploaded_", UploadDate, ".csv"))
+write.csv(weight_df2, paste0("data_out/df_w_GWGvars-n-Outcomes_uploaded_", UploadDate, ".csv"))
 
 
 #****************************************************************************
