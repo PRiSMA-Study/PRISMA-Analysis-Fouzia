@@ -4,8 +4,16 @@
 # THIS FILE CREATES BOE VARIABLES THAT I CAN RUN EVERYTIME WITH NEW DATASET: 
 
 #****************************************************************************
-#TODO: THINGS TO DO AS OF 07/01/2024
-#* Need to change all 55, 77 etc to NA before giving dataset to Lili.
+#TODO: THINGS TO DO AS OF 10/13/2024
+#* Need to do HEV
+#* 
+#* Ask Lili to factorize these variables in this file and add lables. Do this in merged_df5. Starts around line 564.
+#* 1. Update school_years which goes from 0-97 to 0, 1-5, 6-10, 10+. Anything above 22 convert to NA. 
+#* *** Assign these labels: 0=no school; NA and when educated=0 label as 0 (no school); 1-5: 1-5 yrs; 6-10: 6-10 yrs; 10+: 10+ years.
+
+#* 2. Variable 'drink' needs to be updated: it has: 0, 1, 66.  66 should be converted to NA.  It means refused to answer.
+#* 3. Categorize muac.
+#* 4. Assign labels to 'height_index'. 
 #****************************************************************************
 
 library(tidyverse)
@@ -30,7 +38,7 @@ merged_df <- read.csv('D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/AN
 temp.df <- merged_df %>% 
   filter(SITE=="Zambia") %>% 
   filter(TYPE_VISIT==5) %>%
-  select(SITE, MOMID, PREGID, TYPE_VISIT, M05_WEIGHT_PERES) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
+  select(SITE, MOMID, PREGID, TYPE_VISIT) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
 
 
 #****************************************************************************
@@ -73,8 +81,10 @@ load("data_out/mat_inf_demogph_dataframes_2024-06-28.rda")
 #****************************************************************************
 # Bring in other MNH forms - STACKED:
 #****************************************************************************
-mnh03<- read.csv(paste0(folder_path, "/mnh03_merged.csv"))
-mnh04<- read.csv(paste0(folder_path, "/mnh04_merged.csv"))
+mnh00 <- read.csv(paste0(folder_path, "/mnh00_merged.csv"))
+mnh02 <- read.csv(paste0(folder_path, "/mnh02_merged.csv"))
+mnh03 <- read.csv(paste0(folder_path, "/mnh03_merged.csv"))
+mnh04 <- read.csv(paste0(folder_path, "/mnh04_merged.csv"))
 mnh05 <- read.csv(paste0(folder_path, "/mnh05_merged.csv"))
 mnh19 <- read.csv(paste0(folder_path, "/mnh19_merged.csv"))
 
@@ -139,15 +149,15 @@ mat_ga_subset <-mat_preg_endpoints %>%
   select(SITE,MOMID,PREGID,PREG_END_GA)
 
 mat_risks_subset <-mat_risks %>%
-  select(SITE,MOMID,PREGID,WEALTH_QUINT,PARITY)
+  select(SITE, MOMID, PREGID, WEALTH_QUINT ,PARITY)
 
 mat_depr_subset <-mat_depr %>%
-  select(SITE,MOMID,PREGID,DEPR_ANC20_STND,DEPR_ANC32_STND)
+  select(SITE,MOMID,PREGID, DEPR_ANC20_STND, DEPR_ANC32_STND)
 
 mat_nutr_subset <- mat_nutr %>%
-  select(SITE,MOMID,PREGID,
-         FERRITIN70_ANC20,FERRITIN70_ANC32,
-         RBP4_ANC20,RBP4_ANC32,
+  select(SITE, MOMID, PREGID,
+         FERRITIN70_ANC20, FERRITIN70_ANC32,
+         RBP4_ANC20, RBP4_ANC32,
          VITB12_COB_ANC20, VITB12_COB_ANC32,
          FOL_SERUM_ANC20, FOL_SERUM_ANC32,
          FOL_RBC_ANC20, FOL_RBC_ANC32,
@@ -181,10 +191,20 @@ mat_demo_subset <- mat_demo %>%
 #****************************************************************************
 #. OUTCOMES FROM MNH FORMS
 #****************************************************************************
+# MNH00 to create education and age
+mnh00_subset <-mnh00 %>%
+  select(SITE, SCRNID, M00_BRTHDAT,M00_ESTIMATED_AGE,M00_SCHOOL_SCORRES)
+
+# MNH02 to create age
+# mnh02_subset <-mnh02 %>%
+#   select(SITE, MOMID,PREGID,SCRNID, M02_SCRN_OBSSTDAT) # already have M02_SCRN_OBSSTDAT
+
+# MNH03
 mnh03_subset <- mnh03 %>%
   select(SITE, MOMID, PREGID, M03_JOB_SCORRES) %>%
   mutate(TYPE_VISIT = 1)
 
+# MNH04
 mnh04_subset <-mnh04 %>%
   select(SITE, MOMID, PREGID, M04_TYPE_VISIT, M04_FORMCOMPLDAT_MNH04, M04_MICRONUTRIENT_CMOCCUR, 
          M04_PH_PREVN_RPORRES, M04_PH_PREV_RPORRES) %>%
@@ -210,10 +230,13 @@ mnh19_subset <- mnh19 %>%
 # NA here.
 
 #****************************************************************************
-#. MERGE IN MNH03, MNH04, AND MNH05 VARS FIRST
+#. MERGE IN MNH00, MNH02, MNH03, MNH04, AND MNH05 VARS FIRST
 #****************************************************************************
 # NOTE: I dont need to first filter to the momid_vector first b/c left_join does that automatically.
-merged_df2 <- left_join(merged_df, mnh03_subset,
+merged_df2 <- left_join(merged_df, mnh00_subset,
+                        by = c("SITE", "SCRNID"))
+
+merged_df2 <- left_join(merged_df2, mnh03_subset,
                         by = c("SITE", "MOMID", "PREGID", "TYPE_VISIT"))
 
 temp.df <- mnh04 %>% select(SITE, MOMID, PREGID, M04_TYPE_VISIT, M04_FORMCOMPLDAT_MNH04)
@@ -248,6 +271,7 @@ infant_outcomes_subset2 <- infant_outcomes_subset %>%
 mat_preg_endpoints2 <- mat_preg_endpoints %>%
   filter(MOMID %in% momids_vector) %>% 
   relocate(SITE, MOMID, PREGID)
+
 #****************************************************************************
 #. Merge on the infant outcomes.
 #****************************************************************************
@@ -387,6 +411,8 @@ merged_df4 <-merged_df4 %>%
                                    HCV_POSITIVE_ENROLL==0|HCV_POSITIVE_ANY_VISIT==0~0,
                                    TRUE~NA))
 
+# HEV aHEV_IGM_POSITIVE_ENROLL,HEV_IGG_POSITIVE_ENROLL, #TODO
+#* 
 # TB at any point
 merged_df4 <-merged_df4 %>%
   mutate(TB_SYMP_ANY_POINT = case_when(TB_SYMP_POSITIVE_ENROLL==1|TB_SYMP_POSITIVE_ANY_VISIT==1~1,
@@ -537,12 +563,8 @@ table(merged_df4$FOL_SERUM_ANY_POINT, useNA = "always")
 
 
 #****************************************************************************
-#. MERGE ON DEMOGRAPHICS:
+# CREATE GRAVIDITY VAR IN DEMOGRAPHICS:
 #****************************************************************************
-
-merged_df5 <- merged_df4 %>% 
-  left_join(mat_demo_subset, by = c("SITE", "MOMID", "PREGID"))
-
 #GRAVIDITY: number of times a woman has been pregnant (including current pregnancy), 
 # regardless of the outcome or duration of the pregnancy
 
@@ -550,7 +572,7 @@ merged_df5 <- merged_df4 %>%
 # M04_PH_PREV_RPORRES: Have you ever been pregnant? Include all live births, stillbirths, 
 #### miscarriages, or abortions. Do not include the current pregnancy.
 
-merged_df5 <- merged_df5 %>%
+merged_df5 <- merged_df4 %>%
   mutate(M04_PH_PREVN_RPORRES = if_else(M04_PH_PREVN_RPORRES==-7, NA, M04_PH_PREVN_RPORRES),
          M04_PH_PREV_RPORRES = if_else(M04_PH_PREV_RPORRES==77, NA, M04_PH_PREV_RPORRES),
          
@@ -560,17 +582,141 @@ merged_df5 <- merged_df5 %>%
                    TRUE ~ NA_real_))
 
 merged_df5 <- merged_df5 %>%
-  mutate(GRAVIDITY  = GRAVIDITY+1) %>%
-  mutate(GRAVIDITY_CAT = case_when(GRAVIDITY==1 ~ '1',
-                                   GRAVIDITY==2 ~ '2',
-                                   GRAVIDITY==3 ~ '3',
-                                   GRAVIDITY>=4 ~ '4+',
-                                   TRUE ~ as.character(NA)))
+  # Instead of adding 1 to gravidity first, someone who's had no pregnancies in the past and this is her first pregnancy, 
+  # I am assigning her as 1 = which means she's primigravid. 
+  mutate(GRAVIDITY_CAT = case_when(GRAVIDITY==0 ~ 1, 
+                                   GRAVIDITY==1 ~ 2,
+                                   GRAVIDITY==2 ~ 3,
+                                   GRAVIDITY>=3 ~ 4,
+                                   TRUE ~ as.numeric(NA)))
+
+# # FACTORIZE: 
+# merged_df5 <- merged_df5 %>%
+#   mutate(GRAVIDITY_CAT = factor(GRAVIDITY_CAT, 
+#                      levels = c(1, 2, 3, 4), 
+#                      labels = c("Primigravid", "2nd pregnancy", "3rd pregnancy", 
+#                                 "4+ pregnancy")))
 
 temp.df <- merged_df5 %>%
   select(SITE, MOMID, PREGID, TYPE_VISIT, M04_PH_PREVN_RPORRES, M04_PH_PREV_RPORRES, GRAVIDITY, GRAVIDITY_CAT)
 
+table(merged_df5$GRAVIDITY_CAT, useNA = "always")
 
+#****************************************************************************
+# CREATE AGE & OCCUPATION VAR:
+#****************************************************************************
+
+# AGE: 
+# 1, <20
+# 2, 20-24
+# 3, 25-29
+# 4, 30-34
+# 5, 35+
+
+merged_df5 <- merged_df5 %>%
+  mutate(M00_BRTHDAT = if_else(M00_BRTHDAT=='1907-07-07', NA, M00_BRTHDAT))
+
+merged_df5 <- merged_df5 %>%
+  mutate(M00_BRTHDAT = if_else(M00_BRTHDAT=='1905-05-05', NA, M00_BRTHDAT))
+  
+merged_df5 <- merged_df5 %>%
+  # Filter only TYPE_VISIT == 1 for age calculation
+  mutate(age = case_when(
+    TYPE_VISIT == 1 & !is.na(M02_SCRN_OBSSTDAT) & !is.na(M00_BRTHDAT) ~ 
+      (as.numeric(ymd(M02_SCRN_OBSSTDAT) - ymd(M00_BRTHDAT)) %/% 365),
+    TYPE_VISIT == 1 & !is.na(M00_ESTIMATED_AGE) ~ as.numeric(M00_ESTIMATED_AGE),
+    TRUE ~ NA_real_),
+  
+  AGE_5_CAT = case_when(
+    age >= 18 & age < 20 ~ 1,
+    age >= 20 & age < 25 ~ 2,
+    age >= 25 & age < 30 ~ 3,
+    age >= 30 & age < 35 ~ 4,
+    age >= 35 & age <= 50 ~ 5, # There is one woman in Zambia is who age 80
+    TRUE ~ NA_real_))
+  
+  # # Convert AGE_5_CAT to a factor and label the categories
+  # AGE_5_CAT = factor(AGE_5_CAT, 
+  #                           levels = c(1, 2, 3, 4, 5), 
+  #                           labels = c("18-19yo", "20-24yo", "25-29yo", 
+  #                                      "30-34yo", "35+yo")))
+
+temp.df <- merged_df5 %>%
+  select(SITE, MOMID, PREGID, TYPE_VISIT, M02_SCRN_OBSSTDAT, M00_BRTHDAT, M00_ESTIMATED_AGE , age, AGE_5_CAT, ENROLL)
+
+table(merged_df5$AGE_5_CAT, useNA = "always")
+table(merged_df5$AGE_5_CAT, merged_df5$age)
+table(merged_df5$age)
+
+
+# M03_JOB_SCORRES: 
+# "1, Salaried worker --> Specify:
+# 2, Small business --> Specify:
+# 3, Business owner --> Specify:  
+# 4, Skilled labor --> Specify:
+# 5, Unskilled labor --> Specify:
+# 6, Subsistence farming
+# 7, Commercial farming
+# 8, Fishing
+# 9, Housewife
+# 88, Other --> specify:
+# 77, Not applicable/Not working"
+# 55, Missing
+
+# OCCUPATION: 
+# 1, Skilled labor
+# 2, Unskilled labor
+# 3, Subsistence/commercial farming = Farming
+# 4, Housewife
+# 5, No work
+# 6, Other
+
+#TODO: FF - 77 here just means that she's not working, it doesn't mean we don't know what her job status is or that she refused to answer.
+# Xiaoyan also labeled this as 'not paid work/not working'.  This shouldn't be set to NA then. 
+
+table(merged_df5$M03_JOB_SCORRES, useNA = "always")
+
+temp.df <- merged_df5 %>% 
+  select(SITE, MOMID, PREGID, TYPE_VISIT, M03_JOB_SCORRES)
+  
+merged_df5 <- merged_df5 %>%
+  mutate(
+    # Set certain values to NA for M03_JOB_SCORRES
+    M03_JOB_SCORRES = if_else(M03_JOB_SCORRES == 55, NA_real_, M03_JOB_SCORRES), #77 should not be set to NA.
+    
+    # Calculate OCCUPATION when TYPE_VISIT == 1 only.  We can propagate this to other TYPE VISITS. 
+    OCCUPATION = case_when(
+      TYPE_VISIT == 1 & M03_JOB_SCORRES == 4 ~ 1,
+      TYPE_VISIT == 1 & M03_JOB_SCORRES == 5 ~ 2,
+      TYPE_VISIT == 1 & M03_JOB_SCORRES %in% c(6, 7) ~ 3,
+      TYPE_VISIT == 1 & M03_JOB_SCORRES == 9 ~ 4,
+      TYPE_VISIT == 1 & M03_JOB_SCORRES == 77 ~ 5,
+      TYPE_VISIT == 1 & M03_JOB_SCORRES %in% c(1, 2, 3, 8, 88) ~ 6,
+      TRUE ~ NA_real_
+    )
+  )
+
+temp.df <- merged_df5 %>% 
+  select(SITE, MOMID, PREGID, TYPE_VISIT, M03_JOB_SCORRES, OCCUPATION)
+
+table(merged_df5$OCCUPATION, useNA = "always")
+
+# CONVERT TO FACTOR VARIABLE WITH LABELS: 
+merged_df5 <- merged_df5 %>%
+  mutate(OCCUPATION = factor(OCCUPATION, 
+                    levels = c(1, 2, 3, 4, 5, 6), 
+                    labels = c("Skilled labor", "Unskilled labor", 
+                               "Farming", 
+                               "Housewife", "No work", "Other"))
+) %>%
+  
+  # Set "Housewife" as the reference category
+  mutate(OCCUPATION = relevel(OCCUPATION, ref = "Housewife"))
+  
+str(merged_df5$OCCUPATION)  
+table(merged_df5$OCCUPATION, useNA = "always")
+
+#* **************************************************
 temp.df <- merged_df5 %>% 
   filter(SITE=="Zambia") %>% 
   filter(TYPE_VISIT==5) %>%
