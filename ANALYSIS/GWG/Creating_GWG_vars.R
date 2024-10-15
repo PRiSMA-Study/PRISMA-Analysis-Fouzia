@@ -12,6 +12,7 @@
 #*Didn't arrange when calculating lag: GWG_BW_ANC.
 #****************************************************************************
 
+
 # n = 5130 singleton (from Lynda's presentation)
 library(lubridate)
 library(gridExtra)
@@ -80,8 +81,7 @@ length(intersect(imputed_pregids, merged_pregids))
 temp.df <- merged_df %>% 
   filter(SITE=="Zambia") %>% 
   filter(TYPE_VISIT==5) %>%
-  select(SITE, MOMID, PREGID, TYPE_VISIT, M05_WEIGHT_PERES) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
-
+  select(SITE, MOMID, PREGID, TYPE_VISIT) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
 
 
 #* *******************************************************
@@ -369,6 +369,7 @@ weight_df$GA_WKS <- floor(weight_df$GA_WKS)
 
 temp.df <- weight_df %>%
   select(SITE, MOMID, PREGID, TYPE_VISIT_GA, TYPE_VISIT_UPDATED, GA_WKS)
+
 #* *******************************************************
 #* GWG FROM ENROLLMENT:
 #* *******************************************************
@@ -650,4 +651,4 @@ UploadDate = "2024-06-28"
 # Define the path to the folder containing the CSV files
 folder_path <- paste0("D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/ANALYSIS/GWG/data/Stacked Data/", UploadDate)
 getwd()
-weight_df <- read.csv(paste0('ANALYSIS/GWG/data_out/df_w_GWGvars-n-Outcomes_uploaded_', UploadDate, '.csv'))
+weight_df <- read.csv(paste0('data_out/df_w_GWGvars-n-Outcomes_uploaded_', UploadDate, '.csv'))
