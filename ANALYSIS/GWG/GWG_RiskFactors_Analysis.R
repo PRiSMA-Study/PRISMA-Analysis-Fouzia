@@ -45,10 +45,14 @@ distinct_count <- gwg_rf_df %>% # n=9102 women
 
 #* ***************************************************************************
 #* LIST RISK FACTORS:
-#* AGE_5_CAT, married, marry_age, marry_status, educated, school_yrs,
+#* AGE_5_CAT, married, marry_age, marry_status, educated, school_yrs, WEALTH_QUINT,
+#* height_index, muac, bmi_enroll, bmi_index,
 #* chew_tobacco, chew_betelnut, smoke, drink, 
-#* height_index,  bmi_enroll, bmi_index, muac, M05_MUAC_PERES,
-#* ga_wks_enroll, folic, nulliparous, num_fetus, num_miscarriage, primigravida, GRAVIDITY_CAT,
+#* nulliparous, GRAVIDITY_CAT, PREG_END_GA, ga_wks_enroll, num_miscarriage, 
+#* NOTE: PARITY, is NA; num_fetus = all 1.
+
+#* ******** MORBIDITY VARS **************
+#* ANEMIA_T1, ANEMIA_T2, ANEMIA_T3,
 #* DIAB_GEST_ANY, DIAB_GEST_DX, HDP_GROUP,
 #* HIV_ANY_POINT,
 #* MAL_POSITIVE_ENROLL, MAL_POSITIVE_ANY_VISIT, MAL_ANY_POINT,
@@ -58,12 +62,11 @@ distinct_count <- gwg_rf_df %>% # n=9102 women
 #* HCV_POSITIVE_ENROLL, HCV_POSITIVE_ANY_VISIT, HCV_ANY_POINT,
 #* HEV_IGM_POSITIVE_ENROLL,HEV_IGG_POSITIVE_ENROLL,
 #* TB_SYMP_POSITIVE_ENROLL, TB_SYMP_POSITIVE_ANY_VISIT, TB_SYMP_ANY_POINT,
-#* ANEMIA_T1, ANEMIA_T2, ANEMIA_T3,
-#* PREG_END_GA, WEALTH_QUINT ,PARITY, 
 #* DEPR_ANC20_STND,DEPR_ANC32_STND,
 #* FERRITIN70_ANC20, FERRITIN70_ANC32,
 #* RBP4_ANC20, RBP4_ANC32,
 #* VITB12_COB_ANC20, VITB12_COB_ANC32,
+#* folic,
 #* FOL_SERUM_ANC20, FOL_SERUM_ANC32,
 #* FOL_RBC_ANC20, FOL_RBC_ANC32,
 #* FOL_SERUM_ANC20, FOL_SERUM_ANC32
@@ -91,13 +94,30 @@ table(gwg_rf_df$IOM_ADEQUACY, useNA = "always")
 gwg_rf_df <- gwg_rf_df %>%
   filter(!is.na(IOM_ADEQUACY)) # Dropped n=64 rows (not 64 women).
 
-table(gwg_rf_df$educated, useNA = "always")
-table(gwg_rf_df$school_yrs, useNA = "always")
-table(gwg_rf_df$chew_tobacco, useNA = "always")
-table(gwg_rf_df$chew_betelnut, useNA = "always")
-table(gwg_rf_df$drink, useNA = "always")
-table(gwg_rf_df$muac, useNA = "always")
-table(gwg_rf_df$height_index, useNA = "always")
+###############################################
+table(gwg_rf_df$AGE_5_CAT, useNA = "always")
+table(gwg_rf_df$married, useNA = "always") # 0, 1 
+table(gwg_rf_df$marry_age, useNA = "always") # 13 - 43. Categorize this as: <18, 18-29, 30+
+
+table(gwg_rf_df$educated, useNA = "always") # 0, 1
+table(gwg_rf_df$school_yrs, useNA = "always") # 0-97
+table(gwg_rf_df$WEALTH_QUINT, useNA = "always") # 0-5, 55
+table(gwg_rf_df$height_index, useNA = "always") # 1,2,3,4
+table(gwg_rf_df$muac, useNA = "always") # Continuous var
+table(gwg_rf_df$bmi_enroll, useNA = "always") # Continuous
+table(gwg_rf_df$bmi_index, useNA = "always") # 1-4
+
+table(gwg_rf_df$chew_tobacco, useNA = "always") # 0,1.
+table(gwg_rf_df$chew_betelnut, useNA = "always") # 0,1
+table(gwg_rf_df$drink, useNA = "always") # 0,1,66
+
+table(gwg_rf_df$nulliparous, useNA = "always") # 0,1
+table(gwg_rf_df$GRAVIDITY_CAT, useNA = "always") 1-4
+table(gwg_rf_df$num_miscarriage, useNA = "always") # 0-9
+
+
+
+
 
 #* ******************************
 # FACTORIZE VARIABLES AGAIN: 
@@ -106,16 +126,23 @@ table(gwg_rf_df$height_index, useNA = "always")
 gwg_rf_df <- gwg_rf_df %>%
   mutate(AGE_5_CAT = factor(AGE_5_CAT, 
                    levels = c(1, 2, 3, 4, 5), 
-                   labels = c("18-19yo", "20-24yo", "25-29yo", 
-                              "30-34yo", "35+yo")))
+                   labels = c("18-19", "20-24", "25-29", 
+                              "30-34", "35+")))
 table(gwg_rf_df$AGE_5_CAT, useNA = "always")
+
+# EDUCATION
+gwg_rf_df <- gwg_rf_df %>%
+  mutate(educated = factor(educated, 
+                            levels = c(1, 0), 
+                            labels = c("Yes", "No")))
+table(gwg_rf_df$educated, useNA = "always")
 
 # GRAVIDITY_CAT
 gwg_rf_df <- gwg_rf_df %>%
   mutate(GRAVIDITY_CAT = factor(GRAVIDITY_CAT, 
                                 levels = c(1, 2, 3, 4), 
-                                labels = c("Primigravid", "2nd pregnancy", "3rd pregnancy", 
-                                           "4+ pregnancy")))
+                                labels = c("1", "2", "3", 
+                                           "4+")))
 table(gwg_rf_df$GRAVIDITY_CAT, useNA = "always")
 
 gwg_rf_df2 <- gwg_rf_df %>%
@@ -125,6 +152,7 @@ gwg_rf_df2 <- gwg_rf_df %>%
     IOM_ADEQUACY = first(IOM_ADEQUACY),  # or use another rule to select the IOM_ADEQUACY value
     # Take the first variable
     AGE_5_CAT = first(AGE_5_CAT),
+    educated = first(educated),
     GRAVIDITY_CAT = first(GRAVIDITY_CAT))
    #     WEALTH_QUINT = first(WEALTH_QUINT),
     #  educated = first(educated), # 0, 1
@@ -152,7 +180,7 @@ gwg_rf_df2$IOM_ADEQUACY <- relevel(gwg_rf_df2$IOM_ADEQUACY, ref = "Adequate")
 #* **************************************************
 #* 
 # List of new variables to convert to factors and include in the model
-riskfactor_vars <- c("AGE_5_CAT", "GRAVIDITY_CAT") # , "PARITY", # WEALTH_QUINT
+riskfactor_vars <- c("AGE_5_CAT", "educated", "GRAVIDITY_CAT") # , "PARITY", # WEALTH_QUINT
               # "educated", "chew_tobacco", 
               # "chew_betelnut", "smoke", "drink","height_index", 
               # "DIAB_GEST_ANY", "HIV_ANY_POINT", "MAL_ANY_POINT", "SYPH_ANY_POINT",
@@ -231,6 +259,72 @@ for (riskfactor in riskfactor_vars) {
 
 # View the full data frame with RR, CI, and category counts for all variables
 print(RR_CI_df)
+
+#* **************************************************
+#* FOREST PLOT
+#* **************************************************
+RR_CI_plot_df <- RR_CI_df %>%
+  filter(!startsWith(x = Coefficient, prefix = "(Intercept)")) %>%
+  mutate(Coefficient = str_replace(Coefficient, "AGE_5_CAT", "Age ")) %>%
+  mutate(Coefficient = str_replace(Coefficient, "educated", "Education ")) %>%
+  mutate(Coefficient = str_replace(Coefficient, "GRAVIDITY_CAT", "Gravidity "))
+
+# Add a new column to group coefficients (for faceting):
+RR_CI_plot_df <- RR_CI_plot_df %>%
+  mutate(Group = case_when(grepl("Age", Coefficient) ~ "Age",
+                           grepl("Education", Coefficient) ~ "Education",
+                           grepl("Gravidity", Coefficient) ~ "Gravidity",
+                           TRUE ~ "Other"))  # Optional: in case a coefficient doesn't match any group
+
+
+# Convert Coefficient to factor
+RR_CI_plot_df$Coefficient <- factor(RR_CI_plot_df$Coefficient, 
+                                    levels = rev(unique(RR_CI_plot_df$Coefficient)))
+
+
+# Create the forest plot with facets
+forest_plot <- RR_CI_plot_df %>%
+  ggplot(aes(y = Coefficient, x = RR)) +
+  geom_point(size = 2) +
+  geom_linerange(aes(xmin = CI_Lower, xmax = CI_Upper)) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "red") +
+  geom_text(aes(label = as.character(round(RR, 2))),
+            size = 2.5, nudge_y = 0.4) + 
+  # Use faceting to group the coefficients
+  facet_grid(Group ~ ., scales = "free_y", space = "free", switch = "y") +
+  # Add themes
+  theme_minimal() +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_text(hjust = 1))  # Adjust y-axis text
+
+# Print the plot
+forest_plot
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
