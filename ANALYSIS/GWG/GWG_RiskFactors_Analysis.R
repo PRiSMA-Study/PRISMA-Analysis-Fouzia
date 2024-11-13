@@ -24,6 +24,8 @@ library(cowplot)
 library(stringr)
 library(meta)
 library(ggpubr)
+library(cowplot) # for use in ggplot arrangement of tiles.
+library(patchwork)
 
 #******************************************************************************
 rm(list = ls())
@@ -160,15 +162,14 @@ table(gwg_rf_df$M04_MICRONUTRIENT_CMOCCUR, useNA = "always")#0,1
 #* ******************************
 # FACTORIZE VARIABLES AGAIN: 
 #* ******************************
-# dkflajf
 
 ############
 # AGE_5_CAT
 ############
 gwg_rf_df <- gwg_rf_df %>%
   mutate(AGE_5_CAT = factor(AGE_5_CAT, 
-                   levels = c(1, 2, 3, 4, 5), 
-                   labels = c("18-19", "20-24", "25-29", 
+                   levels = c(2, 1, 3, 4, 5), 
+                   labels = c("20-24", "<20", "25-29", 
                               "30-34", "35+")))
 table(gwg_rf_df$AGE_5_CAT, useNA = "always")
 
@@ -178,8 +179,8 @@ table(gwg_rf_df$AGE_5_CAT, useNA = "always")
 ############
 gwg_rf_df <- gwg_rf_df %>%
   mutate(MARRY_AGE_3_CAT = factor(MARRY_AGE_3_CAT, 
-                                  levels = c(0,1,2), 
-                                  labels = c("<18", "18-29","30+")))
+                                  levels = c(1, 0, 2), 
+                                  labels = c("18-29", "<18", "30+")))
 temp.df <-gwg_rf_df%>%
   select(SITE, MOMID, PREGID,MARRY_AGE_3_CAT)
 
@@ -205,13 +206,14 @@ gwg_rf_df <- gwg_rf_df %>%
 table(gwg_rf_df$educated, useNA = "always")
 
 ############
-# OCCUPATION
+# OCCUPATION - # No work is the ref. category.
 ############
 gwg_rf_df <- gwg_rf_df %>%
   mutate(OCCUPATION = factor(OCCUPATION, 
-                             levels = c("Skilled labor", "Unskilled labor","Farming","Housewife","No work","Other"), 
-                             labels = c("Skilled labor", "Unskilled labor","Farming","Housewife","No work","Other")))
+                             levels = c("No work", "Skilled labor", "Unskilled labor","Farming", "Housewife", "Other"), 
+                             labels = c("No work", "Skilled labor", "Unskilled labor","Farming", "Housewife", "Other")))
 table(gwg_rf_df$OCCUPATION, useNA = "always")
+str(gwg_rf_df$OCCUPATION)
 
 ##################
 # WEALTH QUINTILE
@@ -307,13 +309,13 @@ table(gwg_rf_df$bmi_index, useNA = "always")
 
 gwg_rf_df <- gwg_rf_df %>%
   mutate(BMI4CAT = factor(BMI4CAT, 
-                          levels = c(1, 2, 3, 4), 
-                          labels = c('<18.5', '18.5-<25', '25-<30', '>=30')))
+                          levels = c(2, 1, 3, 4), 
+                          labels = c('18.5-<25', '<18.5', '25-<30', '>=30')))
 
 temp.df <- gwg_rf_df %>%
   select(SITE, MOMID, PREGID, BMI4CAT)
 
-table(gwg_rf_df$BMI4CAT, useNA = "always")
+table(gwg_rf_df$BMI4CAT, useNA = "always") # Don't have anyone above 30 BMI atm.
 
 #########
 # HEIGHT
@@ -360,34 +362,45 @@ temp.df <- gwg_rf_df %>%
 table(gwg_rf_df$nulliparous, useNA = "always") # 0,1
 
 #########################
-# GRAVIDITY_CAT (1,2,3,4)
+# GRAVIDITY_CAT (1,2,3)
 #########################
 gwg_rf_df <- gwg_rf_df %>%
   mutate(GRAVIDITY_CAT = factor(GRAVIDITY_CAT, 
-                                levels = c(1, 2, 3, 4), 
-                                labels = c("1", "2", "3", 
-                                           "4+")))
+                                levels = c(1, 2, 3), 
+                                labels = c("1", "2", "3+")))
 table(gwg_rf_df$GRAVIDITY_CAT, useNA = "always")
 
 #########################
 # No. misscarriages (0-9)
 #########################
+# gwg_rf_df <- gwg_rf_df %>%
+#   mutate(MISCARRIAGE = if_else(num_miscarriage>=3, '3+', as.character(num_miscarriage)))
+
 gwg_rf_df <- gwg_rf_df %>%
-  mutate(MISCARRIAGE = if_else(num_miscarriage>=3, '3+', as.character(num_miscarriage)))
+  mutate(MISCARRIAGE = if_else(num_miscarriage>=1, 1, 0))
+
+table(gwg_rf_df$MISCARRIAGE, useNA = "always")
 
 temp.df2 <- gwg_rf_df %>%
   select(SITE, MOMID, PREGID, num_miscarriage, MISCARRIAGE)
 
-gwg_rf_df <- gwg_rf_df %>%
-  mutate(MISCARRIAGE = factor(MISCARRIAGE, 
-                              levels = c('0', '1', '2', '3+'), 
-                              labels = c('0', '1', '2', '3+')))
+# gwg_rf_df <- gwg_rf_df %>%
+#   mutate(MISCARRIAGE = factor(MISCARRIAGE, 
+#                               levels = c('0', '1', '2', '3+'), 
+#                               labels = c('0', '1', '2', '3+')))
 
 temp.df <- gwg_rf_df %>%
   select(SITE, MOMID, PREGID, num_miscarriage, MISCARRIAGE)
 
 table(gwg_rf_df$num_miscarriage, useNA = "always") # 0-9
 table(gwg_rf_df$MISCARRIAGE, useNA = "always")
+
+# CONVERT TO FACTOR VARIABLE WITH LABELS: 
+gwg_rf_df <- gwg_rf_df %>%
+  mutate(MISCARRIAGE = factor(MISCARRIAGE, 
+                             levels = c(0, 1), 
+                             labels = c("No", "Yes")))
+str(gwg_rf_df$MISCARRIAGE)   
 
 #########
 # HIV
@@ -637,6 +650,7 @@ table(gwg_rf_df$FOL_SERUM_ANY_POINT, useNA = "always")
 # ANEMIA T1, T2, T3
 ####################
 # ANEMIA_T1
+####################
 gwg_rf_df <- gwg_rf_df %>%
   mutate(ANEMIA_T1 = factor(ANEMIA_T1, 
                             levels = c(0,1,2,3), 
@@ -646,6 +660,14 @@ temp.df <- gwg_rf_df %>%
   select(SITE, MOMID, PREGID, ANEMIA_T1)
 
 table(gwg_rf_df$ANEMIA_T1, useNA = "always")
+
+####################
+# ANEMIA Yes/No
+####################
+# gwg_rf_df <- gwg_rf_df %>%
+#   mutate(ANEMIA_T1_ANY = if_else(ANEMIA_T1 %in% c('1','2','3'), 1, 0))
+# 
+# table(gwg_rf_df$ANEMIA_T1_ANY, useNA = "always")
 
 # ANEMIA_T2
 gwg_rf_df <- gwg_rf_df %>%
@@ -669,7 +691,13 @@ temp.df <- gwg_rf_df %>%
 
 table(gwg_rf_df$ANEMIA_T3, useNA = "always")
 
+####################
+# ANEMIA Yes/No
+####################
+gwg_rf_df <- gwg_rf_df %>%
+  mutate(ANEMIA_T1_ANY = if_else(ANEMIA_T1 %in% c('1','2','3'), 1, 0))
 
+table(gwg_rf_df$ANEMIA_T1_ANY, useNA = "always")
 #* *******************************************************
 #* ARRANGE AND GROUP_BY WITH RISK FACTORS:
 #* ******************************************************* 
@@ -696,11 +724,12 @@ gwg_rf_df2 <- gwg_rf_df %>%
     chew_betelnut = first(chew_betelnut),
     drink = first(drink),
     BMI4CAT = first(BMI4CAT),
-    muac = first(muac),
+   # muac = first(muac),
     height_index = first(height_index),
     PARITY = first(PARITY),
     GRAVIDITY_CAT = first(GRAVIDITY_CAT),
-    num_miscarriage = first(num_miscarriage),
+    MISCARRIAGE = first(MISCARRIAGE),
+   # num_miscarriage = first(num_miscarriage), # don't need to use this.
     HIV_ANY_POINT = first(HIV_ANY_POINT),
     MAL_POSITIVE_ENROLL = first(MAL_POSITIVE_ENROLL),
     STI_ANY_POINT = first(STI_ANY_POINT),
@@ -750,7 +779,7 @@ temp.df <- gwg_rf_df2 %>%
 riskfactor_vars <- c('AGE_5_CAT', 'MARRY_AGE_3_CAT','married', 'educated', 
                      'OCCUPATION', 'WEALTH_QUINT', 'smoke', # 'school_yrs',
                      'chew_tobacco', 'chew_betelnut','drink', 'BMI4CAT', #'muac',
-                     'height_index', 'PARITY', 'GRAVIDITY_CAT', 'num_miscarriage',
+                     'height_index', 'PARITY', 'GRAVIDITY_CAT', 'MISCARRIAGE',
                      'HIV_ANY_POINT', 'MAL_POSITIVE_ENROLL', 'STI_ANY_POINT', 
                      'SYPH_ANY_POINT', 'HBV_ANY_POINT', 'HCV_ANY_POINT', 
                      'HEV_IGM_POSITIVE_ENROLL', 'HEV_IGG_POSITIVE_ENROLL',
@@ -865,9 +894,9 @@ for (site in sites) {
 }
 
 # Round the estimates:
-RR_CI_df$logRR <- round(RR_CI_df$logRR, 2)
-RR_CI_df$CI_Lower <- round(RR_CI_df$CI_Lower, 2)
-RR_CI_df$CI_Upper <- round(RR_CI_df$CI_Upper, 2)
+RR_CI_df$logRR <- round(RR_CI_df$logRR, 3)
+RR_CI_df$CI_Lower <- round(RR_CI_df$CI_Lower, 3)
+RR_CI_df$CI_Upper <- round(RR_CI_df$CI_Upper, 3)
 # RR_CI_df$Adequate_Perc <- round(RR_CI_df$Adequate_Perc, 1)
 # RR_CI_df$Inadequate_Perc <- round(RR_CI_df$Inadequate_Perc, 1)
 # RR_CI_df$Excessive_Perc <- round(RR_CI_df$Excessive_Perc, 1)
@@ -881,6 +910,88 @@ RR_CI_df <- RR_CI_df %>%
   mutate(IOM_adequacy_label = str_split(Coefficient, ":", simplify = TRUE)[2], # comes from stringr
          Riskfactor_level = str_split(Coefficient, ":", simplify = TRUE)[1]) %>%
   select(-Coefficient)
+
+#* ***************************************************
+#* RENAME RISK FACTORS
+#* ***************************************************
+RR_CI_df <- RR_CI_df %>%
+  mutate(Riskfactor_level = recode_factor(Riskfactor_level,
+                                          # DEMOGRAPHICS
+                                          'AGE_5_CAT<20' = 'Age <20',
+                                          'AGE_5_CAT20-24' = 'Age 20-24',
+                                          'AGE_5_CAT25-29' = 'Age 25-29',
+                                          'AGE_5_CAT30-34' = 'Age 30-34',
+                                          'AGE_5_CAT35+' = 'Age 35+',
+                                          
+                                          'BMI4CAT<18.5' = 'BMI underweight',
+                                          'BMI4CAT18.5-<25' = 'BMI normal',
+                                          'BMI4CAT25-<30' = 'BMI overweight',
+                                          'BMI4CAT>=30' = 'BMI obese',
+                                          
+                                          'MarriedNo' = 'Not married',
+                                          
+                                          'MARRY_AGE_3_CAT<18' = 'Age married <18',
+                                          'MARRY_AGE_3_CAT18-29' = 'Age married 18-29',
+                                          'MARRY_AGE_3_CAT30+' = 'Age married 30+',
+                                          
+                                          'chew_betelnutYes' = 'Betelnut use',
+                                          'chew_tobaccoYes' = 'Tobacco use',
+                                          'drinkYes' = 'Alcohol use',
+                                          'smoke1' = 'Smoking Yes',
+                                          
+                                          'height_index<145' = 'Height <145',
+                                          'height_index145-<150' = 'Height 145-<150',
+                                          'height_index150-<155' = 'Height 150-<155',
+                                          'height_index>=155' = 'Height 155+',
+                                          
+                                          'GRAVIDITY_CAT1' = 'Gravidity 1',
+                                          'GRAVIDITY_CAT2' = 'Gravidity 2',
+                                          'GRAVIDITY_CAT3' = 'Gravidity 3+',
+                                          
+                                          'MISCARRIAGEYes' = 'Miscarriage Yes',
+                                          
+                                          'OCCUPATIONNo work' = 'Occupation No work', # Ref.
+                                          'OCCUPATIONSkilled labor' = 'Occupation Skilled labor',
+                                          'OCCUPATIONUnskilled labor' = 'Occupation Unskilled labor',
+                                          'OCCUPATIONOther' = 'Occupation Other',
+                                          'OCCUPATIONHousewife' = 'Occupation Housewife',
+                                          'OCCUPATIONFarming' = 'Occupation Farming',
+                                          
+                                          'PARITY1' = 'Parity 1', # 0 is ref.
+                                          'PARITY>=2' = 'Parity 2+',
+                                          
+                                          'WEALTH_QUINT1' = "WealthQ 1st",
+                                          'WEALTH_QUINT2' = "WealthQ 2nd",
+                                          'WEALTH_QUINT3' = "WealthQ 3rd",
+                                          'WEALTH_QUINT4' = "WealthQ 4th",
+                                          'WEALTH_QUINT5' = "WealthQ 5th",
+                                          
+                                          # NUTRITION
+                                          # Cobalamin
+                                          'VITB12_COB_ANY_POINTDeficient' = 'Serum B12 at any point - Deficient',
+                                          'VITB12_COB_ANY_POINTInsufficient' = 'Serum B12 at any point - Insufficient',
+                                          'VITB12_COB_ANY_POINTSufficient' = 'Serum B12 at any point - Sufficient',
+                                          
+                                          # Vitamin A
+                                          'RBP4_ANY_POINTNo deficiency' = 'RBP4 at any point - No deficiency',
+                                          'RBP4_ANY_POINTMild deficiency' = 'RBP4 at any point - Mild deficiency',
+                                          'RBP4_ANY_POINTModerate deficiency' = 'RBP4 at any point - Moderate deficiency',
+                                          'RBP4_ANY_POINTSevere deficiency' = 'RBP4 at any point - Severe deficiency',
+                                          
+                                          'M04_MICRONUTRIENT_CMOCCUR1' = 'Received MMS supp.',
+                                          
+                                          'FOL_SERUM_ANY_POINTDeficient' = 'Serum folic acid level - Deficient',
+                                          'FOL_SERUM_ANY_POINTPossibly deficient' = 'Serum folic acid level - Possibly deficient',
+                                          'FOL_SERUM_ANY_POINTNormal' = 'Serum folic acid level - Normal',
+                                          'FOL_SERUM_ANY_POINTElevated' = 'Serum folic acid level - Elevated',
+                                          
+                                          'FERRITIN70_ANY_POINTAbove threshold' = 'Above 70ug/L threshold',
+                                          'FERRITIN70_ANY_POINTBelow threshold' = 'Below 70ug/L threshold',
+                                          
+                                          ))
+
+#TODO I need to relevel all these nutrient vars. 
+
 
 #*******************************************************************************
 # META ANALYSIS - test 
@@ -900,23 +1011,25 @@ temp.metagen <- metagen(logRR, logSE,
 print(temp.metagen)
 forest(temp.metagen)
 
+#* ***************************************************
+#* WRITE OUT THE FILE
+#* ***************************************************
 # Create a list of risk factors as a data frame and label it as Demo, Clinical and Micronutrients.
 riskfactor_vars_df <- data.frame(Variable = riskfactor_vars)
 write.csv(riskfactor_vars_df, file = 'data_out/gwg_riskfactor_vars.csv', row.names = FALSE)
 riskfactor_cat_df <- read.csv(file = 'data_out/gwg_riskfactor_vars_category.csv')
 
-# RR_CI_df <- left_join(RR_CI_df, riskfactor_cat_df,
-#                        by = c("Variable" = "riskfactor"))
+
 
 #*******************************************************************************
 meta_results <- data.frame()
 
 for(riskfactor in riskfactor_vars) {
-  print(riskfactor)
-  
-  riskfactor_category <- riskfactor_cat_df %>%
+  riskfactor_cat <- riskfactor_cat_df %>%
     filter(riskfactor == Variable) %>%
     pull(riskfactor_category)
+  
+  print(paste0(riskfactor, " (", riskfactor_cat, ")"))
   
   for(iom_adequacy in c("Excessive", "Inadequate")) {
     print(paste("      ", iom_adequacy))
@@ -931,7 +1044,7 @@ for(riskfactor in riskfactor_vars) {
       
       if(nrow(atomic_rr_df)==0){
         meta_results <- rbind(meta_results, 
-                              data.frame(riskfactor_category, riskfactor, riskfactor_level, iom_adequacy,
+                              data.frame(riskfactor_cat, riskfactor, riskfactor_level, iom_adequacy,
                                          n_studies=0, n_subjects=0, pooled_rr=NA, pooled_lower_ci=NA, pooled_upper_ci=NA))
         next
       }
@@ -958,7 +1071,7 @@ for(riskfactor in riskfactor_vars) {
       
       # Add in to the meta_results
       meta_results <- rbind(meta_results, 
-                            data.frame(riskfactor_category, riskfactor, riskfactor_level, iom_adequacy,
+                            data.frame(riskfactor_cat, riskfactor, riskfactor_level, iom_adequacy,
                                        n_studies, n_subjects, pooled_rr, pooled_lower_ci, pooled_upper_ci))
     }
   }
@@ -983,7 +1096,7 @@ colScale <- c("RR>1.00, CI-sig" = "orangered",
 tileplot_list <- list()
 for (rf_cat in unique(riskfactor_cat_df$riskfactor_category)) {
   tilemap_cat_data <- tilemap_data %>%
-    filter(riskfactor_category == rf_cat)
+    filter(riskfactor_cat == rf_cat)
   tileplot <- tilemap_cat_data %>%
     ggplot() +
     aes(x = iom_adequacy, y = riskfactor_level, fill = RR_sig) + 
@@ -992,10 +1105,24 @@ for (rf_cat in unique(riskfactor_cat_df$riskfactor_category)) {
   
   tileplot_list[[length(tileplot_list) + 1]] <- tileplot  
 }
-ggarrange(plotlist = tileplot_list)
+plot_grid(plotlist = tileplot_list, 
+          byrow = FALSE)
+
+ggsave(plot = tileplot_list[[1]],
+       filename = 'data_out/gwg_riskfactors_demographics.pdf', height = 6, width = 6)
 
 
+ggsave(plot = tileplot_list[[2]],
+       filename = 'data_out/gwg_riskfactors_clinical.pdf', height = 6, width = 6)
 
+ggsave(plot = tileplot_list[[3]],
+       filename = 'data_out/gwg_riskfactors_nutrients.pdf', height = 3, width = 7)
+
+
+# free(tileplot_list[[1]])/free(tileplot_list[[2]])/free(tileplot_list[[3]])
+
+#* **************************************************
+#* STOP HERE. BELOW IS EXTRA
 #* **************************************************
 #* FOREST PLOT
 #* **************************************************
