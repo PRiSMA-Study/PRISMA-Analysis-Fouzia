@@ -419,6 +419,7 @@ temp.df <-merged_df4%>%
   select(SITE, MOMID, PREGID,marry_age,MARRY_AGE_3_CAT)
 
 table(merged_df4$marry_age,merged_df4$MARRY_AGE_3_CAT,useNA = "always")
+table(merged_df4$MARRY_AGE_3_CAT, useNA = "always")
 
 
 # M03_JOB_SCORRES: 
@@ -441,7 +442,7 @@ table(merged_df4$marry_age,merged_df4$MARRY_AGE_3_CAT,useNA = "always")
 # 3, Subsistence/commercial farming = Farming
 # 4, Housewife
 # 5, No work
-# 6, Other
+# 6, Other (includes salaried worker, small business, business owner, 'Other' and Fishing.)
 
 #TODO: FF - 77 here just means that she's not working, it doesn't mean we don't know what her job status is or that she refused to answer.
 # Xiaoyan also labeled this as 'not paid work/not working'.  This shouldn't be set to NA then. 
@@ -520,8 +521,7 @@ merged_df4 <- merged_df4 %>%
   # I am assigning her as 1 = which means she's primigravid. 
   mutate(GRAVIDITY_CAT = case_when(GRAVIDITY==0 ~ 1, 
                                    GRAVIDITY==1 ~ 2,
-                                   GRAVIDITY==2 ~ 3,
-                                   GRAVIDITY>=3 ~ 4,
+                                   GRAVIDITY>=2 ~ 3,
                                    TRUE ~ as.numeric(NA)))
 
 temp.df <- merged_df4 %>%
@@ -788,7 +788,7 @@ merged_df4 %>% distinct (MOMID, PREGID, SITE, PRETERMBIRTH_LT34, .keep_all = TRU
 merged_df4 %>% distinct (MOMID, PREGID, SITE, PRETERMBIRTH_LT37, .keep_all = TRUE) %>%
   count(PRETERMBIRTH_LT37)
 
-temp.df <- merged_df5 %>% 
+temp.df <- merged_df4 %>% 
   select(SITE, MOMID, PREGID, INFANTID, TYPE_VISIT, PRETERMBIRTH_LT34, PRETERMBIRTH_LT37)
 
 #######
