@@ -23,6 +23,7 @@ library(glmnet)
 library(cowplot)
 library(stringr)
 library(meta)
+library(ggpubr)
 
 #******************************************************************************
 rm(list = ls())
@@ -159,6 +160,7 @@ table(gwg_rf_df$M04_MICRONUTRIENT_CMOCCUR, useNA = "always")#0,1
 #* ******************************
 # FACTORIZE VARIABLES AGAIN: 
 #* ******************************
+# dkflajf
 
 ############
 # AGE_5_CAT
@@ -758,6 +760,8 @@ riskfactor_vars <- c('AGE_5_CAT', 'MARRY_AGE_3_CAT','married', 'educated',
                      'FOL_RBC_ANY_POINT', 'FOL_SERUM_ANY_POINT', 
                      'M04_MICRONUTRIENT_CMOCCUR')
 
+
+
 lapply(gwg_rf_df2[, riskfactor_vars], levels) # Checks how many levels the variables have. 
 
 # Figure out why some variables are not working like betelnut for SAS.
@@ -896,11 +900,24 @@ temp.metagen <- metagen(logRR, logSE,
 print(temp.metagen)
 forest(temp.metagen)
 
+# Create a list of risk factors as a data frame and label it as Demo, Clinical and Micronutrients.
+riskfactor_vars_df <- data.frame(Variable = riskfactor_vars)
+write.csv(riskfactor_vars_df, file = 'data_out/gwg_riskfactor_vars.csv', row.names = FALSE)
+riskfactor_cat_df <- read.csv(file = 'data_out/gwg_riskfactor_vars_category.csv')
+
+# RR_CI_df <- left_join(RR_CI_df, riskfactor_cat_df,
+#                        by = c("Variable" = "riskfactor"))
+
 #*******************************************************************************
 meta_results <- data.frame()
 
 for(riskfactor in riskfactor_vars) {
   print(riskfactor)
+  
+  riskfactor_category <- riskfactor_cat_df %>%
+    filter(riskfactor == Variable) %>%
+    pull(riskfactor_category)
+  
   for(iom_adequacy in c("Excessive", "Inadequate")) {
     print(paste("      ", iom_adequacy))
     atomic_rr_df_all_levels <- RR_CI_df %>%
@@ -914,7 +931,7 @@ for(riskfactor in riskfactor_vars) {
       
       if(nrow(atomic_rr_df)==0){
         meta_results <- rbind(meta_results, 
-                              data.frame(riskfactor, riskfactor_level, iom_adequacy,
+                              data.frame(riskfactor_category, riskfactor, riskfactor_level, iom_adequacy,
                                          n_studies=0, n_subjects=0, pooled_rr=NA, pooled_lower_ci=NA, pooled_upper_ci=NA))
         next
       }
@@ -941,14 +958,41 @@ for(riskfactor in riskfactor_vars) {
       
       # Add in to the meta_results
       meta_results <- rbind(meta_results, 
-                            data.frame(riskfactor, riskfactor_level, iom_adequacy,
+                            data.frame(riskfactor_category, riskfactor, riskfactor_level, iom_adequacy,
                                        n_studies, n_subjects, pooled_rr, pooled_lower_ci, pooled_upper_ci))
-      
     }
   }
 }
+#* **************************************************
+# TILE MAP OF RISK FACTORS
+#* **************************************************
+tilemap_data <- meta_results %>%
+  mutate(RR_sig = case_when((pooled_rr>1.00 & pooled_lower_ci>1 & pooled_upper_ci>1) ~ "RR>1.00, CI-sig",
+                            (pooled_rr<1.00 & pooled_lower_ci <1 & pooled_upper_ci<1) ~ "RR<1.00, CI-sig",
+                            TRUE~ "NS"))
 
+tilemap_data$RR_sig <- factor(tilemap_data$RR_sig, 
+                              levels=c("RR>1.00, CI-sig", "RR<1.00, CI-sig", 
+                                       "NS"),
+                              ordered = TRUE)
 
+colScale <- c("RR>1.00, CI-sig" = "orangered", 
+              "RR<1.00, CI-sig" = "dodgerblue", 
+              "NS" = "gray") 
+
+tileplot_list <- list()
+for (rf_cat in unique(riskfactor_cat_df$riskfactor_category)) {
+  tilemap_cat_data <- tilemap_data %>%
+    filter(riskfactor_category == rf_cat)
+  tileplot <- tilemap_cat_data %>%
+    ggplot() +
+    aes(x = iom_adequacy, y = riskfactor_level, fill = RR_sig) + 
+    geom_tile(color = "white", alpha = 0.8) + 
+    scale_fill_manual(values = colScale) 
+  
+  tileplot_list[[length(tileplot_list) + 1]] <- tileplot  
+}
+ggarrange(plotlist = tileplot_list)
 
 
 
