@@ -233,8 +233,8 @@ temp.df <- gwg_rf_df %>%
 
 gwg_rf_df <- gwg_rf_df %>%
   mutate(WEALTH_QUINT = factor(WEALTH_QUINT, 
-                                levels = c(1, 2, 3, 4, 5), 
-                                labels = c(1, 2, 3, 4, 5)))
+                                levels = c(5, 1, 2, 3, 4), # Highest quintile is the ref.
+                                labels = c(5, 1, 2, 3, 4)))
 
 table(gwg_rf_df$WEALTH_QUINT, useNA = "always")
 
@@ -585,8 +585,8 @@ table(gwg_rf_df$DEPR_ANY_POINT, useNA = "always")
 ###########
 gwg_rf_df <- gwg_rf_df %>%
   mutate(FERRITIN70_ANY_POINT= factor(FERRITIN70_ANY_POINT,
-                                      levels = c(1,2),
-                                      labels = c("Below threshold", "Above threshold")))
+                                      levels = c(2, 1),
+                                      labels = c("Above threshold", "Below threshold")))
 
 temp.df <- gwg_rf_df %>%
   select(SITE, MOMID, PREGID, FERRITIN70_ANY_POINT)
@@ -598,8 +598,8 @@ table(gwg_rf_df$FERRITIN70_ANY_POINT, useNA = "always")
 ###########
 gwg_rf_df <- gwg_rf_df %>%
   mutate(RBP4_ANY_POINT= factor(RBP4_ANY_POINT,
-                                levels = c(1,2,3,4),
-                                labels = c("Severe deficiency", "Moderate deficiency","Mild deficiency","No deficiency")))
+                                levels = c(4, 1, 2, 3),
+                                labels = c("No deficiency", "Severe deficiency", "Moderate deficiency","Mild deficiency")))
 
 temp.df <- gwg_rf_df %>%
   select(SITE, MOMID, PREGID, RBP4_ANY_POINT)
@@ -612,8 +612,8 @@ table(gwg_rf_df$RBP4_ANY_POINT, useNA = "always")
 ###########
 gwg_rf_df <- gwg_rf_df %>%
   mutate(VITB12_COB_ANY_POINT= factor(VITB12_COB_ANY_POINT,
-                                      levels = c(1,2,3),
-                                      labels = c("Deficient", "Insufficient", "Sufficient")))
+                                      levels = c(3, 1, 2),
+                                      labels = c("Sufficient", "Deficient", "Insufficient")))
 
 temp.df <- gwg_rf_df %>%
   select(SITE, MOMID, PREGID, VITB12_COB_ANY_POINT)
@@ -625,8 +625,8 @@ table(gwg_rf_df$VITB12_COB_ANY_POINT, useNA = "always")
 ##########################
 gwg_rf_df <- gwg_rf_df %>%
   mutate(FOL_RBC_ANC20= factor(FOL_RBC_ANC20,
-                               levels = c(1,2),
-                               labels = c("Low", "Normal")))
+                               levels = c(2, 1),
+                               labels = c("Normal", "Low")))
 
 temp.df <- gwg_rf_df %>%
   select(SITE, MOMID, PREGID, FOL_RBC_ANC20)
@@ -638,8 +638,8 @@ table(gwg_rf_df$FOL_RBC_ANC20, useNA = "always")
 ##########################
 gwg_rf_df <- gwg_rf_df %>%
   mutate(FOL_SERUM_ANY_POINT= factor(FOL_SERUM_ANY_POINT,
-                                     levels = c(1,2),
-                                     labels = c("Low", "Normal")))
+                                     levels = c(2, 1),
+                                     labels = c("Normal", "Low")))
 
 temp.df <- gwg_rf_df %>%
   select(SITE, MOMID, PREGID, FOL_SERUM_ANY_POINT)
@@ -946,7 +946,7 @@ RR_CI_df <- RR_CI_df %>%
                                           
                                           'GRAVIDITY_CAT1' = 'Gravidity 1',
                                           'GRAVIDITY_CAT2' = 'Gravidity 2',
-                                          'GRAVIDITY_CAT3' = 'Gravidity 3+',
+                                          'GRAVIDITY_CAT3+' = 'Gravidity 3+',
                                           
                                           'MISCARRIAGEYes' = 'Miscarriage Yes',
                                           
@@ -985,13 +985,8 @@ RR_CI_df <- RR_CI_df %>%
                                           'FOL_SERUM_ANY_POINTNormal' = 'Serum folic acid level - Normal',
                                           'FOL_SERUM_ANY_POINTElevated' = 'Serum folic acid level - Elevated',
                                           
-                                          'FERRITIN70_ANY_POINTAbove threshold' = 'Above 70ug/L threshold',
-                                          'FERRITIN70_ANY_POINTBelow threshold' = 'Below 70ug/L threshold',
-                                          
-                                          ))
-
-#TODO I need to relevel all these nutrient vars. 
-
+                                          'FERRITIN70_ANY_POINTAbove threshold' = 'Ferritin above 70ug/L threshold',
+                                          'FERRITIN70_ANY_POINTBelow threshold' = 'Ferritin below 70ug/L threshold'))
 
 #*******************************************************************************
 # META ANALYSIS - test 
@@ -1011,15 +1006,13 @@ temp.metagen <- metagen(logRR, logSE,
 print(temp.metagen)
 forest(temp.metagen)
 
-#* ***************************************************
-#* WRITE OUT THE FILE
-#* ***************************************************
+#* **********************************************************
+#* WRITE OUT THE RISK FACTOR LABELS AND CATEGORIES TO A FILE
+#* **********************************************************
 # Create a list of risk factors as a data frame and label it as Demo, Clinical and Micronutrients.
 riskfactor_vars_df <- data.frame(Variable = riskfactor_vars)
 write.csv(riskfactor_vars_df, file = 'data_out/gwg_riskfactor_vars.csv', row.names = FALSE)
 riskfactor_cat_df <- read.csv(file = 'data_out/gwg_riskfactor_vars_category.csv')
-
-
 
 #*******************************************************************************
 meta_results <- data.frame()
@@ -1076,6 +1069,8 @@ for(riskfactor in riskfactor_vars) {
     }
   }
 }
+
+write.csv(x = meta_results, file = 'data_out/GWG_Metaanalysis_RiskFactors_20240628.csv', row.names = FALSE)
 #* **************************************************
 # TILE MAP OF RISK FACTORS
 #* **************************************************
