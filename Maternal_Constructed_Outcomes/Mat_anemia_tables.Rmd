@@ -1,31 +1,13 @@
 ---
-title: "Mat_anemia"
-author: "Fouzia Farooq"
-date: "`r Sys.Date()`"
-output: html_document
----
-
----
-title: "<span style='font-size: 18px'> <span style='text-align: center'> PRISMA-Maternal-Outcomes (Issued: 2023-09-27)"
+title:  "<span style='font-size: 18px'> <span style='text-align: center'> PRISMA-Maternal-Outcomes (Maternal Anemia) (Issued: `r Sys.Date()`)"
+author: "Author: Fouzia Farooq"
 output:
   html_document:
     df_print: paged
     toc: yes
     toc_depth: 4
-  word_document:
-    toc: yes
-    toc_depth: '4'
-  pdf_document:
-    toc: yes
-    toc_depth: '4'
-    df_print: kable
-always_allow_html: true
+ 
 
-# knit: (function(inputFile, encoding) { 
-#       out_dir <- 'output';
-#       rmarkdown::render(inputFile,
-#                         encoding=encoding, 
-#                         output_file=file.path(dirname(inputFile), out_dir, 'PRISMA-Maternal-Outcomes-Report')) })
 ---
 
 &nbsp;
@@ -35,7 +17,7 @@ always_allow_html: true
 
 
 ##### **Includes data from synapse last updated:** {.unlisted .unnumbered}
-#####  2023-09-15 {.unlisted .unnumbered}
+#####  2023-10-13 {.unlisted .unnumbered}
 
 
 ```{css, echo=FALSE}
@@ -64,8 +46,8 @@ library(RColorBrewer)
 ```
 
 ```{r}
-# df <- read.csv('data_out/mat_anemia_analysis.csv')
-df <- anemia_df # the file that is generated in 'Mat_anemia_analysis.Rmd'
+anemia_df <- read.csv('../data_out/anemia_fortables_20231020.csv')
+df <- anemia_df 
 ```
 \newpage
 
@@ -80,24 +62,36 @@ df <- anemia_df # the file that is generated in 'Mat_anemia_analysis.Rmd'
 
 Table 1: Anemia
 ```{r}
+
+#TODO: SHOULD I DO THESE OUT OF COMPLETED FORMS? MNH06_COMPLETED
 anemia_table <- df %>%
   rowwise() %>%
   group_by(SITE) %>%
   summarise(
-    "Missing M08_CBC_HB_LBORRES_1 = NA, n (%)" =
-      paste0(sum(is.na(M08_CBC_HB_LBORRES_1)),
+    "Missing CBC_HB_LBORRES at Visit 1, n (%)" =
+      paste0(sum(is.na(M08_CBC_HB_LBORRES_1) & 
+                   ENROLL_PASS==1, na.rm = TRUE),
              " (",
-             format(round(sum(is.na(M08_CBC_HB_LBORRES_1))/n()*100, 2),nsmall=2, digits=3),
+             format(round(sum(is.na(M08_CBC_HB_LBORRES_1) & 
+                                ENROLL_PASS==1, na.rm = TRUE)/n()*100, 2),nsmall=2, digits=3),
              ")"),
-    "Missing M06_HB_POC_LBORRES_1 = NA, n (%)" =
-      paste0(sum(is.na(M06_HB_POC_LBORRES_1)),
+    
+    "Missing HB_POC_LBORRES at Visit 1, n (%)" =
+      paste0(sum(is.na(M06_HB_POC_LBORRES_1) & 
+                   ENROLL_PASS==1, na.rm = TRUE),
              " (",
-             format(round(sum(is.na(M06_HB_POC_LBORRES_1))/n()*100, 2),nsmall=2, digits=3),
+             format(round(sum(is.na(M06_HB_POC_LBORRES_1) & 
+                                ENROLL_PASS==1, na.rm = TRUE)/n()*100, 2),nsmall=2, digits=3),
              ")"),
-    "Missing both at Visit 1 = NA, n (%)" =
-      paste0(sum(is.na(M08_CBC_HB_LBORRES_1) & is.na(M06_HB_POC_LBORRES_1)),
+    
+    "Missing both at Visit 1, n (%)" =
+      paste0(sum(is.na(M08_CBC_HB_LBORRES_1) & 
+                   is.na(M06_HB_POC_LBORRES_1) & 
+                   ENROLL_PASS==1, na.rm = TRUE),
              " (",
-             format(round(sum(is.na(M08_CBC_HB_LBORRES_1) & is.na(M06_HB_POC_LBORRES_1))/n()*100, 2), nsmall=2, digits=3),
+             format(round(sum(is.na(M08_CBC_HB_LBORRES_1) & 
+                                is.na(M06_HB_POC_LBORRES_1) & 
+                                ENROLL_PASS==1, na.rm = TRUE)/n()*100, 2), nsmall=2, digits=3),
              ")"),
     # "anemia category high " = 
     #   paste0(sum(MAT_ANEMIA_MEAS1 == "high hb >=15g/dl")),
@@ -106,92 +100,127 @@ anemia_table <- df %>%
     # ")")
     
     # VISIT 2
-    "Missing M08_CBC_HB_LBORRES_2 = NA, n (%)" =
-      paste0(sum(is.na(M08_CBC_HB_LBORRES_2)),
+    "Missing CBC_HB_LBORRES at Visit 2, n (%)" =
+      paste0(sum(is.na(M08_CBC_HB_LBORRES_2) &
+                   ANC20_PASS==1, na.rm = TRUE),
              " (",
-             format(round(sum(is.na(M08_CBC_HB_LBORRES_2))/n()*100, 2),nsmall=2, digits=3),
-             ")"),
-    "Missing M06_HB_POC_LBORRES_2 = NA, n (%)" =
-      paste0(sum(is.na(M06_HB_POC_LBORRES_2)),
-             " (",
-             format(round(sum(is.na(M06_HB_POC_LBORRES_2))/n()*100, 2),nsmall=2, digits=3),
+             format(round(sum(is.na(M08_CBC_HB_LBORRES_2) &
+                   ANC20_PASS==1, na.rm = TRUE)/n()*100, 2),nsmall=2, digits=3),
              ")"),
     
-    "Missing both at Visit 2 = NA, n (%)" =
-      paste0(sum(is.na(M08_CBC_HB_LBORRES_2) & is.na(M06_HB_POC_LBORRES_2)),
+    "Missing HB_POC_LBORRES at Visit 2, n (%)" =
+      paste0(sum(is.na(M06_HB_POC_LBORRES_2) &
+                   ANC20_PASS==1, na.rm = TRUE),
              " (",
-             format(round(sum(is.na(M08_CBC_HB_LBORRES_2) & is.na(M06_HB_POC_LBORRES_2))/n()*100, 2), nsmall=2, digits=3),
+             format(round(sum(is.na(M06_HB_POC_LBORRES_2)&
+                   ANC20_PASS==1, na.rm = TRUE)/n()*100, 2),nsmall=2, digits=3),
              ")"),
+    
+    "Missing both at Visit 2, n (%)" =
+      paste0(sum(is.na(M08_CBC_HB_LBORRES_2) & 
+                   is.na(M06_HB_POC_LBORRES_2) &
+                   ANC20_PASS==1, na.rm = TRUE),
+             " (",
+             format(round(sum(is.na(M08_CBC_HB_LBORRES_2) & 
+                                is.na(M06_HB_POC_LBORRES_2) &
+                   ANC20_PASS==1, na.rm = TRUE)/n()*100, 2), nsmall=2, digits=3),
+             ")"),
+    
     
     # VISIT 3
-    "Missing M08_CBC_HB_LBORRES_3 = NA, n (%)" =
-      paste0(sum(is.na(M08_CBC_HB_LBORRES_3)),
+    "Missing CBC_HB_LBORRES at Visit 3, n (%)" =
+      paste0(sum(is.na(M08_CBC_HB_LBORRES_3) &
+                   ANC28_PASS==1, na.rm = TRUE),
              " (",
-             format(round(sum(is.na(M08_CBC_HB_LBORRES_3))/n()*100, 2),nsmall=2, digits=3),
+             format(round(sum(is.na(M08_CBC_HB_LBORRES_3) &
+                   ANC28_PASS==1, na.rm = TRUE)/n()*100, 2),nsmall=2, digits=3),
              ")") ,
     
-    "Missing M06_HB_POC_LBORRES_3 = NA, n (%)" =
-      paste0(sum(is.na(M06_HB_POC_LBORRES_3)),
+    "Missing HB_POC_LBORRES at Visit 3, n (%)" =
+      paste0(sum(is.na(M06_HB_POC_LBORRES_3) &
+                   ANC28_PASS==1, na.rm = TRUE),
              " (",
-             format(round(sum(is.na(M06_HB_POC_LBORRES_3))/n()*100, 2),nsmall=2, digits=3),
+             format(round(sum(is.na(M06_HB_POC_LBORRES_3) &
+                   ANC28_PASS==1, na.rm = TRUE)/n()*100, 2),nsmall=2, digits=3),
              ")"),
     
-        "Missing both at Visit 3 = NA, n (%)" =
-      paste0(sum(is.na(M08_CBC_HB_LBORRES_3) & is.na(M06_HB_POC_LBORRES_3)),
+        "Missing both at Visit 3, n (%)" =
+      paste0(sum(is.na(M08_CBC_HB_LBORRES_3) & 
+                   is.na(M06_HB_POC_LBORRES_3) &
+                   ANC28_PASS==1, na.rm = TRUE),
              " (",
-             format(round(sum(is.na(M08_CBC_HB_LBORRES_3) & is.na(M06_HB_POC_LBORRES_3))/n()*100, 2), nsmall=2, digits=3),
+             format(round(sum(is.na(M08_CBC_HB_LBORRES_3) & 
+                                is.na(M06_HB_POC_LBORRES_3) &
+                   ANC28_PASS==1, na.rm = TRUE)/n()*100, 2), nsmall=2, digits=3),
              ")"),
     
     
     # VISIT 4
-    "Missing M08_CBC_HB_LBORRES_4 = NA, n (%)" =
+    "Missing CBC_HB_LBORRES at Visit 4, n (%)" =
       paste0(sum(is.na(M08_CBC_HB_LBORRES_4)),
              " (",
-             format(round(sum(is.na(M08_CBC_HB_LBORRES_4))/n()*100, 2),nsmall=2, digits=3),
+             format(round(sum(is.na(M08_CBC_HB_LBORRES_4) &
+                   ANC32_PASS==1, na.rm = TRUE)/n()*100, 2),nsmall=2, digits=3),
              ")"),
-    "Missing M06_HB_POC_LBORRES_4 = NA, n (%)" =
-      paste0(sum(is.na(M06_HB_POC_LBORRES_4)),
+    
+    "Missing HB_POC_LBORRES at Visit 4, n (%)" =
+      paste0(sum(is.na(M06_HB_POC_LBORRES_4) &
+                   ANC32_PASS==1, na.rm = TRUE),
              " (",
-             format(round(sum(is.na(M06_HB_POC_LBORRES_4))/n()*100, 2),nsmall=2, digits=3),
+             format(round(sum(is.na(M06_HB_POC_LBORRES_4) &
+                   ANC32_PASS==1, na.rm = TRUE)/n()*100, 2),nsmall=2, digits=3),
              ")"),
-        "Missing both at Visit 4 = NA, n (%)" =
-      paste0(sum(is.na(M08_CBC_HB_LBORRES_4) & is.na(M06_HB_POC_LBORRES_4)),
+    
+        "Missing both at Visit 4, n (%)" =
+      paste0(sum(is.na(M08_CBC_HB_LBORRES_4) & 
+                   is.na(M06_HB_POC_LBORRES_4) &
+                   ANC32_PASS==1, na.rm = TRUE),
              " (",
-             format(round(sum(is.na(M08_CBC_HB_LBORRES_4) & is.na(M06_HB_POC_LBORRES_4))/n()*100, 2), nsmall=2, digits=3),
+             format(round(sum(is.na(M08_CBC_HB_LBORRES_4) & 
+                                is.na(M06_HB_POC_LBORRES_4) &
+                   ANC32_PASS==1, na.rm = TRUE)/n()*100, 2), nsmall=2, digits=3),
              ")"),
     
     # VISIT 5
-    "Missing M08_CBC_HB_LBORRES_5 = NA, n (%)" =
-      paste0(sum(is.na(M08_CBC_HB_LBORRES_5)),
+    "Missing CBC_HB_LBORRES at Visit 5, n (%)" =
+      paste0(sum(is.na(M08_CBC_HB_LBORRES_5) &
+                   ANC36_PASS==1, na.rm = TRUE),
              " (",
-             format(round(sum(is.na(M08_CBC_HB_LBORRES_5))/n()*100, 2),nsmall=2, digits=3),
+             format(round(sum(is.na(M08_CBC_HB_LBORRES_5) &
+                   ANC36_PASS==1, na.rm = TRUE)/n()*100, 2),nsmall=2, digits=3),
              ")") ,
-    "Missing M06_HB_POC_LBORRES_5 = NA, n (%)" =
-      paste0(sum(is.na(M06_HB_POC_LBORRES_5)),
+    
+    "Missing HB_POC_LBORRES at Visit 5, n (%)" =
+      paste0(sum(is.na(M06_HB_POC_LBORRES_5) &
+                   ANC36_PASS==1, na.rm = TRUE),
              " (",
              format(round(sum(is.na(M06_HB_POC_LBORRES_5))/n()*100, 2),nsmall=2, digits=3),
              ")"),
     
-        "Missing both at Visit 5 = NA, n (%)" =
-      paste0(sum(is.na(M08_CBC_HB_LBORRES_5) & is.na(M06_HB_POC_LBORRES_5)),
+        "Missing both at Visit 5, n (%)" =
+      paste0(sum(is.na(M08_CBC_HB_LBORRES_5) & 
+                   is.na(M06_HB_POC_LBORRES_5) &
+                   ANC36_PASS==1, na.rm = TRUE),
              " (",
-             format(round(sum(is.na(M08_CBC_HB_LBORRES_5) & is.na(M06_HB_POC_LBORRES_5))/n()*100, 2), nsmall=2, digits=3),
+             format(round(sum(is.na(M08_CBC_HB_LBORRES_5) & 
+                                is.na(M06_HB_POC_LBORRES_5) &
+                   ANC36_PASS==1, na.rm = TRUE)/n()*100, 2), nsmall=2, digits=3),
              ")"),
     
-    # IPC - VISIT 6
-    "Missing M08_CBC_HB_LBORRES_6 = NA, n (%)" =
+    # IPC - VISIT 6 - THESE ARE AMONG THOSE WHO HAVE DELIVERED, WHICH IS ALREADY MY SUBSET. SO DON'T NEED TO DO ANY WINDOW PASS
+    "Missing (or optional) CBC_HB_LBORRES at delivery, n (%)" =
       paste0(sum(is.na(M08_CBC_HB_LBORRES_6)),
              " (",
              format(round(sum(is.na(M08_CBC_HB_LBORRES_6))/n()*100, 2),nsmall=2, digits=3),
              ")"),
         
-    "Missing M06_HB_POC_LBORRES_6 = NA, n (%)" =
+    "Missing (or optional_ HB_POC_LBORRES at delivery, n (%)" =
       paste0(sum(is.na(M06_HB_POC_LBORRES_6)),
              " (",
              format(round(sum(is.na(M06_HB_POC_LBORRES_6))/n()*100, 2),nsmall=2, digits=3),
              ")"),
     
-        "Missing both at Visit 6 = NA, n (%)" =
+        "Missing (or optional) both at delivery, n (%)" =
       paste0(sum(is.na(M08_CBC_HB_LBORRES_6) & is.na(M06_HB_POC_LBORRES_6)),
              " (",
              format(round(sum(is.na(M08_CBC_HB_LBORRES_6) & is.na(M06_HB_POC_LBORRES_6))/n()*100, 2), nsmall=2, digits=3),
@@ -201,50 +230,34 @@ anemia_table <- df %>%
   `colnames<-`(c(.[1,])) %>% 
   slice(-1)
     
-
-    
-    # # VISIT 7, 8,9 - ONLY HAVE POC
-    # # VISIT 7
-    # "Missing M06_HB_POC_LBORRES_7 = NA, n (%)" =
-    #   paste0(sum(is.na(M06_HB_POC_LBORRES_7)),
-    #          " (",
-    #          format(round(sum(is.na(M06_HB_POC_LBORRES_7))/n()*100, 2),nsmall=2, digits=3),
-    #          ")"),
-    # # VISIT 8
-    # "Missing M06_HB_POC_LBORRES_8 = NA, n (%)" =
-    #   paste0(sum(is.na(M06_HB_POC_LBORRES_8)),
-    #          " (",
-    #          format(round(sum(is.na(M06_HB_POC_LBORRES_8))/n()*100, 2),nsmall=2, digits=3),
-    #          ")") ,
-    # # VISIT 9
-    # "Missing M06_HB_POC_LBORRES_9 = NA, n (%)" =
-    #   paste0(sum(is.na(M06_HB_POC_LBORRES_9)),
-    #          " (",
-    #          format(round(sum(is.na(M06_HB_POC_LBORRES_9))/n()*100, 2),nsmall=2, digits=3),
-    #          ")"),
 ```
  
 ```{r}
 anemia_table  %>% 
   `rownames<-` (c(
-    "Missing M08_CBC_HB_LBORRES_1 = NA, n (%)",
-    "Missing M06_HB_POC_LBORRES_1 = NA, n (%)",
-    "Missing both at Visit 1 = NA, n(%)",
-    "Missing M08_CBC_HB_LBORRES_2 = NA, n (%)",
-    "Missing M06_HB_POC_LBORRES_2 = NA, n (%)",
-    "Missing both at Visit 2 = NA, n(%)",
-    "Missing M08_CBC_HB_LBORRES_3 = NA, n (%)",
-    "Missing M06_HB_POC_LBORRES_3 = NA, n (%)",
-    "Missing both at Visit 3 = NA, n(%)",
-    "Missing M08_CBC_HB_LBORRES_4 = NA, n (%)",
-    "Missing M06_HB_POC_LBORRES_4 = NA, n (%)",
-    "Missing both at Visit 4 = NA, n(%)",
-    "Missing M08_CBC_HB_LBORRES_5 = NA, n (%)",
-    "Missing M06_HB_POC_LBORRES_5 = NA, n (%)",
-    "Missing both at Visit 5 = NA, n(%)",
-    "Missing M08_CBC_HB_LBORRES_6 = NA, n (%)",
-    "Missing M06_HB_POC_LBORRES_6 = NA, n (%)",
-    "Missing both at Visit 6 = NA, n(%)")) %>%
+    "Missing CBC_HB_LBORRES at Enrollment, n (%)",
+    "Missing HB_POC_LBORRES at Enrollment, n (%)",
+    "Missing both at Enrollment, n(%)",
+    
+    "Missing CBC_HB_LBORRES at ANC20, n (%)",
+    "Missing HB_POC_LBORRES at ANC20, n (%)",
+    "Missing both at ANC20, n(%)",
+    
+    "Missing CBC_HB_LBORRES at ANC28, n (%)",
+    "Missing HB_POC_LBORRES at ANC28, n (%)",
+    "Missing both at ANC28, n(%)",
+    
+    "Missing CBC_HB_LBORRES at ANC32, n (%)",
+    "Missing HB_POC_LBORRES at ANC32, n (%)",
+    "Missing both at ANC32, n(%)",
+    
+    "Missing CBC_HB_LBORRES at ANC36, n (%)",
+    "Missing HB_POC_LBORRES at ANC36, n (%)",
+    "Missing both at ANC36, n(%)",
+    
+    "Missing (or optional) CBC_HB_LBORRES at delivery, n (%)",
+    "Missing (or optional) HB_POC_LBORRES at delivery, n (%)",
+    "Missing (or optional) both at delivery, n(%)")) %>%
   
   
   mutate_all(funs(str_replace(., "NaN", "0"))) %>% 

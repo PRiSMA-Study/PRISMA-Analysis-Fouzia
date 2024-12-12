@@ -27,8 +27,16 @@ library(kableExtra)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# READ IN FILES:
 ```{r}
-anemia_df <- read.csv('data_out/mat_anemia.csv')
+anemia_df <- read.csv('../data_out/mat_anemia_foranalysis.csv')
+window_subset_df <- read.csv('../data_out/window_subset_df.csv')
+```
+
+# MERGE IN THE TWO SUBSETS
+```{r}
+anemia_df <- left_join(anemia_df, window_subset_df, 
+                         by = c("MOMID", "PREGID", "SITE"))
 ```
 
 
@@ -95,26 +103,55 @@ if(CONVERT_NA ==TRUE){
 }
 ```
 
+
+
+Create anemia levels for each ANC Visit
+WHO Hb thresholds g/dl:
+Mild: 10.0-10.9
+Moderate: 7.0-9.9
+Severe: <7
+Normal: >=11.0
+Excess Hb: >13
 # ANC VISIT 1 - ENROLLMENT
 ```{r}
 anemia_df <- anemia_df %>% filter(DELIVERED_FF==1) # SUBSET TO WOMEN WHO HAD A DELIVERY
 
-anemia_df <- anemia_df %>%
-  #SETTING UP VISIT 1 - enrollment.
-  # 1st trimester
-  mutate(MAT_ANEMIA_MEAS1 = ifelse((!is.na(M08_CBC_HB_LBORRES_1) & between(M08_CBC_HB_LBORRES_1, 10, 10.9)), "mild",
-                                   ifelse((!is.na(M06_HB_POC_LBORRES_1) & between(M06_HB_POC_LBORRES_1, 10, 10.9)), "mild",
-                                          ifelse((!is.na(M08_CBC_HB_LBORRES_1) & between(M08_CBC_HB_LBORRES_1, 7.0, 9.9)), "moderate",
-                                                 ifelse((!is.na(M06_HB_POC_LBORRES_1) & between(M06_HB_POC_LBORRES_1, 7.0, 9.9)), "moderate",
-                                                        ifelse((!is.na(M08_CBC_HB_LBORRES_1) & between(M08_CBC_HB_LBORRES_1, 0.0, 6.9)), "severe",
-                                                               ifelse((!is.na(M06_HB_POC_LBORRES_1) & between(M06_HB_POC_LBORRES_1, 0.0, 6.9)), "severe",
-                                                                      ifelse((!is.na(M08_CBC_HB_LBORRES_1) & between(M08_CBC_HB_LBORRES_1, 13.1, 14.9)), "high hb 13-<15g/dl",
-                                                                             ifelse((!is.na(M06_HB_POC_LBORRES_1) & between(M06_HB_POC_LBORRES_1, 13.1, 14.9)), "high hb 13-<15g/dl",
-                                                                                    ifelse((!is.na(M08_CBC_HB_LBORRES_1) & M08_CBC_HB_LBORRES_1 > 14.9), "high hb >=15g/dl",
-                                                                                           ifelse((!is.na(M06_HB_POC_LBORRES_1) & M06_HB_POC_LBORRES_1 > 14.9), "high hb >=15g/dl",
-                                                                                                  ifelse((!is.na(M08_CBC_HB_LBORRES_1) & between(M08_CBC_HB_LBORRES_1, 11, 13.0)), "normal",
-                                                                                                         ifelse((!is.na(M06_HB_POC_LBORRES_1) & between(M06_HB_POC_LBORRES_1, 11, 13.0)), "normal",
-                                                                                                                as.character(NA)))))))))))))) 
+anemia_df <- anemia_df %>% 
+  mutate(MAT_ANEMIA_MEAS1 = case_when((!is.na(M08_CBC_HB_LBORRES_1) & 
+                                        M08_CBC_HB_LBORRES_1>=10 & M08_CBC_HB_LBORRES_1<11) ~ "mild",
+                                      (is.na(M08_CBC_HB_LBORRES_1) & !is.na(M06_HB_POC_LBORRES_1) & 
+                                        M06_HB_POC_LBORRES_1>=10 & M06_HB_POC_LBORRES_1<11) ~ "mild",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_1) & 
+                                        M08_CBC_HB_LBORRES_1>=7 & M08_CBC_HB_LBORRES_1<10) ~ "moderate",
+                                      (is.na(M08_CBC_HB_LBORRES_1) & !is.na(M06_HB_POC_LBORRES_1) & 
+                                        M06_HB_POC_LBORRES_1>=7 & M06_HB_POC_LBORRES_1<10) ~ "moderate",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_1) & 
+                                        M08_CBC_HB_LBORRES_1>=0 & M08_CBC_HB_LBORRES_1<7) ~ "severe",
+                                      (is.na(M08_CBC_HB_LBORRES_1) & !is.na(M06_HB_POC_LBORRES_1) & 
+                                        M06_HB_POC_LBORRES_1>=0 & M06_HB_POC_LBORRES_1<7) ~ "severe",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_1) & 
+                                        M08_CBC_HB_LBORRES_1>=11 & M08_CBC_HB_LBORRES_1<=13) ~ "normal",
+                                      (is.na(M08_CBC_HB_LBORRES_1) & !is.na(M06_HB_POC_LBORRES_1) & 
+                                        M06_HB_POC_LBORRES_1>=11 & M06_HB_POC_LBORRES_1<=13) ~ "normal",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_1) & 
+                                        M08_CBC_HB_LBORRES_1>13 & M08_CBC_HB_LBORRES_1<15) ~ "high hb 13-<15g/dl",
+                                      (is.na(M08_CBC_HB_LBORRES_1) & !is.na(M06_HB_POC_LBORRES_1) & 
+                                        M06_HB_POC_LBORRES_1>13 & M06_HB_POC_LBORRES_1<15) ~ "high hb 13-<15g/dl",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_1) & M08_CBC_HB_LBORRES_1>=15)  ~ "high hb >=15g/dl",
+                                      (is.na(M08_CBC_HB_LBORRES_1) & !is.na(M06_HB_POC_LBORRES_1) & 
+                                      M06_HB_POC_LBORRES_1>=15) ~ "high hb >=15g/dl",
+                                      
+                                      TRUE ~ as.character(NA)))
+
+
+
+temp.df <- anemia_df %>% 
+  select(MOMID, SITE, MAT_ANEMIA_MEAS1, M08_CBC_HB_LBORRES_1, M06_HB_POC_LBORRES_1)
 
 sum(anemia_df$M08_CBC_HB_LBORRES_1 %in% c(-5, -7))
 
@@ -137,25 +174,41 @@ anemia_df <- anemia_df %>%
 # ANEMIA ANC 20 - VISIT 2
 
 anemia_df <- anemia_df %>% 
-  #SETTING UP VISIT 2 - ANC20.
-  # 2ND TRIMESTER
-  mutate(MAT_ANEMIA_MEAS2 = ifelse((!is.na(M08_CBC_HB_LBORRES_2) & between(M08_CBC_HB_LBORRES_2, 10, 10.9)), "mild",
-                                   ifelse((!is.na(M06_HB_POC_LBORRES_2) & between(M06_HB_POC_LBORRES_2, 10, 10.9)), "mild",
-                                          ifelse((!is.na(M08_CBC_HB_LBORRES_2) & between(M08_CBC_HB_LBORRES_2, 7.0, 9.9)), "moderate",
-                                                 ifelse((!is.na(M06_HB_POC_LBORRES_2) & between(M06_HB_POC_LBORRES_2, 7.0, 9.9)), "moderate",
-                                                        ifelse((!is.na(M08_CBC_HB_LBORRES_2) & between(M08_CBC_HB_LBORRES_2, 0.0, 6.9)), "severe",
-                                                               ifelse((!is.na(M06_HB_POC_LBORRES_2) & between(M06_HB_POC_LBORRES_2, 0.0, 6.9)), "severe",
-                                                                      ifelse((!is.na(M08_CBC_HB_LBORRES_2) & between(M08_CBC_HB_LBORRES_2, 13.1, 14.9)), "high hb 13-<15g/dl",
-                                                                             ifelse((!is.na(M06_HB_POC_LBORRES_2) & between(M06_HB_POC_LBORRES_2, 13.1, 14.9)), "high hb 13-<15g/dl",
-                                                                                    ifelse((!is.na(M08_CBC_HB_LBORRES_2) & M08_CBC_HB_LBORRES_2 > 14.9), "high hb >=15g/dl",
-                                                                                           ifelse((!is.na(M06_HB_POC_LBORRES_2) & M06_HB_POC_LBORRES_2 > 14.9), "high hb >=15g/dl",
-                                                                                                  ifelse((!is.na(M08_CBC_HB_LBORRES_2) & between(M08_CBC_HB_LBORRES_2, 11, 13.0)), "normal",
-                                                                                                         ifelse((!is.na(M06_HB_POC_LBORRES_2) & between(M06_HB_POC_LBORRES_2, 11, 13.0)), "normal",
-                                                                                                                as.character(NA)))))))))))))) 
+  mutate(MAT_ANEMIA_MEAS2 = case_when((!is.na(M08_CBC_HB_LBORRES_2) & 
+                                        M08_CBC_HB_LBORRES_2>=10 & M08_CBC_HB_LBORRES_2<11) ~ "mild",
+                                      (is.na(M08_CBC_HB_LBORRES_2) & !is.na(M06_HB_POC_LBORRES_2) & 
+                                        M06_HB_POC_LBORRES_2>=10 & M06_HB_POC_LBORRES_2<11) ~ "mild",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_2) & 
+                                        M08_CBC_HB_LBORRES_2>=7 & M08_CBC_HB_LBORRES_2<10) ~ "moderate",
+                                      (is.na(M08_CBC_HB_LBORRES_2) & !is.na(M06_HB_POC_LBORRES_2) & 
+                                        M06_HB_POC_LBORRES_2>=7 & M06_HB_POC_LBORRES_2<10) ~ "moderate",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_2) & 
+                                        M08_CBC_HB_LBORRES_2>=0 & M08_CBC_HB_LBORRES_2<7) ~ "severe",
+                                      (is.na(M08_CBC_HB_LBORRES_2) & !is.na(M06_HB_POC_LBORRES_2) & 
+                                        M06_HB_POC_LBORRES_2>=0 & M06_HB_POC_LBORRES_2<7) ~ "severe",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_2) & 
+                                        M08_CBC_HB_LBORRES_2>=11 & M08_CBC_HB_LBORRES_2<=13) ~ "normal",
+                                      (is.na(M08_CBC_HB_LBORRES_2) & !is.na(M06_HB_POC_LBORRES_2) & 
+                                        M06_HB_POC_LBORRES_2>=11 & M06_HB_POC_LBORRES_2<=13) ~ "normal",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_2) & 
+                                        M08_CBC_HB_LBORRES_2>13 & M08_CBC_HB_LBORRES_2<15) ~ "high hb 13-<15g/dl",
+                                      (is.na(M08_CBC_HB_LBORRES_2) & !is.na(M06_HB_POC_LBORRES_2) & 
+                                        M06_HB_POC_LBORRES_2>13 & M06_HB_POC_LBORRES_2<15) ~ "high hb 13-<15g/dl",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_2) & M08_CBC_HB_LBORRES_2>=15)  ~ "high hb >=15g/dl",
+                                      (is.na(M08_CBC_HB_LBORRES_2) & !is.na(M06_HB_POC_LBORRES_2) & 
+                                      M06_HB_POC_LBORRES_2>=15) ~ "high hb >=15g/dl",
+                                      
+                                      TRUE ~ as.character(NA)))
 
 temp.df <- anemia_df %>%
-  select(SITE, MOMID, DELIVERED_FF, M09_DELIV_DSSTDAT_INF1_6, M08_CBC_HB_LBORRES_2, M06_HB_POC_LBORRES_2, MAT_ANEMIA_MEAS2) %>% filter(SITE=='Ghana')
-write.csv(temp.df, 'data_out/temp.df.csv')
+  select(SITE, MOMID, DELIVERED_FF, M09_DELIV_DSSTDAT_INF1_6, M08_CBC_HB_LBORRES_2, M06_HB_POC_LBORRES_2, MAT_ANEMIA_MEAS2)
+# write.csv(temp.df, 'data_out/temp.df.csv')
+
 table(anemia_df$MAT_ANEMIA_MEAS2, useNA = "always", anemia_df$SITE)
 round(prop.table(table(anemia_df$MAT_ANEMIA_MEAS2, useNA = "always", anemia_df$SITE), margin=2)*100,2)  
 
@@ -165,20 +218,41 @@ round(prop.table(table(anemia_df$MAT_ANEMIA_MEAS2, useNA = "always", anemia_df$S
 ```{r}
   #SETTING UP VISIT 3 - ANC28.
 # 3RD trimester
+
 anemia_df <- anemia_df %>% 
-  mutate(MAT_ANEMIA_MEAS3 = ifelse((!is.na(M08_CBC_HB_LBORRES_3) & between(M08_CBC_HB_LBORRES_3, 10, 10.9)), "mild",
-                                   ifelse((!is.na(M06_HB_POC_LBORRES_3) & between(M06_HB_POC_LBORRES_3, 10, 10.9)), "mild",
-                                          ifelse((!is.na(M08_CBC_HB_LBORRES_3) & between(M08_CBC_HB_LBORRES_3, 7.0, 9.9)), "moderate",
-                                                 ifelse((!is.na(M06_HB_POC_LBORRES_3) & between(M06_HB_POC_LBORRES_3, 7.0, 9.9)), "moderate",
-                                                        ifelse((!is.na(M08_CBC_HB_LBORRES_3) & between(M08_CBC_HB_LBORRES_3, 0.0, 6.9)), "severe",
-                                                               ifelse((!is.na(M06_HB_POC_LBORRES_3) & between(M06_HB_POC_LBORRES_3, 0.0, 6.9)), "severe",
-                                                                      ifelse((!is.na(M08_CBC_HB_LBORRES_3) & between(M08_CBC_HB_LBORRES_3, 13.1, 14.9)), "high hb 13-<15g/dl",
-                                                                             ifelse((!is.na(M06_HB_POC_LBORRES_3) & between(M06_HB_POC_LBORRES_3, 13.1, 14.9)), "high hb 13-<15g/dl",
-                                                                                    ifelse((!is.na(M08_CBC_HB_LBORRES_3) & M08_CBC_HB_LBORRES_3 > 14.9), "high hb >=15g/dl",
-                                                                                           ifelse((!is.na(M06_HB_POC_LBORRES_3) & M06_HB_POC_LBORRES_3 > 14.9), "high hb >=15g/dl",
-                                                                                                  ifelse((!is.na(M08_CBC_HB_LBORRES_3) & between(M08_CBC_HB_LBORRES_3, 11, 13.0)), "normal",
-                                                                                                         ifelse((!is.na(M06_HB_POC_LBORRES_3) & between(M06_HB_POC_LBORRES_3, 11, 13.0)), "normal",
-                                                                                                                as.character(NA)))))))))))))) 
+  mutate(MAT_ANEMIA_MEAS3 = case_when((!is.na(M08_CBC_HB_LBORRES_3) & 
+                                        M08_CBC_HB_LBORRES_3>=10 & M08_CBC_HB_LBORRES_3<11) ~ "mild",
+                                      (is.na(M08_CBC_HB_LBORRES_3) & !is.na(M06_HB_POC_LBORRES_3) & 
+                                        M06_HB_POC_LBORRES_3>=10 & M06_HB_POC_LBORRES_3<11) ~ "mild",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_3) & 
+                                        M08_CBC_HB_LBORRES_3>=7 & M08_CBC_HB_LBORRES_3<10) ~ "moderate",
+                                      (is.na(M08_CBC_HB_LBORRES_3) & !is.na(M06_HB_POC_LBORRES_3) & 
+                                        M06_HB_POC_LBORRES_3>=7 & M06_HB_POC_LBORRES_3<10) ~ "moderate",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_3) & 
+                                        M08_CBC_HB_LBORRES_3>=0 & M08_CBC_HB_LBORRES_3<7) ~ "severe",
+                                      (is.na(M08_CBC_HB_LBORRES_3) & !is.na(M06_HB_POC_LBORRES_3) & 
+                                        M06_HB_POC_LBORRES_3>=0 & M06_HB_POC_LBORRES_3<7) ~ "severe",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_3) & 
+                                        M08_CBC_HB_LBORRES_3>=11 & M08_CBC_HB_LBORRES_3<=13) ~ "normal",
+                                      (is.na(M08_CBC_HB_LBORRES_3) & !is.na(M06_HB_POC_LBORRES_3) & 
+                                        M06_HB_POC_LBORRES_3>=11 & M06_HB_POC_LBORRES_3<=13) ~ "normal",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_3) & 
+                                        M08_CBC_HB_LBORRES_3>13 & M08_CBC_HB_LBORRES_3<15) ~ "high hb 13-<15g/dl",
+                                      (is.na(M08_CBC_HB_LBORRES_3) & !is.na(M06_HB_POC_LBORRES_3) & 
+                                        M06_HB_POC_LBORRES_3>13 & M06_HB_POC_LBORRES_3<15) ~ "high hb 13-<15g/dl",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_3) & M08_CBC_HB_LBORRES_3>=15)  ~ "high hb >=15g/dl",
+                                      (is.na(M08_CBC_HB_LBORRES_3) & !is.na(M06_HB_POC_LBORRES_3) & 
+                                      M06_HB_POC_LBORRES_3>=15) ~ "high hb >=15g/dl",
+                                      
+                                      TRUE ~ as.character(NA)))
+
+temp.df <- anemia_df %>%
+  select(SITE, MOMID, DELIVERED_FF, M09_DELIV_DSSTDAT_INF1_6, MAT_ANEMIA_MEAS3, M08_CBC_HB_LBORRES_3, M06_HB_POC_LBORRES_3)
 
 table(anemia_df$MAT_ANEMIA_MEAS3, useNA = "always", anemia_df$SITE)
 round(prop.table(table(anemia_df$MAT_ANEMIA_MEAS3, useNA = "always", anemia_df$SITE), margin=2)*100,2)
@@ -188,22 +262,40 @@ round(prop.table(table(anemia_df$MAT_ANEMIA_MEAS3, useNA = "always", anemia_df$S
 # VISIT 4
 ```{r}
   #SETTING UP VISIT 4 - ANC32.
-# 3RD TRIMESTER
 anemia_df <- anemia_df %>% 
-  mutate(MAT_ANEMIA_MEAS4 = ifelse((!is.na(M08_CBC_HB_LBORRES_4) & between(M08_CBC_HB_LBORRES_4, 10, 10.9)), "mild",
-                                   ifelse((!is.na(M06_HB_POC_LBORRES_4) & between(M06_HB_POC_LBORRES_4, 10, 10.9)), "mild",
-                                          ifelse((!is.na(M08_CBC_HB_LBORRES_4) & between(M08_CBC_HB_LBORRES_4, 7.0, 9.9)), "moderate",
-                                                 ifelse((!is.na(M06_HB_POC_LBORRES_4) & between(M06_HB_POC_LBORRES_4, 7.0, 9.9)), "moderate",
-                                                        ifelse((!is.na(M08_CBC_HB_LBORRES_4) & between(M08_CBC_HB_LBORRES_4, 0.0, 6.9)), "severe",
-                                                               ifelse((!is.na(M06_HB_POC_LBORRES_4) & between(M06_HB_POC_LBORRES_4, 0.0, 6.9)), "severe",
-                                                                      ifelse((!is.na(M08_CBC_HB_LBORRES_4) & between(M08_CBC_HB_LBORRES_4, 13.1, 14.9)), "high hb 13-<15g/dl",
-                                                                             ifelse((!is.na(M06_HB_POC_LBORRES_4) & between(M06_HB_POC_LBORRES_4, 13.1, 14.9)), "high hb 13-<15g/dl",
-                                                                                    ifelse((!is.na(M08_CBC_HB_LBORRES_4) & M08_CBC_HB_LBORRES_4 > 14.9), "high hb >=15g/dl",
-                                                                                           ifelse((!is.na(M06_HB_POC_LBORRES_4) & M06_HB_POC_LBORRES_4 > 14.9), "high hb >=15g/dl",
-                                                                                                  ifelse((!is.na(M08_CBC_HB_LBORRES_4) & between(M08_CBC_HB_LBORRES_4, 11, 13.0)), "normal",
-                                                                                                         ifelse((!is.na(M06_HB_POC_LBORRES_4) & between(M06_HB_POC_LBORRES_4, 11, 13.0)), "normal",
-                                                                                                                as.character(NA)))))))))))))) 
-  
+  mutate(MAT_ANEMIA_MEAS4 = case_when((!is.na(M08_CBC_HB_LBORRES_4) & 
+                                        M08_CBC_HB_LBORRES_4>=10 & M08_CBC_HB_LBORRES_4<11) ~ "mild",
+                                      (is.na(M08_CBC_HB_LBORRES_4) & !is.na(M06_HB_POC_LBORRES_4) & 
+                                        M06_HB_POC_LBORRES_4>=10 & M06_HB_POC_LBORRES_4<11) ~ "mild",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_4) & 
+                                        M08_CBC_HB_LBORRES_4>=7 & M08_CBC_HB_LBORRES_4<10) ~ "moderate",
+                                      (is.na(M08_CBC_HB_LBORRES_4) & !is.na(M06_HB_POC_LBORRES_4) & 
+                                        M06_HB_POC_LBORRES_4>=7 & M06_HB_POC_LBORRES_4<10) ~ "moderate",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_4) & 
+                                        M08_CBC_HB_LBORRES_4>=0 & M08_CBC_HB_LBORRES_4<7) ~ "severe",
+                                      (is.na(M08_CBC_HB_LBORRES_4) & !is.na(M06_HB_POC_LBORRES_4) & 
+                                        M06_HB_POC_LBORRES_4>=0 & M06_HB_POC_LBORRES_4<7) ~ "severe",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_4) & 
+                                        M08_CBC_HB_LBORRES_4>=11 & M08_CBC_HB_LBORRES_4<=13) ~ "normal",
+                                      (is.na(M08_CBC_HB_LBORRES_4) & !is.na(M06_HB_POC_LBORRES_4) & 
+                                        M06_HB_POC_LBORRES_4>=11 & M06_HB_POC_LBORRES_4<=13) ~ "normal",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_4) & 
+                                        M08_CBC_HB_LBORRES_4>13 & M08_CBC_HB_LBORRES_4<15) ~ "high hb 13-<15g/dl",
+                                      (is.na(M08_CBC_HB_LBORRES_4) & !is.na(M06_HB_POC_LBORRES_4) & 
+                                        M06_HB_POC_LBORRES_4>13 & M06_HB_POC_LBORRES_4<15) ~ "high hb 13-<15g/dl",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_4) & M08_CBC_HB_LBORRES_4>=15)  ~ "high hb >=15g/dl",
+                                      (is.na(M08_CBC_HB_LBORRES_4) & !is.na(M06_HB_POC_LBORRES_4) & 
+                                      M06_HB_POC_LBORRES_4>=15) ~ "high hb >=15g/dl",
+                                      
+                                      TRUE ~ as.character(NA)))
+
+temp.df <- anemia_df %>%
+  select(SITE, MOMID, DELIVERED_FF, M09_DELIV_DSSTDAT_INF1_6, MAT_ANEMIA_MEAS4, M08_CBC_HB_LBORRES_4, M06_HB_POC_LBORRES_4)
 
 table(anemia_df$MAT_ANEMIA_MEAS4, useNA = "always", anemia_df$SITE)
 round(prop.table(table(anemia_df$MAT_ANEMIA_MEAS4, useNA = "always", anemia_df$SITE), margin=2)*100,2)
@@ -212,26 +304,41 @@ round(prop.table(table(anemia_df$MAT_ANEMIA_MEAS4, useNA = "always", anemia_df$S
 # VISIT 5
 ```{r}
   #SETTING UP VISIT 5 - ANC36.
-# 3RD TRIMESTER
-anemia_df <- anemia_df %>% 
-  mutate(MAT_ANEMIA_MEAS5 = ifelse((!is.na(M08_CBC_HB_LBORRES_5) & between(M08_CBC_HB_LBORRES_5, 10, 10.9)), "mild",
-                                   ifelse((!is.na(M06_HB_POC_LBORRES_5) & between(M06_HB_POC_LBORRES_5, 10, 10.9)), "mild",
-                                          ifelse((!is.na(M08_CBC_HB_LBORRES_5) & between(M08_CBC_HB_LBORRES_5, 7.0, 9.9)), "moderate",
-                                                 ifelse((!is.na(M06_HB_POC_LBORRES_5) & between(M06_HB_POC_LBORRES_5, 7.0, 9.9)), "moderate",
-                                                        ifelse((!is.na(M08_CBC_HB_LBORRES_5) & between(M08_CBC_HB_LBORRES_5, 0.0, 6.9)), "severe",
-                                                               ifelse((!is.na(M06_HB_POC_LBORRES_5) & between(M06_HB_POC_LBORRES_5, 0.0, 6.9)), "severe",
-                                                                      ifelse((!is.na(M08_CBC_HB_LBORRES_5) & between(M08_CBC_HB_LBORRES_5, 13.1, 14.9)), "high hb 13-<15g/dl",
-                                                                             ifelse((!is.na(M06_HB_POC_LBORRES_5) & between(M06_HB_POC_LBORRES_5, 13.1, 14.9)), "high hb 13-<15g/dl",
-                                                                                    ifelse((!is.na(M08_CBC_HB_LBORRES_5) & M08_CBC_HB_LBORRES_5 > 14.9), "high hb >=15g/dl",
-                                                                                           ifelse((!is.na(M06_HB_POC_LBORRES_5) & M06_HB_POC_LBORRES_5 > 14.9), "high hb >=15g/dl",
-                                                                                                  ifelse((!is.na(M08_CBC_HB_LBORRES_5) & between(M08_CBC_HB_LBORRES_5, 11, 13.0)), "normal",
-                                                                                                         ifelse((!is.na(M06_HB_POC_LBORRES_5) & between(M06_HB_POC_LBORRES_5, 11, 13.0)), "normal", 
 
-                                                                                                                as.character(NA)))))))))))))) 
-  
+anemia_df <- anemia_df %>% 
+  mutate(MAT_ANEMIA_MEAS5 = case_when((!is.na(M08_CBC_HB_LBORRES_5) & 
+                                        M08_CBC_HB_LBORRES_5>=10 & M08_CBC_HB_LBORRES_5<11) ~ "mild",
+                                      (is.na(M08_CBC_HB_LBORRES_5) & !is.na(M06_HB_POC_LBORRES_5) & 
+                                        M06_HB_POC_LBORRES_5>=10 & M06_HB_POC_LBORRES_5<11) ~ "mild",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_5) & 
+                                        M08_CBC_HB_LBORRES_5>=7 & M08_CBC_HB_LBORRES_5<10) ~ "moderate",
+                                      (is.na(M08_CBC_HB_LBORRES_5) & !is.na(M06_HB_POC_LBORRES_5) & 
+                                        M06_HB_POC_LBORRES_5>=7 & M06_HB_POC_LBORRES_5<10) ~ "moderate",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_5) & 
+                                        M08_CBC_HB_LBORRES_5>=0 & M08_CBC_HB_LBORRES_5<7) ~ "severe",
+                                      (is.na(M08_CBC_HB_LBORRES_5) & !is.na(M06_HB_POC_LBORRES_5) & 
+                                        M06_HB_POC_LBORRES_5>=0 & M06_HB_POC_LBORRES_5<7) ~ "severe",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_5) & 
+                                        M08_CBC_HB_LBORRES_5>=11 & M08_CBC_HB_LBORRES_5<=13) ~ "normal",
+                                      (is.na(M08_CBC_HB_LBORRES_5) & !is.na(M06_HB_POC_LBORRES_5) & 
+                                        M06_HB_POC_LBORRES_5>=11 & M06_HB_POC_LBORRES_5<=13) ~ "normal",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_5) & 
+                                        M08_CBC_HB_LBORRES_5>13 & M08_CBC_HB_LBORRES_5<15) ~ "high hb 13-<15g/dl",
+                                      (is.na(M08_CBC_HB_LBORRES_5) & !is.na(M06_HB_POC_LBORRES_5) & 
+                                        M06_HB_POC_LBORRES_5>13 & M06_HB_POC_LBORRES_5<15) ~ "high hb 13-<15g/dl",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_5) & M08_CBC_HB_LBORRES_5>=15)  ~ "high hb >=15g/dl",
+                                      (is.na(M08_CBC_HB_LBORRES_5) & !is.na(M06_HB_POC_LBORRES_5) & 
+                                      M06_HB_POC_LBORRES_5>=15) ~ "high hb >=15g/dl",
+                                      
+                                      TRUE ~ as.character(NA)))
 
 temp.df <- anemia_df %>%
-  select(SITE, MOMID, DELIVERED_FF, M09_DELIV_DSSTDAT_INF1_6, M08_CBC_HB_LBORRES_5, M06_HB_POC_LBORRES_5, MAT_ANEMIA_MEAS5) %>% filter(SITE=='Ghana')
+  select(SITE, MOMID, DELIVERED_FF, M09_DELIV_DSSTDAT_INF1_6, MAT_ANEMIA_MEAS5, M08_CBC_HB_LBORRES_5, M06_HB_POC_LBORRES_5)
 
 table(anemia_df$MAT_ANEMIA_MEAS5, useNA = "always", anemia_df$SITE)
 round(prop.table(table(anemia_df$MAT_ANEMIA_MEAS5, useNA = "always", anemia_df$SITE), margin=2)*100,2)
@@ -243,7 +350,7 @@ round(prop.table(table(anemia_df$MAT_ANEMIA_MEAS5, useNA = "always", anemia_df$S
 ```{r}
 # ANEMIA MEASURED PREGNANCY ONLY # 
 anemia_df <- anemia_df %>%
-  mutate(MAT_ANEMIA_MEAS_ANC = case_when(MAT_ANEMIA_MEAS1 %in% c("severe", "mild", "moderate", "high hb 13-<15g/dl", "high hb >=15g/dl") ~ 1, 
+  mutate(MAT_ANEMIA_MEAS_ANC_ANY = case_when(MAT_ANEMIA_MEAS1 %in% c("severe", "mild", "moderate", "high hb 13-<15g/dl", "high hb >=15g/dl") ~ 1, 
                                          MAT_ANEMIA_MEAS2 %in% c("severe", "mild", "moderate", "high hb 13-<15g/dl", "high hb >=15g/dl") ~ 1,
                                          MAT_ANEMIA_MEAS3 %in% c("severe", "mild", "moderate", "high hb 13-<15g/dl", "high hb >=15g/dl") ~ 1,
                                          MAT_ANEMIA_MEAS4 %in% c("severe", "mild", "moderate", "high hb 13-<15g/dl", "high hb >=15g/dl") ~ 1,
@@ -255,8 +362,8 @@ anemia_df <- anemia_df %>%
                                          MAT_ANEMIA_MEAS5 %in% c("normal") ~ 0,
                                          TRUE ~ as.numeric(NA)))
 
-table(anemia_df$MAT_ANEMIA_MEAS_ANC, useNA = "always", anemia_df$SITE)
-round(prop.table(table(anemia_df$MAT_ANEMIA_MEAS_ANC, useNA = "always", anemia_df$SITE), margin = 2)*100, 3)
+table(anemia_df$MAT_ANEMIA_MEAS_ANC_ANY, useNA = "always", anemia_df$SITE)
+round(prop.table(table(anemia_df$MAT_ANEMIA_MEAS_ANC_ANY, useNA = "always", anemia_df$SITE), margin = 2)*100, 3)
   
 ```
 
@@ -269,14 +376,14 @@ temp.df <- anemia_df %>%
          M08_CBC_HB_LBORRES_3, M06_HB_POC_LBORRES_3,
          M08_CBC_HB_LBORRES_4, M06_HB_POC_LBORRES_4,
          M08_CBC_HB_LBORRES_5, M06_HB_POC_LBORRES_5, 
-         MAT_ANEMIA_MEAS_ANC) %>% filter(SITE=='Ghana')
+         MAT_ANEMIA_MEAS_ANC_ANY) %>% filter(SITE=='Ghana')
 
 temp.df <- anemia_df %>%
   select(SITE, MOMID, DELIVERED_FF, M09_DELIV_DSSTDAT_INF1_6,
          MAT_ANEMIA_MEAS1, MAT_ANEMIA_MEAS2,
          MAT_ANEMIA_MEAS3, MAT_ANEMIA_MEAS4,
          MAT_ANEMIA_MEAS5,
-         MAT_ANEMIA_MEAS_ANC) %>% filter(SITE=='Ghana')
+         MAT_ANEMIA_MEAS_ANC_ANY) %>% filter(SITE=='Ghana')
 
 ```
 
@@ -284,21 +391,40 @@ temp.df <- anemia_df %>%
 ```{r}
 #SETTING UP VISIT 6 - IPC (L&D).
 anemia_df <- anemia_df %>% 
-  mutate(MAT_ANEMIA_MEAS6 = ifelse((!is.na(M08_CBC_HB_LBORRES_6) & between(M08_CBC_HB_LBORRES_6, 10, 10.9)), "mild",
-                                   ifelse((!is.na(M06_HB_POC_LBORRES_6) & between(M06_HB_POC_LBORRES_6, 10, 10.9)), "mild",
-                                          ifelse((!is.na(M08_CBC_HB_LBORRES_6) & between(M08_CBC_HB_LBORRES_6, 7.0, 9.9)), "moderate",
-                                                 ifelse((!is.na(M06_HB_POC_LBORRES_6) & between(M06_HB_POC_LBORRES_6, 7.0, 9.9)), "moderate",
-                                                        ifelse((!is.na(M08_CBC_HB_LBORRES_6) & between(M08_CBC_HB_LBORRES_6, 0.0, 6.9)), "severe",
-                                                               ifelse((!is.na(M06_HB_POC_LBORRES_6) & between(M06_HB_POC_LBORRES_6, 0.0, 6.9)), "severe",
-                                                                      ifelse((!is.na(M08_CBC_HB_LBORRES_6) & between(M08_CBC_HB_LBORRES_6, 13.1, 14.9)), "high hb 13-<15g/dl",
-                                                                             ifelse((!is.na(M06_HB_POC_LBORRES_6) & between(M06_HB_POC_LBORRES_6, 13.1, 14.9)), "high hb 13-<15g/dl",
-                                                                                    ifelse((!is.na(M08_CBC_HB_LBORRES_6) & M08_CBC_HB_LBORRES_6 > 14.9), "high hb >=15g/dl",
-                                                                                           ifelse((!is.na(M06_HB_POC_LBORRES_6) & M06_HB_POC_LBORRES_6 > 14.9), "high hb >=15g/dl",
-                                                                                                  ifelse((!is.na(M08_CBC_HB_LBORRES_6) & between(M08_CBC_HB_LBORRES_6, 11, 13.0)), "normal",
-                                                                                                         ifelse((!is.na(M06_HB_POC_LBORRES_6) & between(M06_HB_POC_LBORRES_6, 11, 13.0)), "normal",# "normal")))))))))))))
+  mutate(MAT_ANEMIA_MEAS6 = case_when((!is.na(M08_CBC_HB_LBORRES_6) & 
+                                        M08_CBC_HB_LBORRES_6>=10 & M08_CBC_HB_LBORRES_6<11) ~ "mild",
+                                      (is.na(M08_CBC_HB_LBORRES_6) & !is.na(M06_HB_POC_LBORRES_6) & 
+                                        M06_HB_POC_LBORRES_6>=10 & M06_HB_POC_LBORRES_6<11) ~ "mild",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_6) & 
+                                        M08_CBC_HB_LBORRES_6>=7 & M08_CBC_HB_LBORRES_6<10) ~ "moderate",
+                                      (is.na(M08_CBC_HB_LBORRES_6) & !is.na(M06_HB_POC_LBORRES_6) & 
+                                        M06_HB_POC_LBORRES_6>=7 & M06_HB_POC_LBORRES_6<10) ~ "moderate",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_6) & 
+                                        M08_CBC_HB_LBORRES_6>=0 & M08_CBC_HB_LBORRES_6<7) ~ "severe",
+                                      (is.na(M08_CBC_HB_LBORRES_6) & !is.na(M06_HB_POC_LBORRES_6) & 
+                                        M06_HB_POC_LBORRES_6>=0 & M06_HB_POC_LBORRES_6<7) ~ "severe",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_6) & 
+                                        M08_CBC_HB_LBORRES_6>=11 & M08_CBC_HB_LBORRES_6<=13) ~ "normal",
+                                      (is.na(M08_CBC_HB_LBORRES_6) & !is.na(M06_HB_POC_LBORRES_6) & 
+                                        M06_HB_POC_LBORRES_6>=11 & M06_HB_POC_LBORRES_6<=13) ~ "normal",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_6) & 
+                                        M08_CBC_HB_LBORRES_6>13 & M08_CBC_HB_LBORRES_6<15) ~ "high hb 13-<15g/dl",
+                                      (is.na(M08_CBC_HB_LBORRES_6) & !is.na(M06_HB_POC_LBORRES_6) & 
+                                        M06_HB_POC_LBORRES_6>13 & M06_HB_POC_LBORRES_6<15) ~ "high hb 13-<15g/dl",
+                                      
+                                      (!is.na(M08_CBC_HB_LBORRES_6) & M08_CBC_HB_LBORRES_6>=15)  ~ "high hb >=15g/dl",
+                                      (is.na(M08_CBC_HB_LBORRES_6) & !is.na(M06_HB_POC_LBORRES_6) & 
+                                      M06_HB_POC_LBORRES_6>=15) ~ "high hb >=15g/dl",
+                                      
+                                      TRUE ~ as.character(NA)))
 
+temp.df <- anemia_df %>%
+  select(SITE, MOMID, DELIVERED_FF, M09_DELIV_DSSTDAT_INF1_6, MAT_ANEMIA_MEAS6, M08_CBC_HB_LBORRES_6, M06_HB_POC_LBORRES_6)
 
-                                                                                                                as.character(NA)))))))))))))) 
 
 table(anemia_df$MAT_ANEMIA_MEAS6, useNA = "always", anemia_df$SITE)
 round(prop.table(table(anemia_df$MAT_ANEMIA_MEAS6, useNA = "always", anemia_df$SITE), margin = 2)*100, 2)
@@ -307,31 +433,64 @@ round(prop.table(table(anemia_df$MAT_ANEMIA_MEAS6, useNA = "always", anemia_df$S
 
 # ANEMIA DURING PNC0 (VISIT 7), PNC1 (VISIT 8), PNC4 (VISIT 9) - ONLY POC Diagnostics (MNH06) is done, not Lab results (MNH08)***
 ```{r echo=FALSE}
-anemia_df <- anemia_df %>%
-  # VISIT 7 - PNC 0
-  mutate(MAT_ANEMIA_MEAS7 = ifelse((!is.na(M06_HB_POC_LBORRES_7) & between(M06_HB_POC_LBORRES_7, 10, 10.9)), "mild",
-                                   ifelse((!is.na(M06_HB_POC_LBORRES_7) & between(M06_HB_POC_LBORRES_7, 7.0, 9.9)), "moderate",
-                                          ifelse((!is.na(M06_HB_POC_LBORRES_7) & between(M06_HB_POC_LBORRES_7, 0.0, 6.9)), "severe",
-                                                 ifelse((!is.na(M06_HB_POC_LBORRES_7) & between(M06_HB_POC_LBORRES_7, 13.1, 14.9)), "high hb 13-<15g/dl",
-                                                        ifelse((!is.na(M06_HB_POC_LBORRES_7) & M06_HB_POC_LBORRES_7 > 14.9), "high hb >=15g/dl",
-                                                        ifelse((!is.na(M06_HB_POC_LBORRES_7) & between(M06_HB_POC_LBORRES_7, 11, 13.0)), "normal",
-                                                               as.character(NA))))))))
 
-temp.df <- anemia_df %>% select(MOMID, SITE, M06_HB_POC_LBORRES_7, MAT_ANEMIA_MEAS7) %>% filter(SITE == "Pakistan")
+# VISIT 7 - PNC0 (Only POC diagnostics MNH06 available)
+anemia_df <- anemia_df %>% 
+  mutate(MAT_ANEMIA_MEAS7 = case_when((is.na(M08_CBC_HB_LBORRES_7) & !is.na(M06_HB_POC_LBORRES_7) & 
+                                        M06_HB_POC_LBORRES_7>=10 & M06_HB_POC_LBORRES_7<11) ~ "mild",
+                                      
+                                      (is.na(M08_CBC_HB_LBORRES_7) & !is.na(M06_HB_POC_LBORRES_7) & 
+                                        M06_HB_POC_LBORRES_7>=7 & M06_HB_POC_LBORRES_7<10) ~ "moderate",
+                                      
+                                      (is.na(M08_CBC_HB_LBORRES_7) & !is.na(M06_HB_POC_LBORRES_7) & 
+                                        M06_HB_POC_LBORRES_7>=0 & M06_HB_POC_LBORRES_7<7) ~ "severe",
+                                      
+                                      (is.na(M08_CBC_HB_LBORRES_7) & !is.na(M06_HB_POC_LBORRES_7) & 
+                                        M06_HB_POC_LBORRES_7>=11 & M06_HB_POC_LBORRES_7<=13) ~ "normal",
+                                      
+                                      (is.na(M08_CBC_HB_LBORRES_7) & !is.na(M06_HB_POC_LBORRES_7) & 
+                                        M06_HB_POC_LBORRES_7>13 & M06_HB_POC_LBORRES_7<15) ~ "high hb 13-<15g/dl",
+                                      
+                                      (is.na(M08_CBC_HB_LBORRES_7) & !is.na(M06_HB_POC_LBORRES_7) & 
+                                      M06_HB_POC_LBORRES_7>=15) ~ "high hb >=15g/dl",
+                                      
+                                      TRUE ~ as.character(NA)))
+
+temp.df <- anemia_df %>%
+  select(SITE, MOMID, DELIVERED_FF, M09_DELIV_DSSTDAT_INF1_6, MAT_ANEMIA_MEAS7, M08_CBC_HB_LBORRES_7, M06_HB_POC_LBORRES_7)
+
+
 table(anemia_df$MAT_ANEMIA_MEAS7, useNA = "always", anemia_df$SITE)
 round(prop.table(table(anemia_df$MAT_ANEMIA_MEAS7, useNA = "always", anemia_df$SITE), margin = 2)*100, 2)
 ```
 
 ```{r}
-  # VISIT 8 - PNC 1
+
+# VISIT 8 - PNC 1 (Only POC diagnostics MNH06 available)
 anemia_df <- anemia_df %>% 
-  mutate(MAT_ANEMIA_MEAS8 = ifelse((!is.na(M06_HB_POC_LBORRES_8) & between(M06_HB_POC_LBORRES_8, 10, 10.9)), "mild",
-                                   ifelse((!is.na(M06_HB_POC_LBORRES_8) & between(M06_HB_POC_LBORRES_8, 7.0, 9.9)), "moderate",
-                                          ifelse((!is.na(M06_HB_POC_LBORRES_8) & between(M06_HB_POC_LBORRES_8, 0.0, 6.9)), "severe",
-                                                 ifelse((!is.na(M06_HB_POC_LBORRES_8) & between(M06_HB_POC_LBORRES_8, 13.1, 14.9)), "high hb 13-<15g/dl",
-                                                        ifelse((!is.na(M06_HB_POC_LBORRES_8) & M06_HB_POC_LBORRES_8 > 14.9), "high hb >=15g/dl",
-                                                        ifelse((!is.na(M06_HB_POC_LBORRES_8) & between(M06_HB_POC_LBORRES_8, 11, 13.0)), "normal",
-                                                               as.character(NA))))))))
+  mutate(MAT_ANEMIA_MEAS8 = case_when((!is.na(M06_HB_POC_LBORRES_8) & 
+                                        M06_HB_POC_LBORRES_8>=10 & M06_HB_POC_LBORRES_8<11) ~ "mild",
+                                      
+                                      (!is.na(M06_HB_POC_LBORRES_8) & 
+                                        M06_HB_POC_LBORRES_8>=7 & M06_HB_POC_LBORRES_8<10) ~ "moderate",
+                                      
+                                      (!is.na(M06_HB_POC_LBORRES_8) & 
+                                        M06_HB_POC_LBORRES_8>=0 & M06_HB_POC_LBORRES_8<7) ~ "severe",
+                                      
+                                      (!is.na(M06_HB_POC_LBORRES_8) & 
+                                        M06_HB_POC_LBORRES_8>=11 & M06_HB_POC_LBORRES_8<=13) ~ "normal",
+                                      
+                                      (!is.na(M06_HB_POC_LBORRES_8) & 
+                                        M06_HB_POC_LBORRES_8>13 & M06_HB_POC_LBORRES_8<15) ~ "high hb 13-<15g/dl",
+                                      
+                                      (!is.na(M06_HB_POC_LBORRES_8) & 
+                                      M06_HB_POC_LBORRES_8>=15) ~ "high hb >=15g/dl",
+                                      
+                                      TRUE ~ as.character(NA)))
+
+temp.df <- anemia_df %>%
+  select(SITE, MOMID, DELIVERED_FF, M09_DELIV_DSSTDAT_INF1_6, MAT_ANEMIA_MEAS8, M06_HB_POC_LBORRES_8)
+
 
 table(anemia_df$MAT_ANEMIA_MEAS8, useNA = "always", anemia_df$SITE)
 round(prop.table(table(anemia_df$MAT_ANEMIA_MEAS8, useNA = "always", anemia_df$SITE), margin = 2)*100, 2)
@@ -339,15 +498,30 @@ round(prop.table(table(anemia_df$MAT_ANEMIA_MEAS8, useNA = "always", anemia_df$S
 
 # PNC 4
 ```{r}
-  # VISIT 9 - PNC 4
+  # VISIT 9 - PNC 4 (Only POC Diagnostics MNH06 available)
 anemia_df <- anemia_df %>% 
-  mutate(MAT_ANEMIA_MEAS9 = ifelse((!is.na(M06_HB_POC_LBORRES_9) & between(M06_HB_POC_LBORRES_9, 10, 10.9)), "mild",
-                                   ifelse((!is.na(M06_HB_POC_LBORRES_9) & between(M06_HB_POC_LBORRES_9, 7.0, 9.9)), "moderate",
-                                          ifelse((!is.na(M06_HB_POC_LBORRES_9) & between(M06_HB_POC_LBORRES_9, 0.0, 6.9)), "severe",
-                                                 ifelse((!is.na(M06_HB_POC_LBORRES_9) & between(M06_HB_POC_LBORRES_9, 13.1, 14.9)), "high hb 13-<15g/dl",
-                                                        ifelse((!is.na(M06_HB_POC_LBORRES_9) & M06_HB_POC_LBORRES_9 > 14.9), "high hb >=15g/dl",
-                                                        ifelse((!is.na(M06_HB_POC_LBORRES_9) & between(M06_HB_POC_LBORRES_9, 11, 13.0)), "normal",
-                                                               as.character(NA))))))))
+  mutate(MAT_ANEMIA_MEAS9 = case_when((!is.na(M06_HB_POC_LBORRES_9) & 
+                                        M06_HB_POC_LBORRES_9>=10 & M06_HB_POC_LBORRES_9<11) ~ "mild",
+                                      
+                                      (!is.na(M06_HB_POC_LBORRES_9) & 
+                                        M06_HB_POC_LBORRES_9>=7 & M06_HB_POC_LBORRES_9<10) ~ "moderate",
+                                      
+                                      (!is.na(M06_HB_POC_LBORRES_9) & 
+                                        M06_HB_POC_LBORRES_9>=0 & M06_HB_POC_LBORRES_9<7) ~ "severe",
+                                      
+                                      (!is.na(M06_HB_POC_LBORRES_9) & 
+                                        M06_HB_POC_LBORRES_9>=11 & M06_HB_POC_LBORRES_9<=13) ~ "normal",
+                                      
+                                      (!is.na(M06_HB_POC_LBORRES_9) & 
+                                        M06_HB_POC_LBORRES_9>13 & M06_HB_POC_LBORRES_9<15) ~ "high hb 13-<15g/dl",
+                                      
+                                      (!is.na(M06_HB_POC_LBORRES_9) & 
+                                      M06_HB_POC_LBORRES_9>=15) ~ "high hb >=15g/dl",
+                                      
+                                      TRUE ~ as.character(NA)))
+
+temp.df <- anemia_df %>%
+  select(SITE, MOMID, DELIVERED_FF, M09_DELIV_DSSTDAT_INF1_6, MAT_ANEMIA_MEAS9, M06_HB_POC_LBORRES_9)
 
 table(anemia_df$MAT_ANEMIA_MEAS9, useNA = "always", anemia_df$SITE)
 round(prop.table(table(anemia_df$MAT_ANEMIA_MEAS9, useNA = "always", anemia_df$SITE), margin = 2)*100, 2)
@@ -358,7 +532,7 @@ round(prop.table(table(anemia_df$MAT_ANEMIA_MEAS9, useNA = "always", anemia_df$S
 ```{r}
 # ANEMIA MEASURED PNC ONLY # 
 anemia_df <- anemia_df %>%
-  mutate(MAT_ANEMIA_MEAS_PNC = case_when(MAT_ANEMIA_MEAS7 %in% c("severe", "mild", "moderate", "high hb 13-<15g/dl", "high hb >=15g/dl") ~ 1, 
+  mutate(MAT_ANEMIA_MEAS_PNC_ANY = case_when(MAT_ANEMIA_MEAS7 %in% c("severe", "mild", "moderate", "high hb 13-<15g/dl", "high hb >=15g/dl") ~ 1, 
                                          MAT_ANEMIA_MEAS8 %in% c("severe", "mild", "moderate", "high hb 13-<15g/dl", "high hb >=15g/dl") ~ 1,
                                          MAT_ANEMIA_MEAS9 %in% c("severe", "mild", "moderate", "high hb 13-<15g/dl", "high hb >=15g/dl") ~ 1,
                                          MAT_ANEMIA_MEAS7 %in% c("normal") ~ 0,
@@ -366,6 +540,14 @@ anemia_df <- anemia_df %>%
                                          MAT_ANEMIA_MEAS9 %in% c("normal") ~ 0,
                                          TRUE ~ as.numeric(NA)))
 
-table(anemia_df$MAT_ANEMIA_MEAS_PNC, useNA = "always", anemia_df$SITE)
-round(prop.table(table(anemia_df$MAT_ANEMIA_MEAS_PNC, useNA = "always", anemia_df$SITE), margin = 2)*100, 3)
+temp.df <- anemia_df %>% select(MOMID, SITE, MAT_ANEMIA_MEAS_PNC_ANY, MAT_ANEMIA_MEAS7, MAT_ANEMIA_MEAS8, MAT_ANEMIA_MEAS9)
+
+table(anemia_df$MAT_ANEMIA_MEAS_PNC_ANY, useNA = "always", anemia_df$SITE)
+round(prop.table(table(anemia_df$MAT_ANEMIA_MEAS_PNC_ANY, useNA = "always", anemia_df$SITE), margin = 2)*100, 3)
 ```
+
+# File for tables:
+```{r}
+write.csv(anemia_df, '../data_out/anemia_fortables_20231020.csv')
+```
+
