@@ -25,6 +25,8 @@ library(readr)
 library(wesanderson)
 library(writexl)
 library(readxl)
+#******************************************************************************
+
 
 #******************************************************************************
 #* UPDATES:
@@ -46,6 +48,7 @@ rm(list = ls())
 dir.create("data_out")
 
 UploadDate = "2024-06-28"
+# UploadDate = "2024-09-20"
 
 #****************************************************************************
 #0. # READ FILES
@@ -59,33 +62,36 @@ mnh01 <- read.csv(paste0(folder_path, "/mnh01_merged.csv"))
 mnh05 <- read.csv(paste0(folder_path, "/mnh05_merged.csv"))
 mnh06 <- read.csv(paste0(folder_path, "/mnh06_merged.csv"))
 
-########
+##########################
 # Read in Imputed Data:
-########
+###########################
 imputed_df <- read.csv(paste0(folder_path, '/GWG_ImputeObs_wk9_wk14.csv')) # This has many rows per woman
 
-imputed_df <- imputed_df %>% 
-  rename(MOMID = momid,
-         WEIGHT_IMPUTED_9 = weight_imputed_9,
-         WEIGHT_IMPUTED_14 = weight_imputed_14)
+imputed_df <- imputed_df %>%
+  rename(
+    WEIGHT_IMPUTED_9 = ifelse("weight_imputed_9" %in% colnames(imputed_df), "weight_imputed_9", "WEIGHT_IMPUTED_9"),
+    WEIGHT_IMPUTED_14 = ifelse("weight_imputed_14" %in% colnames(imputed_df), "weight_imputed_14", "WEIGHT_IMPUTED_14")
+  ) %>%
+  select(SITE,MOMID,PREGID, SCRNID,WEIGHT_IMPUTED_9, WEIGHT_IMPUTED_14)#keep variables we will use to avoid duplicate variables when merging imputed_df2 and merged_df
 
-# Trying to remove first 2 characters from the PREGID. 
-# imputed_df <- imputed_df %>%
-#   mutate(PREGID = substring(PREGID, 3))
+# temp.df <- merged_df %>% 
+#   filter(SITE=="Zambia") %>% 
+#   filter(TYPE_VISIT==5) %>%
+#   select(SITE, MOMID, PREGID, TYPE_VISIT, M05_WEIGHT_PERES) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
 
-imputed_pregids <- imputed_df$PREGID
+#* ****************************************************************************
+#* Optional: Checking things
+#* ****************************************************************************
+imputed_pregids <- imputed_df$MOMID # only n=1227 matching MOMIDs
+merged_pregids <- merged_df$MOMID
+length(intersect(imputed_pregids, merged_pregids))
+
+imputed_pregids <- imputed_df$PREGID # only n=9090 matching PREGIDs
 merged_pregids <- merged_df$PREGID
 length(intersect(imputed_pregids, merged_pregids))
 
-
-temp.df <- merged_df %>% 
-  filter(SITE=="Zambia") %>% 
-  filter(TYPE_VISIT==5) %>%
-  select(SITE, MOMID, PREGID, TYPE_VISIT) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
-
-
 #* *******************************************************
-#* Deduplicate data sets that need to be merged on:
+#* Optional: Deduplicate data sets that need to be merged on:
 #* *******************************************************
 #* NOTE: MNH05 WILL HAVE LOTS OF VISIT TYPES! SO DON'T DE-DUPLICATE!!!
 duplicate_df <- mnh05 %>% group_by(MOMID, PREGID, M05_TYPE_VISIT) %>%  filter(n()>1) %>% 
@@ -108,29 +114,6 @@ temp.df <- merged_df %>%
   filter(TYPE_VISIT==5) %>%
   select(SITE, MOMID, PREGID, TYPE_VISIT, M05_WEIGHT_PERES)
 
-
-#* ****************************************************************************
-#* Checking things:
-#* ****************************************************************************
-# temp.df1 <- merged_df %>% 
-#   filter(MOMID=='Z3-202-1740') %>%
-#   select(SITE, MOMID, PREGID, TYPE_VISIT, ENROLL)
-# 
-# temp.df2 <- mnh05_filtered %>% 
-#   filter(MOMID=='Z3-202-1740') %>%
-#   select(SITE, MOMID, PREGID, M05_TYPE_VISIT)
-# 
-# temp.df3 <- full_join(temp.df1, temp.df2, 
-#                         by = c("MOMID", "PREGID", "SITE", "TYPE_VISIT" = "M05_TYPE_VISIT"))
-
-
-imputed_pregids <- imputed_df$MOMID # only n=1227 matching MOMIDs
-merged_pregids <- merged_df$MOMID
-length(intersect(imputed_pregids, merged_pregids))
-
-imputed_pregids <- imputed_df$PREGID # only n=9090 matching PREGIDs
-merged_pregids <- merged_df$PREGID
-length(intersect(imputed_pregids, merged_pregids))
 
 #* ****************************************************************************
 # LEFT_JOIN() IMPUTED DATA FIRST: 
@@ -178,12 +161,8 @@ temp.df <- merged_df3 %>%
 merged_df3 <- merged_df3 %>%
   mutate(M05_WEIGHT_PERES = ifelse(M05_WEIGHT_PERES==-7, NA, M05_WEIGHT_PERES),
          M05_HEIGHT_PERES = ifelse(M05_HEIGHT_PERES==-7, NA, M05_HEIGHT_PERES),
-        # M05_WEIGHT_PERES = ifelse(M05_WEIGHT_PERES==-7.00, NA, M05_WEIGHT_PERES),
-         # M05_WEIGHT_PERES = ifelse(M05_HEIGHT_PERES==-7.00, NA, M05_HEIGHT_PERES),
          M05_WEIGHT_PERES = ifelse(M05_WEIGHT_PERES==-5, NA, M05_WEIGHT_PERES),
          M05_HEIGHT_PERES = ifelse(M05_HEIGHT_PERES==-5, NA, M05_HEIGHT_PERES))
-         # M05_WEIGHT_PERES = ifelse(M05_WEIGHT_PERES==-5.00, NA, M05_WEIGHT_PERES),
-         # M05_WEIGHT_PERES = ifelse(M05_HEIGHT_PERES==-5.00, NA, M05_HEIGHT_PERES))
 
 temp.df <- merged_df3 %>% 
   select(SITE, MOMID, PREGID, TYPE_VISIT, M05_WEIGHT_PERES) # Zambia has n=668 obs at visit 5 and n=1272 obs at visit 1.
@@ -320,6 +299,14 @@ weight_df <- weight_df %>%
          bmi4cat=factor(BMI4CAT,levels=c(0,1,2,3),
                         labels= c("Underweight", "Normal Weight", "Overweight", "Obesity")))
 
+temp.df <- weight_df %>%
+  filter(TYPE_VISIT_UPDATED==1)%>%
+  select(SITE, MOMID,PREGID,TYPE_VISIT_UPDATED,WEIGHT_ENROLL,HEIGHT_ENROLL,BMI,BMI4CAT,bmi4cat)
+
+#check number of women missing early pregnancy BMI
+temp.df <- weight_df %>%
+  filter(is.na(BMI))%>% #19 women no BMI
+  select(SITE, MOMID,PREGID,TYPE_VISIT_UPDATED,WEIGHT_ENROLL,HEIGHT_ENROLL,BMI,BMI4CAT,bmi4cat)
 
 #* *******************************************************
 #* BMI FLAG:
@@ -371,8 +358,23 @@ temp.df <- weight_df %>%
   select(SITE, MOMID, PREGID, TYPE_VISIT_GA, TYPE_VISIT_UPDATED, GA_WKS)
 
 #* *******************************************************
-#* GWG FROM ENROLLMENT:
+#* CALCULATING GA TRIMESTER
 #* *******************************************************
+weight_df <- weight_df %>% 
+  mutate(GA_TRIM=case_when(GA_DAYS>=0 & GA_DAYS<=97 ~ 1,
+                           GA_DAYS>=98 & GA_DAYS<=195 ~ 2,
+                           GA_DAYS>=196 & GA_DAYS<=294 ~ 3,
+                           TRUE ~ NA_real_))#exclude those out of range values
+
+
+temp.df <- weight_df %>%
+  select(SITE, MOMID, PREGID, TYPE_VISIT_UPDATED,GA_DAYS,GA_TRIM)
+
+#* *******************************************************
+#* GWG FROM ENROLLMENT & FLAG:
+#* *******************************************************
+#GWG_FROM_ENROLL is calculated based on recorded or imputed weight
+
 #* #TODO NOTE: FF updated from >=30 for GWG_FROM_ENROLL to >50. IT is possible for a woman to gain 50kg. 
 weight_df <- weight_df %>% 
   group_by(SITE, MOMID, PREGID) %>%
@@ -392,6 +394,10 @@ weight_df <- weight_df %>%
   ungroup()
 
 temp.df <- weight_df %>% select(SITE, MOMID, PREGID, TYPE_VISIT, WEIGHT_ENROLL, M05_WEIGHT_PERES, GWG_FROM_ENROLL, GWG_BW_ANC)
+
+temp.df <- weight_df %>% 
+  filter(PREGID=="3d498c10-d29b-41bc-8d23-c063e4b6c8a9")%>%
+  select(SITE, MOMID, PREGID, TYPE_VISIT_UPDATED, WEIGHT_ENROLL, M05_WEIGHT_PERES, GWG_FROM_ENROLL, GWG_BW_ANC,GWG_FROM_ENROLL_FLAG)
 
 #* *******************************************************
 #* GWG FROM ENROLLMENT AT THE END OF A PREGNANCY:
@@ -528,6 +534,25 @@ weight_df$GWG_REC_HI <- round(weight_df$GWG_REC_HI, digits = 2)
 temp.df <- weight_df %>% 
   select(SITE, MOMID, PREGID, TYPE_VISIT_UPDATED, BMI4CAT, GWG_REC_LO, GWG_TOTAL, GWG_REC_HI, GA_ENROLL_WKS, GA_WKS, PREG_END)
 
+#* *******************************************************
+# CALC. MEAN/MEDIAN AGE:
+#* *******************************************************
+temp.df <- weight_df %>%
+  select(SITE, MOMID, PREGID, TYPE_VISIT_UPDATED, age)
+
+age_summary <- weight_df %>% 
+  filter(TYPE_VISIT_UPDATED==1) %>%
+  summarize(mean_age = mean(age, na.rm = TRUE),
+            sd_age = sd(age, na.rm = TRUE),
+            median_age = median(age, na.rm = TRUE),
+            Q1_age = quantile(age, 0.25, na.rm = TRUE),
+            Q3_age = quantile(age, 0.75, na.rm = TRUE),
+            IQR_age = IQR(age, na.rm = TRUE))
+
+
+bmi_summary <- weight_df %>% 
+  filter(TYPE_VISIT_UPDATED==1) %>%
+  summarize(mean_bmi = mean(bmi_enroll, na.rm = TRUE))
 
 #* *******************************************************
 #* IOM ADEQUACY:
@@ -538,9 +563,10 @@ weight_df <- weight_df %>%
   mutate(IOM_ADEQUACY = case_when(
     (BMI4CAT %in% c(0,1,2,3) & GWG_TOTAL < GWG_REC_LO)  ~ 0,
     (BMI4CAT %in% c(0,1,2,3) & (GWG_TOTAL >= GWG_REC_LO & GWG_TOTAL<= GWG_REC_HI))  ~ 1,
-    (BMI4CAT %in% c(0,1,2,3) & GWG_TOTAL > GWG_REC_LO)  ~ 2,
+    (BMI4CAT %in% c(0,1,2,3) & GWG_TOTAL > GWG_REC_HI)  ~ 2,
     TRUE ~ NA_real_)) %>%
   ungroup()
+
 
 # B/c there are some negative _LO and _HI, and GWG_TOTAL ==0, those I will just asign as inadequate GWG based on IOM. 
 

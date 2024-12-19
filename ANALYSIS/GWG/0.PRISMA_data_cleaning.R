@@ -17,12 +17,14 @@ rm(list = ls())
 dir.create("data_out")
 
 UploadDate = "2024-10-18"
+# UploadDate = "2024-09-20"
 
 #****************************************************************************
 #0. # READ FILES
 #****************************************************************************
 # Define the path to the folder containing the CSV files
 folder_path <- paste0("D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/ANALYSIS/GWG/data/Stacked Data/", UploadDate)
+
 
 # Get a list of all CSV files in the folder
 csv_files <- list.files(path = folder_path, pattern = "*.csv", full.names = TRUE)

@@ -6,6 +6,7 @@
 #****************************************************************************
 #TODO: THINGS TO DO AS OF 10/11/2024
 # Use epitools package - Qing suggested do this first for descriptive.
+#TODO: do i need to include a site name also in the individual forest plot. No b/c each forest plot is all 6 sites and pooled. 
 #****************************************************************************
 library(lubridate)
 library(gridExtra)

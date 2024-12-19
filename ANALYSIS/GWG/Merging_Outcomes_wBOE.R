@@ -26,6 +26,7 @@ rm(list = ls())
 dir.create("data_out")
 
 UploadDate = "2024-06-28"
+# UploadDate = "2024-09-20"
 
 #****************************************************************************
 #0. # READ FILES
@@ -34,6 +35,7 @@ UploadDate = "2024-06-28"
 folder_path <- paste0("D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/ANALYSIS/GWG/data/Stacked Data/", UploadDate)
 
 merged_df <- read.csv('D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/ANALYSIS/GWG/data_out/merged_df_BOE-calc_uploaded_2024-06-28.csv')
+# merged_df <- read.csv('D:/Users/xinyili/Documents/Analysis/Gestational Weight Gain/data_out/merged_df_BOE-calc_uploaded_2024-09-20.csv')
 
 temp.df <- merged_df %>% 
   filter(SITE=="Zambia") %>% 
@@ -73,10 +75,38 @@ temp.df <- merged_df %>%
  #     # file = "D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/ANALYSIS/GWG/data_out/mat_inf_demogph_dataframes_2024-06-28.rda")
  #      file = "data_out/mat_inf_demogph_dataframes_2024-06-28.rda")
  
+
+# # INFANT OUTCOMES:
+#  infant_outcomes <- read.csv('Z:/Outcome Data/2024-09-20/INF_OUTCOMES.csv')
+# 
+# # MATERNAL OUTCOMES:
+#  mat_preg_endpoints <- haven::read_dta('Z:/Outcome Data/2024-09-20/MAT_ENDPOINTS.dta')
+#  mat_infection <- read.csv('Z:/Outcome Data/2024-09-20/MAT_INFECTION.csv')
+#  mat_hdp <- haven::read_dta('Z:/Outcome Data/2024-09-20/MAT_HDP.dta')
+#  mat_anemia <- haven::read_dta('Z:/Outcome Data/2024-09-20/MAT_ANEMIA.dta')
+#  mat_gdm <- haven::read_dta('Z:/Outcome Data/2024-09-20/MAT_GDM.dta')
+#  mat_nearmiss <- haven::read_dta('Z:/Outcome Data/2024-09-20/MAT_NEAR_MISS.dta')
+#  #mat_nearmiss_interim <- haven::read_dta('Z:/Outcome Data/2024-09-20/MAT_NEAR_MISS_INTERIM.dta')
+#  mat_risks <- haven::read_dta('Z:/Outcome Data/2024-09-20/MAT_RISKS.dta')
+#  mat_depr <- haven::read_dta('Z:/Outcome Data/2024-09-20/MAT_DEPR.dta')
+#  mat_nutr <- haven::read_dta('Z:/Outcome Data/2024-09-20/MAT_NUTR.dta')
+# 
+# 
+# ## DEMOGRAPHICS:
+# mat_demo <- read.csv('Z:/Outcome Data/2024-09-20/MAT_DEMOGRAPHIC.csv')
+# 
+# 
+# 
+# save(mat_preg_endpoints, mat_infection, mat_hdp, mat_anemia,
+#      mat_gdm,  mat_nearmiss, mat_risks, mat_depr, mat_nutr,
+#      mat_demo,
+#      infant_outcomes,
+#      file = "data_out/mat_inf_demogph_dataframes_2024-09-20.rda")
 #****************************************************************************
 # Load in the Rda file:
 #****************************************************************************
 load("data_out/mat_inf_demogph_dataframes_2024-06-28.rda")
+# load("data_out/mat_inf_demogph_dataframes_2024-09-20.rda")
 
 #****************************************************************************
 # Bring in other MNH forms - STACKED:
@@ -91,7 +121,7 @@ mnh19 <- read.csv(paste0(folder_path, "/mnh19_merged.csv"))
 # mnh04 <- mnh04 %>%
 #   distinct (MOMID, PREGID, SITE, .keep_all = TRUE)
 
-table(mnh04$M04_TYPE_VISIT, useNA = "always") # MNH04 at multipe visits.
+table(mnh04$M04_TYPE_VISIT, useNA = "always") # MNH04 at multiple visits.
 
 # READ IN ADDITIONAL FILES: 
 # mnh06 <- read.csv('data/Stacked Data/2024-06-14/mnh06_merged.csv')
@@ -168,6 +198,8 @@ mat_demo_subset <- mat_demo %>%
          chew_tobacco, chew_betelnut, smoke, drink, 
          height_index,  bmi_enroll, bmi_index, muac, 
          ga_wks_enroll, folic, nulliparous, num_fetus, num_miscarriage, primigravida)
+
+
 
 # # Micronutrient supplementation:
 # nutrition_subset <-mnh04 %>% select("MOMID", "PREGID", "SITE", "M04_TYPE_VISIT",
