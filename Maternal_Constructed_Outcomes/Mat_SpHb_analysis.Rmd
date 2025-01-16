@@ -1,0 +1,686 @@
+---
+title:  "<span style='font-size: 18px'> <span style='text-align: center'> PRISMA Sphb and CBC Hb analysis - Bland Altman Plots (Issued: `r Sys.Date()`)"
+author: "Author: Fouzia Farooq"
+output:
+  pdf_document:
+    df_print: paged
+    toc: yes
+    toc_depth: 4
+ 
+
+---
+
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+
+
+##### **Includes data from synapse last updated:** {.unlisted .unnumbered}
+#####  Kenya: 2023-10-13 {.unlisted .unnumbered}
+#####  Pakistan: 2023-10-13 {.unlisted .unnumbered}
+#####  Zambia: 2023-10-13 {.unlisted .unnumbered}
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r include=FALSE}
+library(tidyverse)
+# library(gfoRmula)
+# library(R.utils)
+library(dplyr)
+library(irr)
+library(knitr)
+library(kableExtra)
+```
+
+
+```{r include=FALSE}
+sphb_df <- read.csv('../data_out/mat_Sphb.csv', header = TRUE)
+window_subset_df <- read.csv('../data_out/window_subset_df.csv', header = TRUE)
+sphb_df <- sphb_df %>% filter(SITE=="Pakistan" | SITE=="Zambia" | SITE=="Kenya")
+```
+
+
+```{r include=FALSE}
+
+# Convert "1907-07-07" to NA:
+# CATEGORICAL: 
+# ---- 77, Not applicable 
+# ---- 55, Missing 
+# ---- 66, Refused to answer
+# ---- 99, Don't know
+
+# CONTINUOUS:
+# ---- -7, Not applicable 
+# ---- -5, Missing 
+# ---- -6, Refused to answer
+# ---- -9, Don't know
+# DATE: 
+# ---- 07-07-1907, Not applicable 
+# ---- 05-05-1905, Missing 
+# ---- 06-06-1906, Refused to answer
+# ---- 09-09-1909, Don't know
+
+# TIME: 
+# ---- 77:77, Not applicable 
+# ---- 55:55, Missing 
+# ---- 66:66, Refused to answer
+# ---- 99:99, Don't know
+
+CONVERT_NA <- TRUE
+if(CONVERT_NA ==TRUE){
+  
+  sphb_df <- sphb_df %>% #b/c I am passing in the entire dataframe, I don't need to specify the first parameter.
+    mutate_all(function(d) {
+      if_else(d=="1907-07-07", NA, d)
+    })
+  
+  sphb_df <- sphb_df %>% 
+    mutate_all(function(d) {
+      if_else(d==-7, NA, d)
+    })
+  
+  sphb_df <- sphb_df %>% 
+    mutate_all(function(d) {
+      if_else(d==77, NA, d)
+    })
+  
+  # -5 IS MISSING FOR CONTINOUS
+  sphb_df <- sphb_df %>% 
+    mutate_all(function(d) {
+      if_else(d==-5, NA, d)
+    })
+  
+  # 55 IS MISSING FOR CATEGORICAL
+  sphb_df <- sphb_df %>% 
+    mutate_all(function(d) {
+      if_else(d==55, NA, d) 
+    })
+  
+  # 55:55 IS MISSING FOR TIME
+  sphb_df <- sphb_df %>% 
+    mutate_all(function(d) {
+      if_else(d=='55:55', NA, d)
+    })
+}
+```
+
+
+```{r include=FALSE}
+# https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4913118/
+
+ # Absolute agreement concerns if different raters assign the same score to the same subject. Conversely, consistency definition concerns if raters’ scores to the same group of subjects are correlated in an additive manner.18 Consider an interrater reliability study of 2 raters as an example. In this case, consistency definition concerns the degree to which one rater’s score (y) can be equated to another rater’s score (x) plus a systematic error (c) (ie, y = x + c), whereas absolute agreement concerns about the extent to which y equals x. -->
+# INSPECTING THE DATA -->
+  
+temp.df <- sphb_df %>% select(MOMID, SITE, M08_CBC_HB_LBORRES_1, M06_SPHB_LBORRES_1)
+```
+
+
+```{r include=FALSE}
+# REMOVE THIS CHUNCK.
+# 1. CALC. DIFFERENCE IN THE TWO MEASUREMENTS 
+
+# sphb_df <- sphb_df %>% mutate(diff.enroll = M08_CBC_HB_LBORRES_1 - M06_SPHB_LBORRES_1,
+#                               diff.anc20 = M08_CBC_HB_LBORRES_2 - M06_SPHB_LBORRES_2,
+#                               diff.anc28 = M08_CBC_HB_LBORRES_3 - M06_SPHB_LBORRES_3,
+#                               diff.anc32 = M08_CBC_HB_LBORRES_4 - M06_SPHB_LBORRES_4,
+#                               diff.anc36 = M08_CBC_HB_LBORRES_5 - M06_SPHB_LBORRES_5,
+#                               diff.pnc6 = M08_CBC_HB_LBORRES_10 - M06_SPHB_LBORRES_10)
+# 
+# temp.df <- sphb_df %>% select(MOMID, SITE, M08_CBC_HB_LBORRES_1, M06_SPHB_LBORRES_1, diff.anc20)
+# temp.df <- sphb_df %>% select(MOMID, SITE, M08_CBC_HB_LBORRES_10, M06_SPHB_LBORRES_10, diff.pnc6)
+```
+
+```{r include=FALSE}
+# 1. CALC. DIFFERENCE IN THE TWO MEASUREMENTS 
+
+sphb_df <- sphb_df %>% mutate(diff.enroll = M06_SPHB_LBORRES_1 - M08_CBC_HB_LBORRES_1,
+                              diff.anc20 =  M06_SPHB_LBORRES_2 - M08_CBC_HB_LBORRES_2,
+                              diff.anc28 =  M06_SPHB_LBORRES_3- M08_CBC_HB_LBORRES_3,
+                              diff.anc32 =  M06_SPHB_LBORRES_4 - M08_CBC_HB_LBORRES_4,
+                              diff.anc36 = M06_SPHB_LBORRES_5 - M08_CBC_HB_LBORRES_5,
+                              diff.pnc6 =  M06_SPHB_LBORRES_10 - M08_CBC_HB_LBORRES_10)
+
+temp.df <- sphb_df %>% select(MOMID, SITE, M08_CBC_HB_LBORRES_1, M06_SPHB_LBORRES_1, diff.anc20)
+temp.df <- sphb_df %>% select(MOMID, SITE, M08_CBC_HB_LBORRES_10, M06_SPHB_LBORRES_10, diff.pnc6)
+```
+
+
+```{r include=FALSE}
+# 2. CALC. AVERAGE B/W THE TWO MEASUREMETNS
+
+sphb_df <- sphb_df %>% mutate(avg.enroll = (M08_CBC_HB_LBORRES_1 + M06_SPHB_LBORRES_1)*0.5,
+                              avg.anc20 = (M08_CBC_HB_LBORRES_2 + M06_SPHB_LBORRES_2)*0.5,
+                              avg.anc28 = (M08_CBC_HB_LBORRES_3 + M06_SPHB_LBORRES_3)*0.5,
+                              avg.anc32 = (M08_CBC_HB_LBORRES_4 + M06_SPHB_LBORRES_4)*0.5,
+                              avg.anc36 = (M08_CBC_HB_LBORRES_5 + M06_SPHB_LBORRES_5)*0.5,
+                              avg.pnc6 =(M08_CBC_HB_LBORRES_10 + M06_SPHB_LBORRES_10)*0.5)
+```
+
+
+```{r include=FALSE}
+# 3. CALC. THE AVERAGE DIFFERENT AND 95%CI
+
+# AVERAGE DIFF
+# mean_diff.enroll <- mean(sphb_df$diff.enroll, na.rm=TRUE)
+# mean_diff.anc20 <- mean(sphb_df$diff.anc20, na.rm=TRUE)
+# mean_diff.anc28 <- mean(sphb_df$diff.anc28, na.rm=TRUE)
+# mean_diff.anc32 <- mean(sphb_df$diff.anc32, na.rm=TRUE)
+# mean_diff.anc36 <- mean(sphb_df$diff.anc36, na.rm=TRUE)
+# mean_diff.pnc6 <- mean(sphb_df$diff.pnc6, na.rm=TRUE)
+# 
+# # LOWER 95%CI
+# lower.ci.enroll <- mean_diff.enroll - 1.96*sd(sphb_df$diff.enroll, na.rm=TRUE)
+# lower.ci.anc20 <- mean_diff.anc20 - 1.96*sd(sphb_df$diff.anc20, na.rm=TRUE)
+# lower.ci.anc28 <- mean_diff.anc28 - 1.96*sd(sphb_df$diff.anc28, na.rm=TRUE)
+# lower.ci.anc32 <- mean_diff.anc32 - 1.96*sd(sphb_df$diff.anc32, na.rm=TRUE)
+# lower.ci.anc36 <- mean_diff.anc36 - 1.96*sd(sphb_df$diff.anc36, na.rm=TRUE)
+# lower.ci.pnc6 <- mean_diff.pnc6 - 1.96*sd(sphb_df$diff.pnc6, na.rm=TRUE)
+# 
+# 
+# # UPPER 95%CI
+# upper.ci.enroll <- mean_diff.enroll + 1.96*sd(sphb_df$diff.enroll, na.rm=TRUE)
+# upper.ci.anc20 <- mean_diff.anc20 + 1.96*sd(sphb_df$diff.anc20, na.rm=TRUE)
+# upper.ci.anc28 <- mean_diff.anc28 + 1.96*sd(sphb_df$diff.anc28, na.rm=TRUE)
+# upper.ci.anc32 <- mean_diff.anc32 + 1.96*sd(sphb_df$diff.anc32, na.rm=TRUE)
+# upper.ci.anc36 <- mean_diff.anc36 + 1.96*sd(sphb_df$diff.anc36, na.rm=TRUE)
+# upper.ci.pnc6 <- mean_diff.pnc6 + 1.96*sd(sphb_df$diff.pnc6, na.rm=TRUE)
+```
+
+```{r}
+# 3. CALC. THE AVERAGE DIFFERENT AND 95%CI
+
+# AVERAGE DIFF
+site_mean_diff_df <- sphb_df %>%
+  group_by(SITE) %>% 
+  summarize(
+    mean_diff.enroll = mean( diff.enroll, na.rm=TRUE),
+    mean_diff.anc20 = mean( diff.anc20, na.rm=TRUE),
+    mean_diff.anc28 = mean( diff.anc28, na.rm=TRUE),
+    mean_diff.anc32 = mean( diff.anc32, na.rm=TRUE),
+    mean_diff.anc36 = mean( diff.anc36, na.rm=TRUE),
+    mean_diff.pnc6 = mean( diff.pnc6, na.rm=TRUE),
+    
+    # LOWER 95%CI
+    lower.ci.enroll = mean_diff.enroll - 1.96*sd( diff.enroll, na.rm=TRUE),
+    lower.ci.anc20 = mean_diff.anc20 - 1.96*sd( diff.anc20, na.rm=TRUE),
+    lower.ci.anc28 = mean_diff.anc28 - 1.96*sd( diff.anc28, na.rm=TRUE),
+    lower.ci.anc32 = mean_diff.anc32 - 1.96*sd( diff.anc32, na.rm=TRUE),
+    lower.ci.anc36 = mean_diff.anc36 - 1.96*sd( diff.anc36, na.rm=TRUE),
+    lower.ci.pnc6 = mean_diff.pnc6 - 1.96*sd( diff.pnc6, na.rm=TRUE),
+    
+    
+    # UPPER 95%CI
+    upper.ci.enroll = mean_diff.enroll + 1.96*sd( diff.enroll, na.rm=TRUE),
+    upper.ci.anc20 = mean_diff.anc20 + 1.96*sd( diff.anc20, na.rm=TRUE),
+    upper.ci.anc28 = mean_diff.anc28 + 1.96*sd( diff.anc28, na.rm=TRUE),
+    upper.ci.anc32 = mean_diff.anc32 + 1.96*sd( diff.anc32, na.rm=TRUE),
+    upper.ci.anc36 = mean_diff.anc36 + 1.96*sd( diff.anc36, na.rm=TRUE),
+    upper.ci.pnc6 = mean_diff.pnc6 + 1.96*sd( diff.pnc6, na.rm=TRUE))
+```
+
+```{r eval=FALSE, message=FALSE, include=FALSE}
+write.csv(sphb_df, '../data_out/Mat_sphb_20231027.csv')
+```
+
+```{r}
+sphb_df <- left_join(sphb_df, site_mean_diff_df, by = "SITE")
+sphb_df <- sphb_df %>% 
+  mutate(within.ci.enroll = between(diff.enroll, lower.ci.enroll, upper.ci.enroll), 
+         within.ci.anc20 = between(diff.anc20, lower.ci.anc20, upper.ci.anc20),
+         within.ci.anc28 = between(diff.anc28, lower.ci.anc28, upper.ci.anc28),
+         within.ci.anc32 = between(diff.anc32, lower.ci.anc32, upper.ci.anc32),
+         within.ci.anc36 = between(diff.anc36, lower.ci.anc36, upper.ci.anc36))
+```
+
+### Figure 1a. Agreement between Enrollment Sphb and Hgb  
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.dim=c(6,6)}
+# Create the legend breaks and labels
+legend_breaks <- c("Values within 95% limits of agreement", "Values above or 95% limits of agreement")
+legend_labels <- c("Within 95% limits of agreement", "Above or below 95% limits of agreement")
+
+sphb_df %>% 
+  filter(!is.na(within.ci.enroll)) %>% 
+  ggplot(aes(x = avg.enroll, y = diff.enroll, color = within.ci.enroll)) +
+  geom_point(size=1.5, alpha = 0.3) +
+  scale_color_manual(values = c("red", "blue3")) +
+  geom_hline(data = site_mean_diff_df, aes(yintercept = mean_diff.enroll)) +
+  geom_hline(data = site_mean_diff_df, aes(yintercept = lower.ci.enroll), color = "red", linetype="dashed") +
+  geom_hline(data = site_mean_diff_df, aes(yintercept = upper.ci.enroll), color = "red", linetype="dashed") +
+  # ggtitle("Bland-Altman Plot") +
+  ylab("Difference Between Measurements at Enrollment visit") +
+  xlab("Average Hemoglobin Measurement (g/dl)") + 
+  # ggtitle('Agreement between Enrollment Sphb and Hgb')+
+  theme_bw() +
+  facet_grid(vars(SITE), scales = "free") +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) + 
+  theme(legend.position = "right") + 
+  ylim(-10, 10) 
+
+
+ggsave('../plots/BAplot_enroll.pdf', plot = last_plot(), height = 8, width = 7)
+```
+
+\newpage
+#### Figure 1b. Relationship between Enrollment Sphb and Hgb 
+```{r}
+# SCATTER PLOT:
+# Create a scatter plot using ggplot2
+ggplot(sphb_df, aes(x=M08_CBC_HB_LBORRES_1, y=M06_SPHB_LBORRES_1)) +
+  geom_point(alpha=0.4) +
+  facet_grid(~ SITE) + 
+  labs(title = "Enrollment", x = "CBC Hb (mg/dl)", y = "Sphb (mg/dl)") + 
+  ylim(0, 20) + 
+  xlim(0,20) +
+  geom_abline(slope=1, intercept=0, linetype = "dashed", color = "red") + 
+    geom_smooth(method = "lm", se = TRUE, color = "blue")  # Add a linear regression line
+```
+
+```{r eval=FALSE, message=FALSE, include=FALSE}
+# INTRACLASS CORRELATION - ENROLLMENT
+
+icc_df <- sphb_df %>% select( SITE, M06_SPHB_LBORRES_1, M08_CBC_HB_LBORRES_1) 
+
+unique_sites <- unique(icc_df$SITE)
+icc_results <- data.frame()
+
+# Loop through each SITE and compute ICC
+for (site in unique_sites) {
+  site_data <- icc_df %>% filter(SITE == site) %>% select(-SITE)
+  icc_value <- icc(site_data, model = "twoway", type = "agreement", unit = "single", conf.level = 0.95)
+  icc_results_site <- data.frame(SITE = site, ICC = icc_value$value, Lower = icc_value$lbound, Upper = icc_value$ubound)
+  icc_results <- rbind(icc_results, icc_results_site)
+}
+
+icc_results <- icc_results %>% mutate('95%CI' = paste0("(", format(round(Lower,3),nsmall=2, digits=3), ", ", format(round(Upper,3),nsmall=2, digits=3), ")"))
+icc_results <- icc_results %>% rename(Site = SITE) %>% select(-Upper, -Lower)
+icc_results$ICC <- format(round(icc_results$ICC, 3), nsmall=2, digits=3)
+```
+
+```{r eval=FALSE, message=FALSE, include=FALSE}
+icc_table <- kable(icc_results, format = "markdown", col.names = c("SITE", "ICC", "Lower", "Upper"), align = "c") %>%
+  kable_styling(latex_options = c("striped", "hold_position"), full_width = FALSE)
+
+# Add light blue background color to the header row
+icc_table <- icc_table %>%
+  row_spec(0, background = "lightblue")
+
+icc_table
+```
+
+```{r}
+# PEARSON CORRELATION: ENROLLMENT
+
+corr_enroll <- sphb_df %>%
+  group_by(SITE) %>%
+  summarize(correlation = cor(M06_SPHB_LBORRES_1, M08_CBC_HB_LBORRES_1, use = "pairwise.complete.obs")) %>%
+  ungroup()
+
+corr_enroll
+
+
+# PEARSON CORRELATION:ANC-20
+corr_anc20 <- sphb_df %>%
+  group_by(SITE) %>%
+  summarize(correlation = cor(M06_SPHB_LBORRES_2, M08_CBC_HB_LBORRES_2, use = "pairwise.complete.obs")) %>%
+  ungroup()
+
+corr_anc20
+
+# PEARSON CORRELATION:ANC-28
+corr_anc28 <- sphb_df %>%
+  group_by(SITE) %>%
+  summarize(correlation = cor(M06_SPHB_LBORRES_3, M08_CBC_HB_LBORRES_3, use = "pairwise.complete.obs")) %>%
+  ungroup()
+
+corr_anc28
+
+# PEARSON CORRELATION:ANC-32
+corr_anc32 <- sphb_df %>%
+  group_by(SITE) %>%
+  summarize(correlation = cor(M06_SPHB_LBORRES_4, M08_CBC_HB_LBORRES_4, use = "pairwise.complete.obs")) %>%
+  ungroup()
+
+corr_anc32
+
+# PEARSON CORRELATION:ANC-36
+corr_anc36 <- sphb_df %>%
+  group_by(SITE) %>%
+  summarize(correlation = cor(M06_SPHB_LBORRES_5, M08_CBC_HB_LBORRES_5, use = "pairwise.complete.obs")) %>%
+  ungroup()
+
+corr_anc36
+```
+
+
+
+### Figure 2a. Agreement between ANC-20 Sphb and Hgb  
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.dim=c(6,6)}
+
+sphb_df %>% 
+  filter(!is.na(within.ci.anc20)) %>% 
+  ggplot(aes(x = avg.enroll, y = diff.anc20, color = within.ci.anc20)) +
+  geom_point(size=1.5, alpha = 0.3) +
+  scale_color_manual(values = c("red", "blue3")) +
+  geom_hline(data = site_mean_diff_df, aes(yintercept = mean_diff.anc20)) +
+  geom_hline(data = site_mean_diff_df, aes(yintercept = lower.ci.anc20), color = "red", linetype="dashed") +
+  geom_hline(data = site_mean_diff_df, aes(yintercept = upper.ci.anc20), color = "red", linetype="dashed") +
+  # ggtitle("Bland-Altman Plot") +
+  ylab("Difference Between Measurements at ANC-20 visit") +
+  xlab("Average Hemoglobin Measurement (g/dl)") + 
+  # ggtitle('Agreement between Enrollment Sphb and Hgb')+
+  theme_bw() +
+  facet_grid(vars(SITE), scales = "free") +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) + 
+  theme(legend.position = "right") + 
+  ylim(-8, 8)
+
+ggsave('../plots/BAplot_anc20.jpeg', plot = last_plot(), height = 8, width = 7)
+```
+
+#### Figure 2b. Relationship between ANC-20 Sphb and Hgb 
+```{r}
+# SCATTER PLOT:
+# Create a scatter plot using ggplot2
+ggplot(sphb_df, aes(x=M08_CBC_HB_LBORRES_2, y=M06_SPHB_LBORRES_2)) +
+  geom_point(alpha=0.4) +
+  facet_grid(~ SITE) + 
+  labs(title = "ANC-20", x = "CBC Hb (mg/dl)", y = "Sphb (mg/dl)") + 
+  ylim(0, 20) + 
+  xlim(0,20) +
+  geom_abline(slope=1, intercept=0, linetype = "dashed", color = "red") + 
+    geom_smooth(method = "lm", se = TRUE, color = "blue")  # Add a linear regression line
+```
+
+```{r eval=FALSE, message=FALSE, include=FALSE}
+# INTRACLASS CORRELATION - VISIT 2
+
+icc_df <- sphb_df %>% select( SITE, M06_SPHB_LBORRES_2, M08_CBC_HB_LBORRES_2) 
+
+unique_sites <- unique(icc_df$SITE)
+icc_results <- data.frame()
+
+# Loop through each SITE and compute ICC
+for (site in unique_sites) {
+  site_data <- icc_df %>% filter(SITE == site) %>% select(-SITE)
+  icc_value <- icc(site_data, model = "twoway", type = "agreement", unit = "single", conf.level = 0.95)
+  icc_results_site <- data.frame(SITE = site, ICC = icc_value$value, Lower = icc_value$lbound, Upper = icc_value$ubound)
+  icc_results <- rbind(icc_results, icc_results_site)
+}
+```
+
+```{r eval=FALSE, message=FALSE, include=FALSE}
+icc_table <- kable(icc_results, format = "markdown", col.names = c("SITE", "ICC", "Lower", "Upper"), align = "c") %>%
+  kable_styling(latex_options = c("striped", "hold_position"), full_width = FALSE)
+
+# Add light blue background color to the header row
+icc_table <- icc_table %>%
+  row_spec(0, background = "lightblue")
+
+icc_table
+```
+
+### Figure 3a. Agreement between ANC-28 Sphb and Hgb  
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.dim=c(6,6)}
+
+sphb_df %>% 
+  filter(!is.na(within.ci.anc28)) %>% 
+  ggplot(aes(x = avg.anc28, y = diff.anc28, color = within.ci.anc28)) +
+  geom_point(size=1.5, alpha = 0.3) +
+  scale_color_manual(values = c("red", "blue3")) +
+  geom_hline(data = site_mean_diff_df, aes(yintercept = mean_diff.anc28)) +
+  geom_hline(data = site_mean_diff_df, aes(yintercept = lower.ci.anc28), color = "red", linetype="dashed") +
+  geom_hline(data = site_mean_diff_df, aes(yintercept = upper.ci.anc28), color = "red", linetype="dashed") +
+  # ggtitle("Bland-Altman Plot") +
+  ylab("Difference Between Measurements at ANC-28 visit") +
+  xlab("Average Hemoglobin Measurement (g/dl)") + 
+  # ggtitle('Agreement between anc28ment Sphb and Hgb')+
+  theme_bw() +
+  facet_grid(vars(SITE), scales = "free") +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) + 
+  theme(legend.position = "right") + 
+  ylim(-5, 5)
+
+ggsave('../plots/BAplot_anc28.jpeg', plot = last_plot(), height = 8, width = 7)
+```
+
+#### Figure 3b. Relationship between ANC-28 Sphb and Hgb 
+```{r}
+# SCATTER PLOT:
+# Create a scatter plot using ggplot2
+ggplot(sphb_df, aes(x=M08_CBC_HB_LBORRES_3, y=M06_SPHB_LBORRES_3)) +
+  geom_point(alpha=0.4) +
+  facet_grid(~ SITE) + 
+  labs(title = "ANC-28", x = "CBC Hb (mg/dl)", y = "Sphb (mg/dl)") + 
+  ylim(0, 20) + 
+  xlim(0,20) +
+  geom_abline(slope=1, intercept=0, linetype = "dashed", color = "red") + 
+    geom_smooth(method = "lm", se = TRUE, color = "blue")  # Add a linear regression line
+```
+
+```{r eval=FALSE, message=FALSE, include=FALSE}
+# INTRACLASS CORRELATION - VISIT 3
+icc_df <- sphb_df %>% select( SITE, M06_SPHB_LBORRES_3, M08_CBC_HB_LBORRES_3) 
+
+unique_sites <- unique(icc_df$SITE)
+icc_results <- data.frame()
+
+# Loop through each SITE and compute ICC
+for (site in unique_sites) {
+  site_data <- icc_df %>% filter(SITE == site) %>% select(-SITE)
+  icc_value <- icc(site_data, model = "twoway", type = "agreement", unit = "single", conf.level = 0.95)
+  icc_results_site <- data.frame(SITE = site, ICC = icc_value$value, Lower = icc_value$lbound, Upper = icc_value$ubound)
+  icc_results <- rbind(icc_results, icc_results_site)
+}
+```
+
+```{r eval=FALSE, message=FALSE, include=FALSE}
+icc_table <- kable(icc_results, format = "markdown", col.names = c("SITE", "ICC", "Lower", "Upper"), align = "c") %>%
+  kable_styling(latex_options = c("striped", "hold_position"), full_width = FALSE)
+
+# Add light blue background color to the header row
+icc_table <- icc_table %>%
+  row_spec(0, background = "lightblue")
+
+icc_table
+```
+
+### Figure 4a. Agreement between ANC-32 Sphb and Hgb (Pakistan site)
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.dim=c(6,6)}
+
+sphb_df %>% 
+  filter(!is.na(within.ci.anc32)) %>% 
+  ggplot(aes(x = avg.anc32, y = diff.anc32, color = within.ci.anc32)) +
+  geom_point(size=1.5, alpha = 0.3) +
+  scale_color_manual(values = c("red", "blue3")) +
+  geom_hline(data = site_mean_diff_df, aes(yintercept = mean_diff.anc32)) +
+  geom_hline(data = site_mean_diff_df, aes(yintercept = lower.ci.anc32), color = "red", linetype="dashed") +
+  geom_hline(data = site_mean_diff_df, aes(yintercept = upper.ci.anc32), color = "red", linetype="dashed") +
+  # ggtitle("Bland-Altman Plot") +
+  ylab("Difference Between Measurements at ANC-32 visit") +
+  xlab("Average Hemoglobin Measurement (g/dl)") + 
+  # ggtitle('Agreement between anc32ment Sphb and Hgb')+
+  theme_bw() +
+  facet_grid(vars(SITE), scales = "free") +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) + 
+  theme(legend.position = "right") + 
+  ylim(-6, 6)
+
+
+ggsave('../plots/BAplot_anc32.jpeg', plot = last_plot(), height = 8, width = 7)
+```
+
+#### Figure 4b. Relationship between ANC-32 Sphb and Hgb 
+```{r}
+# SCATTER PLOT:
+# Create a scatter plot using ggplot2
+ggplot(sphb_df, aes(x=M08_CBC_HB_LBORRES_4, y=M06_SPHB_LBORRES_5)) +
+  geom_point(alpha=0.4) +
+  facet_grid(~ SITE) + 
+  labs(title = "ANC-32", x = "CBC Hb (mg/dl)", y = "Sphb (mg/dl)") + 
+  ylim(0, 20) + 
+  xlim(0,20) +
+  geom_abline(slope=1, intercept=0, linetype = "dashed", color = "red") + 
+    geom_smooth(method = "lm", se = TRUE, color = "blue")  # Add a linear regression line
+```
+
+```{r eval=FALSE, message=FALSE, include=FALSE}
+# INTRACLASS CORRELATION - VISIT 4
+icc_df <- sphb_df %>% select( SITE, M06_SPHB_LBORRES_4, M08_CBC_HB_LBORRES_4) 
+
+unique_sites <- unique(icc_df$SITE)
+icc_results <- data.frame()
+
+# Loop through each SITE and compute ICC
+for (site in unique_sites) {
+  site_data <- icc_df %>% filter(SITE == site) %>% select(-SITE)
+  icc_value <- icc(site_data, model = "twoway", type = "agreement", unit = "single", conf.level = 0.95)
+  icc_results_site <- data.frame(SITE = site, ICC = icc_value$value, Lower = icc_value$lbound, Upper = icc_value$ubound)
+  icc_results <- rbind(icc_results, icc_results_site)
+}
+```
+
+```{r eval=FALSE, message=FALSE, include=FALSE}
+icc_table <- kable(icc_results, format = "markdown", col.names = c("SITE", "ICC", "Lower", "Upper"), align = "c") %>%
+  kable_styling(latex_options = c("striped", "hold_position"), full_width = FALSE)
+
+# Add light blue background color to the header row
+icc_table <- icc_table %>%
+  row_spec(0, background = "lightblue")
+
+icc_table
+```
+
+### Figure 5. Agreement between ANC-36 Sphb and Hgb 
+```{r echo=FALSE, message=FALSE, warning=FALSE, fig.dim=c(6,6)}
+
+sphb_df %>% 
+  filter(!is.na(within.ci.anc36)) %>% 
+  ggplot(aes(x = avg.anc36, y = diff.anc36, color = within.ci.anc36)) +
+  geom_point(size=1.5, alpha = 0.3) +
+  scale_color_manual(values = c("red", "blue3")) +
+  geom_hline(data = site_mean_diff_df, aes(yintercept = mean_diff.anc36)) +
+  geom_hline(data = site_mean_diff_df, aes(yintercept = lower.ci.anc36), color = "red", linetype="dashed") +
+  geom_hline(data = site_mean_diff_df, aes(yintercept = upper.ci.anc36), color = "red", linetype="dashed") +
+  # ggtitle("Bland-Altman Plot") +
+  ylab("Difference Between Measurements at ANC-36 visit") +
+  xlab("Average Hemoglobin Measurement (g/dl)") + 
+  # ggtitle('Agreement between anc36ment Sphb and Hgb')+
+  theme_bw() +
+  facet_grid(vars(SITE), scales = "free") +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) + 
+  theme(legend.position = "right") + 
+  ylim(-5, 5) 
+
+
+ggsave('../plots/BAplot_anc36.jpeg', plot = last_plot(), height = 8, width = 7)
+```
+
+#### Figure 5b. Relationship between ANC-36 Sphb and Hgb 
+```{r}
+# SCATTER PLOT:
+# Create a scatter plot using ggplot2
+ggplot(sphb_df, aes(x=M08_CBC_HB_LBORRES_5, y=M06_SPHB_LBORRES_5)) +
+  geom_point(alpha=0.4) +
+  facet_grid(~ SITE) + 
+  labs(title = "ANC-36", x = "CBC Hb (mg/dl)", y = "Sphb (mg/dl)") + 
+  ylim(0, 20) + 
+  xlim(0,20) +
+  geom_abline(slope=1, intercept=0, linetype = "dashed", color = "red") + 
+    geom_smooth(method = "lm", se = TRUE, color = "blue")  # Add a linear regression line
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# INTRACLASS CORRELATION - VISIT 5
+
+icc_df <- sphb_df %>% select( SITE, M06_SPHB_LBORRES_5, M08_CBC_HB_LBORRES_5) 
+
+unique_sites <- unique(icc_df$SITE)
+icc_results <- data.frame()
+
+# Loop through each SITE and compute ICC
+for (site in unique_sites) {
+  site_data <- icc_df %>% filter(SITE == site) %>% select(-SITE)
+  icc_value <- icc(site_data, model = "twoway", type = "agreement", unit = "single", conf.level = 0.95)
+  icc_results_site <- data.frame(SITE = site, ICC = icc_value$value, Lower = icc_value$lbound, Upper = icc_value$ubound)
+  icc_results <- rbind(icc_results, icc_results_site)
+}
+```
+
+```{r eval=FALSE, message=FALSE, include=FALSE}
+icc_table <- kable(icc_results, format = "markdown", col.names = c("SITE", "ICC", "Lower", "Upper"), align = "c") %>%
+  kable_styling(latex_options = c("striped", "hold_position"), full_width = FALSE)
+
+# Add light blue background color to the header row
+icc_table <- icc_table %>%
+  row_spec(0, background = "lightblue")
+
+icc_table
+```
+
+
+```{r eval=FALSE, message=FALSE, include=FALSE, fig.dim=c(6,6)}
+# CRAETE BLAND-ALTMAN PLOT - PNC6 VISIT 10
+color_above <- upper.ci.pnc6
+color_below <- lower.ci.pnc6
+
+sphb_df$color <- ifelse(sphb_df$diff.pnc6 > color_above, "red",
+                        ifelse(sphb_df$diff.pnc6 < color_below, "red", "blue3"))
+
+ggplot(sphb_df, aes(x = avg.pnc6, y = diff.pnc6, color = color)) +
+  geom_point(size=2, alpha = 0.3) +
+  scale_color_manual(values = c("blue3", "red", "red")) + 
+  geom_hline(yintercept = mean_diff.pnc6) +
+  geom_hline(yintercept = lower.ci.pnc6, color = "red", linetype="dashed") +
+  geom_hline(yintercept = upper.ci.pnc6, color = "red", linetype="dashed") +
+  ggtitle("Bland-Altman Plot") +
+  ylab("Difference Between Measurements at PNC-6 visit") +
+  xlab("Average Measurement (g/dl)") + 
+  ggtitle('Agreement between PNC-6 Sphb and Hgb')+
+  theme_bw() +
+  facet_grid(vars(SITE), scales = "free") +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) + 
+  theme(legend.position = "right") + 
+    color_scale +
+  guides(color = guide_legend(title = NULL))
+
+
+ggsave('../plots/BAplot_avg.pnc6.jpeg', plot = last_plot(), height = 8, width = 7)
+```
+
+
+
+```{r eval=FALSE, message=FALSE, include=FALSE}
+# INTRACLASS CORRELATION - VISIT 10
+icc_df <- sphb_df %>% select( SITE, M06_SPHB_LBORRES_10, M08_CBC_HB_LBORRES_10) 
+
+unique_sites <- unique(icc_df$SITE)
+icc_results <- data.frame()
+
+# Loop through each SITE and compute ICC
+for (site in unique_sites) {
+  site_data <- icc_df %>% filter(SITE == site) %>% select(-SITE)
+  icc_value <- icc(site_data, model = "twoway", type = "agreement", unit = "single", conf.level = 0.95)
+  icc_results_site <- data.frame(SITE = site, ICC = icc_value$value, Lower = icc_value$lbound, Upper = icc_value$ubound)
+  icc_results <- rbind(icc_results, icc_results_site)
+}
+```
+
+```{r eval=FALSE, message=FALSE, include=FALSE}
+icc_table <- kable(icc_results, format = "markdown", col.names = c("SITE", "ICC", "Lower", "Upper"), align = "c") %>%
+  kable_styling(latex_options = c("striped", "hold_position"), full_width = FALSE)
+
+# Add light blue background color to the header row
+icc_table <- icc_table %>%
+  row_spec(0, background = "lightblue")
+
+icc_table
+```
+
