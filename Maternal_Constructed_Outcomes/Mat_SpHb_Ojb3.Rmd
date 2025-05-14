@@ -6,6 +6,7 @@ output:
   pdf_document: default
   html_document: default
 ---
+# NOTE: This file has the information on when n=900 women are enrolled. 
 
 OBJECTIVE 3 RISK FACTORS TO ASSESS: 
 ●	Maternal age,
@@ -69,10 +70,10 @@ library(Hmisc) # Survival - Harrell's C-index
 
 Import data: 
 ```{r}
-UploadDate =  "2024-05-31" #  "2024-04-19" 
+UploadDate =  "2025-01-10" # "2024-10-18" #  "2024-04-19" 
 
 # path_to_data <-  'D:/Users/fouziafarooq/Documents/PRISMA_constructed-outcomes/data/2024-04-19/'# - Stacked data used.
-path_to_data <-  paste0('D:/Users/fouziafarooq/Documents/PRISMA_constructed-outcomes/data/', UploadDate,'/')# - Stacked data used.
+path_to_data <-  paste0('D:/Users/fouziafarooq/Documents/PRISMA-Analysis-Fouzia/data/', UploadDate,'/')# - Stacked data used.
 
 
 uploadDate <- as.Date(UploadDate, format = "%Y-%m-%d")
@@ -229,6 +230,47 @@ date_900th_enrolled <- enrollment_counts %>%
                         slice(1)
 # Kenya reached n=900 2023-10-11
 # Zambia reached n=900 2024-01-24
+# Pakistan reached n=900 2023-02-25
+
+
+# Email from Sasha 04/14/2025:  asked what are the exact start dates for n=900 women.
+
+temp.df <- mnh02 %>%
+  filter(SITE== "Zambia") %>% 
+  select(SITE, MOMID, PREGID, M02_FORMCOMPLDAT_MNH02)
+
+temp.df <- mnh02 %>%
+  filter(SITE== "Kenya") %>% 
+  select(SITE, MOMID, PREGID, M02_FORMCOMPLDAT_MNH02)
+
+temp.df <- mnh02 %>%
+  filter(SITE== "Pakistan") %>% 
+  select(SITE, MOMID, PREGID, M02_FORMCOMPLDAT_MNH02)
+
+first_enrollment_dates <- mnh02 %>%
+  filter(SITE %in% c("Zambia", "Kenya", "Pakistan")) %>%
+  group_by(SITE) %>%
+  summarise(first_date = min(M02_FORMCOMPLDAT_MNH02, na.rm = TRUE)) %>%
+  arrange(SITE)
+
+
+
+
+
+
+
+# Group the data by delivery date and count the number of women who've delivered on each date.
+#NOTE: This is not accurate b/c women who've had a misscarriage etc are not part of this form.
+enrollment_counts_delivery <- mnh06 %>% filter(SITE== "Zambia") %>% 
+                      group_by(M06_FORMCOMPLDAT_MNH06) %>% 
+                      summarise(num_delivered = n()) %>% 
+                      arrange(M06_FORMCOMPLDAT_MNH06)
+
+# Find the date when the cumulative count reaches 900
+date_900th__delivered <- enrollment_counts_delivery %>%
+                        mutate(cumulative_delivered = cumsum(num_delivered)) %>%
+                        filter(cumulative_delivered >= 900) %>%
+                        slice(1)
 ```
 
 In MNH01, **Zambia doesn't have MOMID and PREGID** so have to merge with MNH02. 
@@ -396,7 +438,6 @@ mnh12_subset <- mnh12 %>%
 ```
 
 1. Arranging Based on Dates and Scheduled/Unscheduled visits:
-This I might have to do for each MNH that is included.  FOr this analysis, I need MNH08 and MNH06 for now.  No need to worry about organizing other ones for now. 
 ```{r}
 # mnh08_temp
 mnh08_subset <- mnh08_subset %>% 
